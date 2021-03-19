@@ -8,7 +8,7 @@ pub struct Coordinate {
 impl Coordinate {
     /// Returns a new instance of `Coordinate` with the supplied x and y coordinates set.
     pub fn new(x: u8, y: u8) -> Coordinate {
-        return Coordinate {
+        Coordinate {
             x,
             y,
         }
@@ -51,7 +51,7 @@ mod tests {
     use super::*;
 
     fn get_coordinate() -> Coordinate {
-        return Coordinate {
+        Coordinate {
             x: 3,
             y: 4,
         }

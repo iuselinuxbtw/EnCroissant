@@ -1,5 +1,6 @@
-use crate::pieces::BoardPiece;
 use std::rc::Rc;
+
+use crate::pieces::BoardPiece;
 
 #[derive(Debug, Clone)]
 pub struct Board {

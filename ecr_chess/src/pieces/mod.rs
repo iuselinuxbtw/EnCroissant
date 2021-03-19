@@ -1,6 +1,9 @@
-use crate::coordinate::Coordinate;
 use std::fmt::Debug;
+
 use dyn_clonable::clonable;
+
+use crate::coordinate::Coordinate;
+use std::ops::Deref;
 
 pub mod king;
 pub mod queen;
@@ -50,8 +53,8 @@ impl BoardPiece {
         self.coordinate
     }
 
-    pub fn get_piece(&self) -> &Box<dyn Piece> {
-        &self.piece
+    pub fn get_piece(&self) -> &dyn Piece {
+        self.piece.deref()
     }
 }
 
@@ -69,11 +72,13 @@ impl PartialEq for BoardPiece {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use mockall::mock;
     use std::fmt::{Formatter, Result as FmtResult};
 
-    mock!{
+    use mockall::mock;
+
+    use super::*;
+
+    mock! {
         pub Piece {}
         impl Piece for MockPiece {
             fn get_shortcode_algebraic(&self) -> &'static str;
