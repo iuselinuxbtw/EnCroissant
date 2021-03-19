@@ -16,14 +16,44 @@ pub mod pawn;
 #[clonable]
 pub trait Piece: Debug + Clone {
     /// Returns the short code of `Piece`'s type according to the algebraic standard.
-    fn get_shortcode_algebraic(&self) -> &'static str;
+    fn get_shortcode_algebraic(&self) -> &'static str {
+        self.get_type().get_shortcode_algebraic()
+    }
+
+    /// Returns the `PieceType` of the piece.
+    fn get_type(&self) -> PieceType;
+}
+
+/// All available pieces.
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum PieceType {
+    Pawn,
+    Knight,
+    Bishop,
+    Rook,
+    Queen,
+    King,
+}
+
+impl PieceType {
+    /// Returns the short code of the piece type according to the algebraic standard.
+    fn get_shortcode_algebraic(&self) -> &'static str {
+        match self {
+            PieceType::Pawn => "",
+            PieceType::Knight => "N",
+            PieceType::Bishop => "B",
+            PieceType::Rook => "R",
+            PieceType::Queen => "Q",
+            PieceType::King => "K",
+        }
+    }
 }
 
 /// The color of a piece.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum PieceColor {
-    LIGHT,
-    DARK,
+    Light,
+    Dark,
 }
 
 /// A `Piece` that has additional properties so it can sit on a `Board`.
@@ -82,6 +112,7 @@ mod tests {
         pub Piece {}
         impl Piece for MockPiece {
             fn get_shortcode_algebraic(&self) -> &'static str;
+            fn get_type(&self) -> PieceType;
         }
 
         impl Clone for MockPiece {
@@ -103,18 +134,18 @@ mod tests {
     #[test]
     fn test_get_color() {
         let mock = MockPiece::new();
-        let p = get_board_piece(mock, PieceColor::LIGHT);
-        assert_eq!(p.get_color(), PieceColor::LIGHT);
+        let p = get_board_piece(mock, PieceColor::Light);
+        assert_eq!(p.get_color(), PieceColor::Light);
 
         let mock = MockPiece::new();
-        let p = get_board_piece(mock, PieceColor::DARK);
-        assert_eq!(p.get_color(), PieceColor::DARK);
+        let p = get_board_piece(mock, PieceColor::Dark);
+        assert_eq!(p.get_color(), PieceColor::Dark);
     }
 
     #[test]
     fn test_get_coordinate() {
         let mock = MockPiece::new();
-        let p = get_board_piece(mock, PieceColor::LIGHT);
+        let p = get_board_piece(mock, PieceColor::Light);
         assert_eq!(p.get_coordinate(), Coordinate::new(1, 2));
     }
 
@@ -124,25 +155,25 @@ mod tests {
         let mut mock1 = MockPiece::new();
         mock1.expect_get_shortcode_algebraic()
             .return_const("Q");
-        let p1 = BoardPiece::new(Box::new(mock1), (3, 4).into(), PieceColor::DARK);
+        let p1 = BoardPiece::new(Box::new(mock1), (3, 4).into(), PieceColor::Dark);
 
         let mut mock2 = MockPiece::new();
         mock2.expect_get_shortcode_algebraic()
             .return_const("Q");
-        let mut p2 = BoardPiece::new(Box::new(mock2), (3, 4).into(), PieceColor::DARK);
+        let mut p2 = BoardPiece::new(Box::new(mock2), (3, 4).into(), PieceColor::Dark);
         assert_eq!(p1, p2);
 
         // Piece does not has the same short code
         let mut mock3 = MockPiece::new();
         mock3.expect_get_shortcode_algebraic()
             .return_const("K");
-        let p3 = BoardPiece::new(Box::new(mock3), (3, 4).into(), PieceColor::DARK);
+        let p3 = BoardPiece::new(Box::new(mock3), (3, 4).into(), PieceColor::Dark);
         assert_ne!(p1, p3);
 
         // Color does not match
-        p2.color = PieceColor::LIGHT;
+        p2.color = PieceColor::Light;
         assert_ne!(p1, p2);
-        p2.color = PieceColor::DARK;
+        p2.color = PieceColor::Dark;
 
         // Coordinate does not match
         p2.coordinate = (1, 2).into();

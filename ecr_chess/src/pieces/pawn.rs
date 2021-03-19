@@ -1,11 +1,12 @@
 use super::Piece;
+use crate::pieces::PieceType;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Pawn {}
 
 impl Piece for Pawn {
-    fn get_shortcode_algebraic(&self) -> &'static str {
-        ""
+    fn get_type(&self) -> PieceType {
+        PieceType::Pawn
     }
 }
 
@@ -20,5 +21,10 @@ mod tests {
     #[test]
     fn test_get_shortcode_algebraic() {
         assert_eq!("", get_piece().get_shortcode_algebraic());
+    }
+
+    #[test]
+    fn test_get_type() {
+        assert_eq!(PieceType::Pawn, get_piece().get_type());
     }
 }
