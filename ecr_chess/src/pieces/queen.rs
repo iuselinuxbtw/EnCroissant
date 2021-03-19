@@ -1,5 +1,6 @@
 use super::Piece;
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Queen {}
 
 impl Piece for Queen {
