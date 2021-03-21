@@ -10,6 +10,19 @@ use crate::utils::new_rc_refcell;
 /// `BoardPiece`.
 pub type SquareInner = Rc<RefCell<BoardPiece>>;
 
+/// Holds information whether castling is allowed on the specific sides.
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct BoardCastleState {
+    /// Can light castle on king side?
+    pub light_king_side: bool,
+    /// Can light castle on queen side?
+    pub light_queen_side: bool,
+    /// Can dark castle on king side?
+    pub dark_king_side: bool,
+    /// Can dark castle on queen side?
+    pub dark_queen_side: bool,
+}
+
 /// A `Board` contains the current game of chess.
 #[derive(Debug, Clone)]
 pub struct Board {
@@ -29,6 +42,12 @@ pub struct Board {
     /// The number of moves already done. Will be increased when a move occurs and light_to_move is
     /// `false`.
     move_number: usize,
+    /// The amount of half moves done. A half move is any move where nothing gets captured and no
+    /// pawn is moved. Resets to 0 if a non-half move occurs.
+    half_move_amount: usize,
+    /// Which castle actions are allowed? Only contains if it would be theoretically allowed, not
+    /// representing if the castle would be blocked by another piece or similar.
+    castle_state: BoardCastleState,
 }
 
 impl Board {
@@ -40,6 +59,13 @@ impl Board {
             moves: vec![],
             light_to_move: true,
             move_number: 1,
+            half_move_amount: 0,
+            castle_state: BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: true,
+                dark_queen_side: true,
+            },
         }
     }
 
@@ -86,6 +112,16 @@ impl Board {
     /// Returns the current move number.
     pub fn get_move_number(&self) -> usize {
         self.move_number
+    }
+
+    /// Returns the amount of half moves done.
+    pub fn get_half_move_amount(&self) -> usize {
+        self.half_move_amount
+    }
+
+    /// Returns the castle moves that are still allowed.
+    pub fn get_castle_state(&self) -> &BoardCastleState {
+        &self.castle_state
     }
 }
 
@@ -226,6 +262,16 @@ mod tests {
         fn test_empty() {
             let b = Board::empty();
 
+            assert!(b.light_to_move);
+            assert_eq!(1, b.move_number);
+            assert_eq!(0, b.half_move_amount);
+            assert_eq!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: true,
+                dark_queen_side: true,
+            }, b.castle_state);
+
             assert_eq!(0, b.moves.len());
             assert_eq!(0, b.pieces.len());
 
@@ -305,6 +351,35 @@ mod tests {
 
             b.move_number = 1337;
             assert_eq!(1337, b.get_move_number());
+        }
+
+        #[test]
+        fn test_get_half_move_amount() {
+            let mut b = Board::empty();
+            assert_eq!(0, b.get_half_move_amount());
+
+            b.half_move_amount = 420;
+            assert_eq!(420, b.get_half_move_amount());
+        }
+
+        #[test]
+        fn test_get_castle_state() {
+            let mut b = Board::empty();
+            assert_eq!(&BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: true,
+                dark_queen_side: true,
+            }, b.get_castle_state());
+
+            b.castle_state.dark_king_side = false;
+            b.castle_state.dark_queen_side = false;
+            assert_eq!(&BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: false,
+                dark_queen_side: false
+            }, b.get_castle_state());
         }
     }
 }
