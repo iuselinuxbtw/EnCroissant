@@ -48,6 +48,9 @@ pub struct Board {
     /// Which castle actions are allowed? Only contains if it would be theoretically allowed, not
     /// representing if the castle would be blocked by another piece or similar.
     castle_state: BoardCastleState,
+    /// Specifies the en passant target square that is currently possible. Only contains if it
+    /// would be allowed theoretically, not checking if it would actually be possible.
+    en_passant_target: Option<Coordinate>,
 }
 
 impl Board {
@@ -66,6 +69,7 @@ impl Board {
                 dark_king_side: true,
                 dark_queen_side: true,
             },
+            en_passant_target: None,
         }
     }
 
@@ -122,6 +126,11 @@ impl Board {
     /// Returns the castle moves that are still allowed.
     pub fn get_castle_state(&self) -> &BoardCastleState {
         &self.castle_state
+    }
+
+    /// Returns the currently possible en passant target square.
+    pub fn get_en_passant_target(&self) -> Option<Coordinate> {
+        self.en_passant_target
     }
 }
 
@@ -271,6 +280,7 @@ mod tests {
                 dark_king_side: true,
                 dark_queen_side: true,
             }, b.castle_state);
+            assert_eq!(None, b.en_passant_target);
 
             assert_eq!(0, b.moves.len());
             assert_eq!(0, b.pieces.len());
@@ -380,6 +390,15 @@ mod tests {
                 dark_king_side: false,
                 dark_queen_side: false
             }, b.get_castle_state());
+        }
+
+        #[test]
+        fn test_get_en_passant_target() {
+            let mut b = Board::empty();
+            assert_eq!(None, b.en_passant_target);
+
+            b.en_passant_target = Some((3, 4).into());
+            assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
         }
     }
 }
