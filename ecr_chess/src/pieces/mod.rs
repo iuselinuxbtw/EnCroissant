@@ -1,9 +1,9 @@
 use std::fmt::Debug;
+use std::ops::Deref;
 
 use dyn_clonable::clonable;
 
 use crate::coordinate::Coordinate;
-use std::ops::Deref;
 
 pub mod king;
 pub mod queen;
@@ -75,6 +75,21 @@ impl BoardPiece {
         }
     }
 
+    /// Creates a new piece from the supplied `PieceType`. Under the hood, this method calls
+    /// `BoardPiece::new` with a `Box<dyn Piece>` generated according to the supplied piece type.
+    pub fn new_from_type(piece_type: PieceType, coordinate: Coordinate, color: PieceColor) -> BoardPiece {
+        BoardPiece::new(
+            match piece_type {
+                PieceType::Pawn => Box::new(pawn::Pawn {}),
+                PieceType::Knight => Box::new(knight::Knight {}),
+                PieceType::Bishop => Box::new(bishop::Bishop {}),
+                PieceType::Rook => Box::new(rook::Rook {}),
+                PieceType::Queen => Box::new(queen::Queen {}),
+                PieceType::King => Box::new(king::King {}),
+            }, coordinate, color,
+        )
+    }
+
     pub fn get_color(&self) -> PieceColor {
         self.color
     }
@@ -127,65 +142,134 @@ mod tests {
         }
     }
 
-    fn get_board_piece(p: MockPiece, color: PieceColor) -> BoardPiece {
-        BoardPiece::new(Box::new(p), Coordinate::new(1, 2), color)
+    mod board_piece {
+        use super::*;
+
+        fn get_board_piece(p: MockPiece, color: PieceColor) -> BoardPiece {
+            BoardPiece::new(Box::new(p), Coordinate::new(1, 2), color)
+        }
+
+        #[test]
+        fn test_get_color() {
+            let mock = MockPiece::new();
+            let p = get_board_piece(mock, PieceColor::Light);
+            assert_eq!(p.get_color(), PieceColor::Light);
+
+            let mock = MockPiece::new();
+            let p = get_board_piece(mock, PieceColor::Dark);
+            assert_eq!(p.get_color(), PieceColor::Dark);
+        }
+
+        #[test]
+        fn test_get_coordinate() {
+            let mock = MockPiece::new();
+            let p = get_board_piece(mock, PieceColor::Light);
+            assert_eq!(p.get_coordinate(), Coordinate::new(1, 2));
+        }
+
+        #[test]
+        fn test_eq_and_new() {
+            // Everything is equal
+            let mut mock1 = MockPiece::new();
+            mock1.expect_get_shortcode_algebraic()
+                .return_const("Q");
+            let p1 = BoardPiece::new(Box::new(mock1), (3, 4).into(), PieceColor::Dark);
+
+            let mut mock2 = MockPiece::new();
+            mock2.expect_get_shortcode_algebraic()
+                .return_const("Q");
+            let mut p2 = BoardPiece::new(Box::new(mock2), (3, 4).into(), PieceColor::Dark);
+            assert_eq!(p1, p2);
+
+            // Piece does not has the same short code
+            let mut mock3 = MockPiece::new();
+            mock3.expect_get_shortcode_algebraic()
+                .return_const("K");
+            let p3 = BoardPiece::new(Box::new(mock3), (3, 4).into(), PieceColor::Dark);
+            assert_ne!(p1, p3);
+
+            // Color does not match
+            p2.color = PieceColor::Light;
+            assert_ne!(p1, p2);
+            p2.color = PieceColor::Dark;
+
+            // Coordinate does not match
+            p2.coordinate = (1, 2).into();
+            assert_ne!(p1, p2);
+            p2.coordinate = (3, 4).into();
+
+            // Out of game does not match
+            p2.out_of_game = true;
+            assert_ne!(p1, p2);
+            p2.out_of_game = false;
+
+            // Everything is reset, p1 and p2 should be equal again
+            assert_eq!(p1, p2);
+        }
+
+        #[test]
+        fn test_new_from_type() {
+            // Pawn
+            assert_eq!(
+                BoardPiece::new(
+                    Box::new(pawn::Pawn {}), (7, 1).into(), PieceColor::Dark,
+                ),
+                BoardPiece::new_from_type(PieceType::Pawn, (7, 1).into(), PieceColor::Dark),
+            );
+
+            // Knight
+            assert_eq!(
+                BoardPiece::new(
+                    Box::new(knight::Knight {}), (1, 3).into(), PieceColor::Light,
+                ),
+                BoardPiece::new_from_type(PieceType::Knight, (1, 3).into(), PieceColor::Light),
+            );
+
+            // Bishop
+            assert_eq!(
+                BoardPiece::new(
+                    Box::new(bishop::Bishop {}), (4, 4).into(), PieceColor::Dark,
+                ),
+                BoardPiece::new_from_type(PieceType::Bishop, (4, 4).into(), PieceColor::Dark),
+            );
+
+            // Rook
+            assert_eq!(
+                BoardPiece::new(
+                    Box::new(rook::Rook {}), (3, 5).into(), PieceColor::Light,
+                ),
+                BoardPiece::new_from_type(PieceType::Rook, (3, 5).into(), PieceColor::Light),
+            );
+
+            // Queen
+            assert_eq!(
+                BoardPiece::new(
+                    Box::new(queen::Queen {}), (5, 5).into(), PieceColor::Dark,
+                ),
+                BoardPiece::new_from_type(PieceType::Queen, (5, 5).into(), PieceColor::Dark),
+            );
+
+            // King
+            assert_eq!(
+                BoardPiece::new(
+                    Box::new(king::King {}), (2, 7).into(), PieceColor::Light,
+                ),
+                BoardPiece::new_from_type(PieceType::King, (2, 7).into(), PieceColor::Light),
+            );
+        }
     }
 
-    #[test]
-    fn test_get_color() {
-        let mock = MockPiece::new();
-        let p = get_board_piece(mock, PieceColor::Light);
-        assert_eq!(p.get_color(), PieceColor::Light);
+    mod piece_type {
+        use super::*;
 
-        let mock = MockPiece::new();
-        let p = get_board_piece(mock, PieceColor::Dark);
-        assert_eq!(p.get_color(), PieceColor::Dark);
-    }
-
-    #[test]
-    fn test_get_coordinate() {
-        let mock = MockPiece::new();
-        let p = get_board_piece(mock, PieceColor::Light);
-        assert_eq!(p.get_coordinate(), Coordinate::new(1, 2));
-    }
-
-    #[test]
-    fn test_eq_and_new() {
-        // Everything is equal
-        let mut mock1 = MockPiece::new();
-        mock1.expect_get_shortcode_algebraic()
-            .return_const("Q");
-        let p1 = BoardPiece::new(Box::new(mock1), (3, 4).into(), PieceColor::Dark);
-
-        let mut mock2 = MockPiece::new();
-        mock2.expect_get_shortcode_algebraic()
-            .return_const("Q");
-        let mut p2 = BoardPiece::new(Box::new(mock2), (3, 4).into(), PieceColor::Dark);
-        assert_eq!(p1, p2);
-
-        // Piece does not has the same short code
-        let mut mock3 = MockPiece::new();
-        mock3.expect_get_shortcode_algebraic()
-            .return_const("K");
-        let p3 = BoardPiece::new(Box::new(mock3), (3, 4).into(), PieceColor::Dark);
-        assert_ne!(p1, p3);
-
-        // Color does not match
-        p2.color = PieceColor::Light;
-        assert_ne!(p1, p2);
-        p2.color = PieceColor::Dark;
-
-        // Coordinate does not match
-        p2.coordinate = (1, 2).into();
-        assert_ne!(p1, p2);
-        p2.coordinate = (3, 4).into();
-
-        // Out of game does not match
-        p2.out_of_game = true;
-        assert_ne!(p1, p2);
-        p2.out_of_game = false;
-
-        // Everything is reset, p1 and p2 should be equal again
-        assert_eq!(p1, p2);
+        #[test]
+        fn test_piece_type_get_shortcode_algebraic() {
+            assert_eq!("", PieceType::Pawn.get_shortcode_algebraic());
+            assert_eq!("N", PieceType::Knight.get_shortcode_algebraic());
+            assert_eq!("B", PieceType::Bishop.get_shortcode_algebraic());
+            assert_eq!("R", PieceType::Rook.get_shortcode_algebraic());
+            assert_eq!("Q", PieceType::Queen.get_shortcode_algebraic());
+            assert_eq!("K", PieceType::King.get_shortcode_algebraic());
+        }
     }
 }

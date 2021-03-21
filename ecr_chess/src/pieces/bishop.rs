@@ -1,5 +1,6 @@
-use super::Piece;
 use crate::pieces::PieceType;
+
+use super::Piece;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bishop {}
