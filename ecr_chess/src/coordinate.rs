@@ -40,6 +40,23 @@ impl Coordinate {
     }
 }
 
+/// Converts the x coordinate represented as a `char` to a `u8` that represents the x coordinate in
+/// the board. When the char cannot be mapped into an appropriate coordinate (e.g. the char is
+/// `'z'`) it returns an invalid x coordinate (`8`).
+pub fn char_to_x_coordinate(c: char) -> u8 {
+    match c {
+        'a' => 0,
+        'b' => 1,
+        'c' => 2,
+        'd' => 3,
+        'e' => 4,
+        'f' => 5,
+        'g' => 6,
+        'h' => 7,
+        _ => 8, // This should not happen
+    }
+}
+
 impl From<(u8, u8)> for Coordinate {
     fn from(v: (u8, u8)) -> Self {
         Coordinate::new(v.0, v.1)
@@ -58,17 +75,17 @@ mod tests {
     }
 
     #[test]
-    fn test_new() {
+    fn test_coordinate_new() {
         assert_eq!(get_coordinate(), Coordinate::new(3, 4));
     }
 
     #[test]
-    fn test_get_x() {
+    fn test_coordinate_get_x() {
         assert_eq!(3, get_coordinate().get_x());
     }
 
     #[test]
-    fn test_get_x_as_char() {
+    fn test_coordinate_get_x_as_char() {
         assert_eq!('a', Coordinate::new(0, 0).get_x_as_char());
         assert_eq!('b', Coordinate::new(1, 0).get_x_as_char());
         assert_eq!('c', Coordinate::new(2, 0).get_x_as_char());
@@ -87,7 +104,21 @@ mod tests {
     }
 
     #[test]
-    fn test_from_tuple() {
+    fn test_coordinate_from_tuple() {
         assert_eq!(Coordinate::from((3, 4)), Coordinate::new(3, 4));
+    }
+
+    #[test]
+    fn test_char_to_x_coordinate() {
+        assert_eq!(0, char_to_x_coordinate('a'));
+        assert_eq!(1, char_to_x_coordinate('b'));
+        assert_eq!(2, char_to_x_coordinate('c'));
+        assert_eq!(3, char_to_x_coordinate('d'));
+        assert_eq!(4, char_to_x_coordinate('e'));
+        assert_eq!(5, char_to_x_coordinate('f'));
+        assert_eq!(6, char_to_x_coordinate('g'));
+        assert_eq!(7, char_to_x_coordinate('h'));
+        assert_eq!(8, char_to_x_coordinate('i'));
+        assert_eq!(8, char_to_x_coordinate('u'));
     }
 }
