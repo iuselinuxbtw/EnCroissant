@@ -10,9 +10,20 @@ use thiserror::Error;
 
 use crate::coordinate::{char_to_x_coordinate, Coordinate};
 use crate::pieces::{PieceColor, PieceType};
+use crate::board::BoardCastleState;
 
 lazy_static! {
-    static ref FEN_REGEX: Regex = Regex::new(r#"^(?P<piece_placements>((?:[rnbqkpRNBQKP1-8]{1,8}/){7})[rnbqkpRNBQKP1-8]{1,8})\s(?P<to_move>[b|w])\s(?P<castles>-|K?Q?k?q?)\s(?P<en_passant>-|[a-h][3|6])\s(?P<half_moves>\d+)\s(?P<move_number>\d+)$"#).unwrap();
+    /// This is the regex pattern that we use to split the string. What may be a bit confusing is
+    /// that we have 'rnbqkpRNBQKP1-8' twice in the string. This is because the last line has no /
+    /// at the end.
+    /// # Example
+    /// It splits this string `r4rk1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3RK2R b K - 1 16` into
+    /// the following parts:
+    /// ```
+    ///              piece_placements                     to_move castles en_passant half_moves move_number
+    /// r4rk1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3RK2R    b       K        -          1          16
+    /// ```
+    pub static ref FEN_REGEX: Regex = Regex::new(r#"^(?P<piece_placements>((?:[rnbqkpRNBQKP1-8]{1,8}/){7})[rnbqkpRNBQKP1-8]{1,8})\s(?P<to_move>[b|w])\s(?P<castles>-|K?Q?k?q?)\s(?P<en_passant>-|[a-h][3|6])\s(?P<half_moves>\d+)\s(?P<move_number>\d+)$"#).unwrap();
 }
 
 /// An error that occurred while doing actions related to the FEN.
@@ -40,6 +51,7 @@ impl TryFrom<&str> for Fen {
     type Error = FenError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
+        // First we split the string with regex
         let caps = match FEN_REGEX.captures(value) {
             None => Err(FenError::InvalidFenString),
             Some(v) => Ok(v)
@@ -57,9 +69,9 @@ impl TryFrom<&str> for Fen {
             en_passant: match &caps["en_passant"] {
                 "-" => None,
                 v => Some({
+                    // If there are en_passant options in the string, then we just save those as a
+                    // string (for now).
                     let coordinates: Vec<char> = v.chars().collect();
-                    // We can unwrap the parsed number since we already checked that it is valid
-                    // with regex.
                     (char_to_x_coordinate(coordinates[0]), coordinates[1] as u8).into()
                 }),
             },
@@ -121,6 +133,7 @@ fn resolve_piece_code(x: u8, y: u8, code: char) -> (Coordinate, PieceColor, Piec
         color = PieceColor::Light;
     };
 
+    // Match the char code to the corresponding 'PieceType'
     let piece_type: PieceType = match code.to_ascii_lowercase() {
         'r' => PieceType::Rook,
         'n' => PieceType::Knight,
@@ -199,6 +212,8 @@ mod tests {
             let mut expected = FenPiecePlacements {
                 pieces: Vec::new(),
             };
+            // We have to implement the entire board manually. You can view the position here:
+            // https://lichess.org/study/UZlSqSLA/Ku9M59je#31
             // Eighth row
             expected.pieces.push(((0, 7).into(), PieceColor::Dark, PieceType::Rook));
             expected.pieces.push(((4, 7).into(), PieceColor::Dark, PieceType::Rook));

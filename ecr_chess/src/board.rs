@@ -388,7 +388,7 @@ mod tests {
                 light_king_side: true,
                 light_queen_side: true,
                 dark_king_side: false,
-                dark_queen_side: false
+                dark_queen_side: false,
             }, b.get_castle_state());
         }
 
