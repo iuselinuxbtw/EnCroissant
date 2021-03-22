@@ -19,7 +19,7 @@ lazy_static! {
     /// # Example
     /// It splits this string `r4rk1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3RK2R b K - 1 16` into
     /// the following parts:
-    /// ```
+    /// ```text
     ///              piece_placements                     to_move castles en_passant half_moves move_number
     /// r4rk1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3RK2R    b       K        -          1          16
     /// ```
@@ -39,12 +39,12 @@ pub enum FenError {
 /// Holds the information a FEN represents.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Fen {
-    piece_placements: FenPiecePlacements,
-    light_to_move: bool,
-    castles: Option<String>,
-    en_passant: Option<Coordinate>,
-    half_moves: usize,
-    move_number: usize,
+    pub piece_placements: FenPiecePlacements,
+    pub light_to_move: bool,
+    pub castles: BoardCastleState,
+    pub en_passant: Option<Coordinate>,
+    pub half_moves: usize,
+    pub move_number: usize,
 }
 
 impl TryFrom<&str> for Fen {
@@ -62,10 +62,7 @@ impl TryFrom<&str> for Fen {
                 "w" => true,
                 _ => false, // Includes "b"
             },
-            castles: match &caps["castles"] {
-                "-" => None,
-                v => Some(String::from(v)),
-            },
+            castles: resolve_board_castle_state(String::from(&caps["castles"])),
             en_passant: match &caps["en_passant"] {
                 "-" => None,
                 v => Some({
@@ -83,7 +80,7 @@ impl TryFrom<&str> for Fen {
 
 /// Stores all the pieces with their corresponding colors and coordinates.
 #[derive(Debug, PartialEq, Clone)]
-struct FenPiecePlacements {
+pub struct FenPiecePlacements {
     pieces: Vec<(Coordinate, PieceColor, PieceType)>,
 }
 
@@ -148,6 +145,42 @@ fn resolve_piece_code(x: u8, y: u8, code: char) -> (Coordinate, PieceColor, Piec
     (coordinates, color, piece_type)
 }
 
+/// Resolves a Fen Castling ability string and returns a BoardCastleState.
+/// # Example
+/// Parsing the string `Qkq`:
+/// ```
+/// # use ecr_chess::board::BoardCastleState;
+/// # use ecr_chess::formats::fen;
+/// #
+/// assert_eq!(BoardCastleState {
+///     light_king_side: false,
+///     light_queen_side: true,
+///     dark_king_side: true,
+///     dark_queen_side: true,
+/// }, fen::resolve_board_castle_state(String::from("Qkq")));
+/// ```
+pub fn resolve_board_castle_state(state: String) -> BoardCastleState {
+    let mut bcs = BoardCastleState {
+        light_king_side: false,
+        light_queen_side: false,
+        dark_king_side: false,
+        dark_queen_side: false,
+    };
+    if state.contains("q") {
+        bcs.dark_queen_side = true;
+    };
+    if state.contains("k"){
+        bcs.dark_king_side = true;
+    };
+    if state.contains("K"){
+        bcs.light_king_side = true;
+    }
+    if state.contains("Q"){
+        bcs.light_queen_side = true;
+    }
+    bcs
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -178,13 +211,25 @@ mod tests {
         invalid_caps = FEN_REGEX.captures("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R z - - 3 17");
         assert!(invalid_caps.is_none());
     }
+    #[test]
+    #[should_panic]
+    fn test_invalid_fen_string() {
+        FEN_REGEX.captures("r3r1k1/pp3pbp/1Bp1b1p1/8/2BP4/Q1n2N2/P4PPP/3R1K1R/ b - - 0 18").unwrap();
+    }
 
     #[test]
     fn test_resolve_piece_code() {
         let piece1 = resolve_piece_code(0, 2, 'k');
         assert_eq!(((0, 2).into(), PieceColor::Dark, PieceType::King), piece1);
+
         let piece2 = resolve_piece_code(5, 7, 'P');
         assert_eq!(((5, 7).into(), PieceColor::Light, PieceType::Pawn), piece2);
+
+        let piece3 = resolve_piece_code(7,0, 'n');
+        assert_eq!(((7,0).into(), PieceColor::Dark, PieceType::Knight), piece3);
+
+        let piece4 = resolve_piece_code(2,5, 'B');
+        assert_eq!(((2,5).into(), PieceColor::Light, PieceType::Bishop), piece4);
     }
 
     mod fen {
@@ -196,7 +241,12 @@ mod tests {
             assert_eq!(Fen {
                 piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR".into(),
                 light_to_move: true,
-                castles: Some("KQkq".to_string()),
+                castles: BoardCastleState {
+                    light_king_side: true,
+                    light_queen_side: true,
+                    dark_king_side: true,
+                    dark_queen_side: true
+                },
                 en_passant: None,
                 half_moves: 0,
                 move_number: 1,
@@ -250,5 +300,43 @@ mod tests {
 
             assert_eq!(expected, "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R".into());
         }
+    }
+    #[test]
+    fn test_resolve_board_castle_state(){
+        let castle_state = resolve_board_castle_state(String::from("KQkq"));
+        let expected = BoardCastleState{
+            light_king_side: true,
+            light_queen_side: true,
+            dark_king_side: true,
+            dark_queen_side: true
+        };
+        assert_eq!(castle_state, expected);
+
+        let castle_state2 = resolve_board_castle_state(String::from("Kq"));
+        let expected2 = BoardCastleState{
+            light_king_side: true,
+            light_queen_side: false,
+            dark_king_side: false,
+            dark_queen_side: true
+        };
+        assert_eq!(castle_state2, expected2);
+
+        let castle_state3 = resolve_board_castle_state(String::from("Qq"));
+        let expected3 = BoardCastleState{
+            light_king_side: false,
+            light_queen_side: true,
+            dark_king_side: false,
+            dark_queen_side: true
+        };
+        assert_eq!(castle_state3, expected3);
+
+        let castle_state4 = resolve_board_castle_state(String::from("-"));
+        let expected4 = BoardCastleState{
+            light_king_side: false,
+            light_queen_side: false,
+            dark_king_side: false,
+            dark_queen_side: false
+        };
+        assert_eq!(castle_state4, expected4);
     }
 }
