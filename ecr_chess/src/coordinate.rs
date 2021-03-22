@@ -1,4 +1,4 @@
-/// A `Coordinate` represents a square on the chess board.
+/// A [`Coordinate`] represents a square on the chess board.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Coordinate {
     x: u8,
@@ -6,7 +6,7 @@ pub struct Coordinate {
 }
 
 impl Coordinate {
-    /// Returns a new instance of `Coordinate` with the supplied x and y coordinates set.
+    /// Returns a new instance of [`Coordinate`] with the supplied x and y coordinates set.
     pub fn new(x: u8, y: u8) -> Coordinate {
         Coordinate {
             x,
@@ -40,8 +40,8 @@ impl Coordinate {
     }
 }
 
-/// Converts the x coordinate represented as a `char` to a `u8` that represents the x coordinate in
-/// the board. When the char cannot be mapped into an appropriate coordinate (e.g. the char is
+/// Converts the x coordinate represented as a [`char`] to a [`u8`] that represents the x coordinate
+/// in the board. When the char cannot be mapped into an appropriate coordinate (e.g. the char is
 /// `'z'`) it returns an invalid x coordinate (`8`).
 pub fn char_to_x_coordinate(c: char) -> u8 {
     match c {

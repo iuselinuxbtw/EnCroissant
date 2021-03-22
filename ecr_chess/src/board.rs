@@ -6,8 +6,8 @@ use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::new_rc_refcell;
 
-/// The inner content of a square. Holds a reference-counted pointer to a `RefCell` that holds a
-/// `BoardPiece`.
+/// The inner content of a square. Holds a reference-counted pointer to a [`RefCell`] that holds a
+/// [`BoardPiece`].
 pub type SquareInner = Rc<RefCell<BoardPiece>>;
 
 /// Holds information whether castling is allowed on the specific sides.
@@ -23,13 +23,25 @@ pub struct BoardCastleState {
     pub dark_queen_side: bool,
 }
 
-/// A `Board` contains the current game of chess.
+impl Default for BoardCastleState {
+    /// By default, every castle action is possible.
+    fn default() -> Self {
+        BoardCastleState {
+            light_king_side: true,
+            light_queen_side: true,
+            dark_king_side: true,
+            dark_queen_side: true,
+        }
+    }
+}
+
+/// A [`Board`] contains the current game of chess.
 #[derive(Debug, Clone)]
 pub struct Board {
     /// The representation of the board. A board consists of 8x8 squares. The first array is for the
     /// x, the second for the y coordinate. Since the board has 8 squares on each axis, an index of
-    /// `0` to `7` is possible. Contains an `Option<BoardPiece>` since a square can be empty, which
-    /// means that squares with `None` as value will be empty.
+    /// `0` to `7` is possible. Contains an [`Option<BoardPiece>`] since a square can be empty, which
+    /// means that squares with [`None`] as value will be empty.
     board: Vec<Vec<Option<SquareInner>>>,
     /// Since a hybrid solution for saving the pieces is used, we save all pieces as well as
     pieces: Vec<SquareInner>,
@@ -43,7 +55,7 @@ pub struct Board {
     /// `false`.
     move_number: usize,
     /// The amount of half moves done. A half move is any move where nothing gets captured and no
-    /// pawn is moved. Resets to 0 if a non-half move occurs.
+    /// pawn is moved. Resets to `0` if a non-half move occurs.
     half_move_amount: usize,
     /// Which castle actions are allowed? Only contains if it would be theoretically allowed, not
     /// representing if the castle would be blocked by another piece or similar.
@@ -63,12 +75,7 @@ impl Board {
             light_to_move: true,
             move_number: 1,
             half_move_amount: 0,
-            castle_state: BoardCastleState {
-                light_king_side: true,
-                light_queen_side: true,
-                dark_king_side: true,
-                dark_queen_side: true,
-            },
+            castle_state: BoardCastleState::default(),
             en_passant_target: None,
         }
     }
@@ -92,7 +99,7 @@ impl Board {
     }
 
     /// Adds a piece to the board. Since a hybrid solution for saving the board is used, the piece
-    /// gets added into the board array as well as the apiece list.
+    /// gets added into the board array as well as the piece list.
     pub fn add_piece(&mut self, piece: BoardPiece) {
         let x_coordinate = piece.get_coordinate().get_x() as usize;
         let y_coordinate = piece.get_coordinate().get_y() as usize;
@@ -399,6 +406,20 @@ mod tests {
 
             b.en_passant_target = Some((3, 4).into());
             assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
+        }
+    }
+
+    mod board_castle_state {
+        use super::*;
+
+        #[test]
+        fn test_default() {
+            assert_eq!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: true,
+                dark_queen_side: true,
+            }, BoardCastleState::default());
         }
     }
 }

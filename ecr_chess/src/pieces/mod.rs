@@ -1,3 +1,5 @@
+//! Definition and implementation of the different chess pieces.
+
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -12,15 +14,15 @@ pub mod bishop;
 pub mod knight;
 pub mod pawn;
 
-/// A `Piece` represents a chess figure on the `Board`.
+/// A [`Piece`] represents a chess figure on the [`Board`](struct@crate::board::Board).
 #[clonable]
 pub trait Piece: Debug + Clone {
-    /// Returns the short code of `Piece`'s type according to the algebraic standard.
+    /// Returns the short code of [`Piece`]'s type according to the algebraic standard.
     fn get_shortcode_algebraic(&self) -> &'static str {
         self.get_type().get_shortcode_algebraic()
     }
 
-    /// Returns the `PieceType` of the piece.
+    /// Returns the [`PieceType`] of the piece.
     fn get_type(&self) -> PieceType;
 }
 
@@ -56,7 +58,7 @@ pub enum PieceColor {
     Dark,
 }
 
-/// A `Piece` that has additional properties so it can sit on a `Board`.
+/// A [`Piece`] that has additional properties so it can sit on a [`Board`](struct@crate::board::Board).
 #[derive(Debug, Clone)]
 pub struct BoardPiece {
     piece: Box<dyn Piece>,
@@ -75,8 +77,8 @@ impl BoardPiece {
         }
     }
 
-    /// Creates a new piece from the supplied `PieceType`. Under the hood, this method calls
-    /// `BoardPiece::new` with a `Box<dyn Piece>` generated according to the supplied piece type.
+    /// Creates a new piece from the supplied [`PieceType`]. Under the hood, this method calls
+    /// [`BoardPiece::new`] with a [`Box<dyn Piece>`] generated according to the supplied piece type.
     pub fn new_from_type(piece_type: PieceType, coordinate: Coordinate, color: PieceColor) -> BoardPiece {
         BoardPiece::new(
             match piece_type {
