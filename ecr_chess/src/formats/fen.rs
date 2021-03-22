@@ -1,7 +1,7 @@
 //! Contains an implementation for the Forsyth-Edwards Notation (FEN). More information about it can
 //! be found in [chess programming wiki](https://www.chessprogramming.org/Forsyth-Edwards_Notation).
 
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::num::ParseIntError;
 
 use lazy_static::lazy_static;
@@ -14,7 +14,7 @@ use crate::board::BoardCastleState;
 
 lazy_static! {
     /// This is the regex pattern that we use to split the string. What may be a bit confusing is
-    /// that we have 'rnbqkpRNBQKP1-8' twice in the string. This is because the last line has no /
+    /// that we have 'rnbqkpRNBQKP1-8' twice in the string. This is because the last line has no `/`
     /// at the end.
     /// # Example
     /// It splits this string `r4rk1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3RK2R b K - 1 16` into
@@ -24,13 +24,19 @@ lazy_static! {
     /// r4rk1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3RK2R    b       K        -          1          16
     /// ```
     pub static ref FEN_REGEX: Regex = Regex::new(r#"^(?P<piece_placements>((?:[rnbqkpRNBQKP1-8]{1,8}/){7})[rnbqkpRNBQKP1-8]{1,8})\s(?P<to_move>[b|w])\s(?P<castles>-|K?Q?k?q?)\s(?P<en_passant>-|[a-h][3|6])\s(?P<half_moves>\d+)\s(?P<move_number>\d+)$"#).unwrap();
+
+    /// Parses the piece placement part of the FEN.
+    pub static ref FEN_PIECE_PLACEMENT_REGEX: Regex = Regex::new(r#"^(((?:[rnbqkpRNBQKP1-8]{1,8}/){7})[rnbqkpRNBQKP1-8]{1,8})$"#).unwrap();
 }
 
 /// An error that occurred while doing actions related to the FEN.
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq)]
 pub enum FenError {
     #[error("invalid FEN string")]
     InvalidFenString,
+
+    #[error("invalid FEN piece placement string")]
+    InvalidFenPiecePlacementString,
 
     #[error("cannot parse as int: {0}")]
     ParseIntError(#[from] ParseIntError),
@@ -57,7 +63,9 @@ impl TryFrom<&str> for Fen {
             Some(v) => Ok(v)
         }?;
         Ok(Fen {
-            piece_placements: (&caps["piece_placements"]).into(),
+            // Unwrapping is safe here since the FEN string got already validated so this does not
+            // return an error
+            piece_placements: (&caps["piece_placements"]).try_into().unwrap(),
             light_to_move: match &caps["to_move"] {
                 "w" => true,
                 _ => false, // Includes "b"
@@ -78,17 +86,23 @@ impl TryFrom<&str> for Fen {
     }
 }
 
-/// Stores all the pieces with their corresponding colors and coordinates.
+/// A list of [`Piece`](struct@crate::pieces::BoardPiece)'s with their corresponding [`PieceColor`]
+/// and [`Coordinate`].
+pub type FenPieceList = Vec<(Coordinate, PieceColor, PieceType)>;
+
+/// Stores all pieces notated in the FEN.
 #[derive(Debug, PartialEq, Clone)]
 pub struct FenPiecePlacements {
-    pieces: Vec<(Coordinate, PieceColor, PieceType)>,
+    pub pieces: FenPieceList,
 }
 
-impl From<&str> for FenPiecePlacements {
+impl TryFrom<&str> for FenPiecePlacements {
+    type Error = FenError;
+
     /// Parses the FEN positions string into actual chess pieces with positions.
-    // TODO: Do we need error handling here (TryFrom)? This should only be necessary if this struct
-    //       interfaces with the public and not if it is only a private helper for the Fen struct
-    fn from(value: &str) -> Self {
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        FEN_PIECE_PLACEMENT_REGEX.captures(value).ok_or(FenError::InvalidFenPiecePlacementString)?;
+
         let mut result: Vec<(Coordinate, PieceColor, PieceType)> = Vec::new();
 
         let rows: Vec<&str> = value.split("/").collect();
@@ -113,9 +127,9 @@ impl From<&str> for FenPiecePlacements {
             }
         };
 
-        FenPiecePlacements {
-            pieces: result
-        }
+        Ok(FenPiecePlacements {
+            pieces: result,
+        })
     }
 }
 
@@ -166,18 +180,20 @@ pub fn resolve_board_castle_state(state: String) -> BoardCastleState {
         dark_king_side: false,
         dark_queen_side: false,
     };
+
     if state.contains("q") {
         bcs.dark_queen_side = true;
-    };
-    if state.contains("k"){
+    }
+    if state.contains("k") {
         bcs.dark_king_side = true;
-    };
-    if state.contains("K"){
+    }
+    if state.contains("K") {
         bcs.light_king_side = true;
     }
-    if state.contains("Q"){
+    if state.contains("Q") {
         bcs.light_queen_side = true;
     }
+
     bcs
 }
 
@@ -185,36 +201,58 @@ pub fn resolve_board_castle_state(state: String) -> BoardCastleState {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_fen_regex() {
-        let caps = FEN_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
-        assert_eq!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", &caps["piece_placements"]);
-        assert_eq!("w", &caps["to_move"]);
-        assert_eq!("KQkq", &caps["castles"]);
-        assert_eq!("-", &caps["en_passant"]);
-        assert_eq!("0", &caps["half_moves"]);
-        assert_eq!("1", &caps["move_number"]);
+    mod fen_regex {
+        use super::*;
+
+        #[test]
+        fn test_input() {
+            let caps = FEN_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
+            assert_eq!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", &caps["piece_placements"]);
+            assert_eq!("w", &caps["to_move"]);
+            assert_eq!("KQkq", &caps["castles"]);
+            assert_eq!("-", &caps["en_passant"]);
+            assert_eq!("0", &caps["half_moves"]);
+            assert_eq!("1", &caps["move_number"]);
 
 
-        let example_string = "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17";
-        let gotc = FEN_REGEX.captures(example_string).unwrap();
-        assert_eq!("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R", &gotc["piece_placements"]);
-        assert_eq!("b", &gotc["to_move"]);
-        assert_eq!("-", &gotc["castles"]);
-        assert_eq!("-", &gotc["en_passant"]);
-        assert_eq!("3", &gotc["half_moves"]);
-        assert_eq!("17", &gotc["move_number"]);
+            let example_string = "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17";
+            let gotc = FEN_REGEX.captures(example_string).unwrap();
+            assert_eq!("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R", &gotc["piece_placements"]);
+            assert_eq!("b", &gotc["to_move"]);
+            assert_eq!("-", &gotc["castles"]);
+            assert_eq!("-", &gotc["en_passant"]);
+            assert_eq!("3", &gotc["half_moves"]);
+            assert_eq!("17", &gotc["move_number"]);
 
-        //Invalid FENs
-        let mut invalid_caps = FEN_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 0 1");
-        assert!(invalid_caps.is_none());
-        invalid_caps = FEN_REGEX.captures("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R z - - 3 17");
-        assert!(invalid_caps.is_none());
+            // Invalid FENs
+            let mut invalid_caps = FEN_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 0 1");
+            assert!(invalid_caps.is_none());
+            invalid_caps = FEN_REGEX.captures("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R z - - 3 17");
+            assert!(invalid_caps.is_none());
+        }
+
+        #[test]
+        #[should_panic]
+        fn test_invalid_input() {
+            FEN_REGEX.captures("r3r1k1/pp3pbp/1Bp1b1p1/8/2BP4/Q1n2N2/P4PPP/3R1K1R/ b - - 0 18").unwrap();
+        }
     }
-    #[test]
-    #[should_panic]
-    fn test_invalid_fen_string() {
-        FEN_REGEX.captures("r3r1k1/pp3pbp/1Bp1b1p1/8/2BP4/Q1n2N2/P4PPP/3R1K1R/ b - - 0 18").unwrap();
+
+    mod fen_piece_placement_regex {
+        use super::*;
+
+        #[test]
+        fn test_valid_input() {
+            FEN_PIECE_PLACEMENT_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR").unwrap();
+            FEN_PIECE_PLACEMENT_REGEX.captures("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R").unwrap();
+        }
+
+        #[test]
+        fn test_invalid_input() {
+            assert!(FEN_PIECE_PLACEMENT_REGEX.captures("r3r1k1/pp3pbp/1Bp1b1p1/8/2BP4/Q1n2N2/P4PPP/3R1K1R/").is_none());
+            assert!(FEN_PIECE_PLACEMENT_REGEX.captures("").is_none());
+            assert!(FEN_PIECE_PLACEMENT_REGEX.captures("r/r").is_none());
+        }
     }
 
     #[test]
@@ -239,7 +277,7 @@ mod tests {
         fn test_try_from_string() {
             let fen = Fen::try_from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
             assert_eq!(Fen {
-                piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR".into(),
+                piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR".try_into().unwrap(),
                 light_to_move: true,
                 castles: BoardCastleState {
                     light_king_side: true,
@@ -258,7 +296,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_from_string() {
+        fn test_try_from_string_valid_input() {
             let mut expected = FenPiecePlacements {
                 pieces: Vec::new(),
             };
@@ -298,7 +336,16 @@ mod tests {
             expected.pieces.push(((5, 0).into(), PieceColor::Light, PieceType::King));
             expected.pieces.push(((7, 0).into(), PieceColor::Light, PieceType::Rook));
 
-            assert_eq!(expected, "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R".into());
+            assert_eq!(expected, "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R".try_into().unwrap());
+        }
+
+        #[test]
+        fn test_try_from_string_invalid_input() {
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from(""));
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from("asdfjknasdfjkndasjknf"));
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from("0/0/0/0/0/0/0/0"));
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from("a/b/c/d/e"));
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from("aaaaaa/AAAA4A/b6B"));
         }
     }
     #[test]
