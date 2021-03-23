@@ -5,6 +5,7 @@ use crate::coordinate::Coordinate;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::new_rc_refcell;
+use crate::formats::fen::Fen;
 
 /// The inner content of a square. Holds a reference-counted pointer to a `RefCell` that holds a
 /// `BoardPiece`.
@@ -256,6 +257,26 @@ impl Default for Board {
     }
 }
 
+impl From<Fen> for Board {
+    fn from(f: Fen) -> Self {
+        let mut board = Board::empty();
+
+        // Set the attributes of the board state
+        board.move_number = f.move_number;
+        board.half_move_amount = f.half_moves;
+        board.en_passant_target = f.en_passant;
+        board.castle_state = f.castles;
+        board.light_to_move = f.light_to_move;
+
+        // Add all pieces to the board
+        for piece in f.piece_placements {
+            board.add_piece(piece.into());
+        }
+
+        board
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -399,6 +420,37 @@ mod tests {
 
             b.en_passant_target = Some((3, 4).into());
             assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
+        }
+
+        #[test]
+        fn test_from_fen() {
+            let fen: Fen = "2k5/8/8/8/8/4R3/8/2K5 b - - 3 6".parse().unwrap();
+            let board: Board = fen.into();
+
+            assert_eq!(3, board.pieces.len());
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::King, (2, 0).into(), PieceColor::Light),
+                board.get_at((2, 0).into()).unwrap().borrow().deref(),
+            );
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::Rook, (4, 2).into(), PieceColor::Light),
+                board.get_at((4, 2).into()).unwrap().borrow().deref(),
+            );
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::King, (2, 7).into(), PieceColor::Dark),
+                board.get_at((2, 7).into()).unwrap().borrow().deref(),
+            );
+
+            assert_eq!(false, board.light_to_move);
+            assert_eq!(None, board.en_passant_target);
+            assert_eq!(3, board.half_move_amount);
+            assert_eq!(6, board.move_number);
+            assert_eq!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }, board.castle_state);
         }
     }
 }

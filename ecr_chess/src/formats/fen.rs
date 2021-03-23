@@ -1,7 +1,6 @@
 //! Contains an implementation for the Forsyth-Edwards Notation (FEN). More information about it can
 //! be found in [chess programming wiki](https://www.chessprogramming.org/Forsyth-Edwards_Notation).
 
-use std::convert::{TryFrom, TryInto};
 use std::num::ParseIntError;
 
 use lazy_static::lazy_static;
@@ -11,6 +10,7 @@ use thiserror::Error;
 use crate::coordinate::{char_to_x_coordinate, Coordinate};
 use crate::pieces::{PieceColor, PieceType};
 use crate::board::BoardCastleState;
+use std::str::FromStr;
 
 lazy_static! {
     /// This is the regex pattern that we use to split the string. What may be a bit confusing is
@@ -53,19 +53,19 @@ pub struct Fen {
     pub move_number: usize,
 }
 
-impl TryFrom<&str> for Fen {
-    type Error = FenError;
+impl FromStr for Fen {
+    type Err = FenError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         // First we split the string with regex
-        let caps = match FEN_REGEX.captures(value) {
+        let caps = match FEN_REGEX.captures(s) {
             None => Err(FenError::InvalidFenString),
             Some(v) => Ok(v)
         }?;
         Ok(Fen {
             // Unwrapping is safe here since the FEN string got already validated so this does not
             // return an error
-            piece_placements: (&caps["piece_placements"]).try_into().unwrap(),
+            piece_placements: (&caps["piece_placements"]).parse().unwrap(),
             light_to_move: match &caps["to_move"] {
                 "w" => true,
                 _ => false, // Includes "b"
@@ -86,26 +86,37 @@ impl TryFrom<&str> for Fen {
     }
 }
 
-/// A list of [`Piece`](struct@crate::pieces::BoardPiece)'s with their corresponding [`PieceColor`]
-/// and [`Coordinate`].
-pub type FenPieceList = Vec<(Coordinate, PieceColor, PieceType)>;
+/// Contains information about a piece that is stored inside Fen. This is their [`Coordinate`],
+/// their [`PieceColor`] and their [`PieceType`].
+pub type FenPiece = (Coordinate, PieceColor, PieceType);
 
 /// Stores all pieces notated in the FEN.
 #[derive(Debug, PartialEq, Clone)]
 pub struct FenPiecePlacements {
-    pub pieces: FenPieceList,
+    pub pieces: Vec<FenPiece>,
 }
 
-impl TryFrom<&str> for FenPiecePlacements {
-    type Error = FenError;
+impl IntoIterator for FenPiecePlacements {
+    type Item = FenPiece;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    /// Just returns the [`IntoIter<FenPiece>`](struct@std::vec::IntoIter) of the pieces [`Vec`]
+    /// that is stored inside the [`FenPiecePlacements`] struct.
+    fn into_iter(self) -> Self::IntoIter {
+        self.pieces.into_iter()
+    }
+}
+
+impl FromStr for FenPiecePlacements {
+    type Err = FenError;
 
     /// Parses the FEN positions string into actual chess pieces with positions.
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        FEN_PIECE_PLACEMENT_REGEX.captures(value).ok_or(FenError::InvalidFenPiecePlacementString)?;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        FEN_PIECE_PLACEMENT_REGEX.captures(s).ok_or(FenError::InvalidFenPiecePlacementString)?;
 
-        let mut result: Vec<(Coordinate, PieceColor, PieceType)> = Vec::new();
+        let mut result: Vec<FenPiece> = Vec::new();
 
-        let rows: Vec<&str> = value.split("/").collect();
+        let rows: Vec<&str> = s.split("/").collect();
         for i in 0..rows.len() {
             let row = &rows[i];
             let chars: Vec<char> = row.chars().collect();
@@ -134,7 +145,7 @@ impl TryFrom<&str> for FenPiecePlacements {
 }
 
 /// Resolves a piece from coordinates and a FEN piece code.
-fn resolve_piece_code(x: u8, y: u8, code: char) -> (Coordinate, PieceColor, PieceType) {
+fn resolve_piece_code(x: u8, y: u8, code: char) -> FenPiece {
     let coordinates: Coordinate = (x, y).into();
 
     // By default dark but if its uppercase it's light
@@ -159,7 +170,7 @@ fn resolve_piece_code(x: u8, y: u8, code: char) -> (Coordinate, PieceColor, Piec
     (coordinates, color, piece_type)
 }
 
-/// Resolves a Fen Castling ability string and returns a BoardCastleState.
+/// Resolves a Fen Castling ability string and returns a [`BoardCastleState`].
 /// # Example
 /// Parsing the string `Qkq`:
 /// ```
@@ -274,10 +285,10 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_try_from_string() {
-            let fen = Fen::try_from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
+        fn test_from_str_string() {
+            let fen = Fen::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
             assert_eq!(Fen {
-                piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR".try_into().unwrap(),
+                piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR".parse().unwrap(),
                 light_to_move: true,
                 castles: BoardCastleState {
                     light_king_side: true,
@@ -296,7 +307,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_try_from_string_valid_input() {
+        fn test_from_str_valid_input() {
             let mut expected = FenPiecePlacements {
                 pieces: Vec::new(),
             };
@@ -336,18 +347,39 @@ mod tests {
             expected.pieces.push(((5, 0).into(), PieceColor::Light, PieceType::King));
             expected.pieces.push(((7, 0).into(), PieceColor::Light, PieceType::Rook));
 
-            assert_eq!(expected, "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R".try_into().unwrap());
+            assert_eq!(expected, "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R".parse().unwrap());
         }
 
         #[test]
-        fn test_try_from_string_invalid_input() {
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from(""));
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from("asdfjknasdfjkndasjknf"));
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from("0/0/0/0/0/0/0/0"));
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from("a/b/c/d/e"));
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::try_from("aaaaaa/AAAA4A/b6B"));
+        fn test_from_str_invalid_input() {
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str(""));
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str("asdfjknasdfjkndasjknf"));
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str("0/0/0/0/0/0/0/0"));
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str("a/b/c/d/e"));
+            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str("aaaaaa/AAAA4A/b6B"));
+        }
+
+        #[test]
+        fn test_into_iterator() {
+            let p1 = FenPiecePlacements::from_str("2k5/8/8/8/8/4R3/8/2K5").unwrap();
+            let p2 = p1.clone();
+
+            let mut p1_iter = p1.into_iter();
+            let mut p2_iter = p2.pieces.into_iter();
+
+            // They should return the same values
+            for _ in 0..=2 {
+                let p1_iter_next = p1_iter.next();
+                assert_eq!(p1_iter_next, p2_iter.next());
+                assert_ne!(None, p1_iter_next); // Implies p2_iter_next != None
+            }
+
+            assert_eq!(None, p1_iter.next());
+            assert_eq!(None, p2_iter.next());
+            assert_eq!(p1_iter.next(), p2_iter.next());
         }
     }
+
     #[test]
     fn test_resolve_board_castle_state(){
         let castle_state = resolve_board_castle_state(String::from("KQkq"));
