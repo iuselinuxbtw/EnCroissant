@@ -69,7 +69,6 @@ fn square_check(square:&Coordinate, team_color: &PieceColor) -> Option<Coordinat
     // We need to check if the square is occupied to avoid calculating non-reachable coordinates
     let square_occupied = piece_is_on_square(*square);
     if !square_occupied.is_none() {
-        // TODO: Error handling (In reality this unwrap should never fail but we all know that that's not how it works).
         // Check whether it is our own piece.
         if &square_occupied.unwrap().color == team_color {
             return None;
