@@ -11,6 +11,7 @@ pub mod rook;
 pub mod bishop;
 pub mod knight;
 pub mod pawn;
+pub mod move_gen;
 
 /// A `Piece` represents a chess figure on the `Board`.
 #[clonable]
