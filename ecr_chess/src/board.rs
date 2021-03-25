@@ -24,6 +24,13 @@ pub struct BoardCastleState {
     pub dark_queen_side: bool,
 }
 
+impl BoardCastleState {
+    /// Returns if any castle action is still allowed.
+    pub fn is_any_possible(&self) -> bool {
+        self.light_king_side || self.light_queen_side || self.dark_king_side || self.dark_queen_side
+    }
+}
+
 /// A `Board` contains the current game of chess.
 #[derive(Debug, Clone)]
 pub struct Board {
@@ -132,6 +139,11 @@ impl Board {
     /// Returns the currently possible en passant target square.
     pub fn get_en_passant_target(&self) -> Option<Coordinate> {
         self.en_passant_target
+    }
+
+    /// Returns all pieces that are on the [`Board`].
+    pub fn get_pieces(&self) -> &Vec<SquareInner> {
+        &self.pieces
     }
 }
 
@@ -287,6 +299,7 @@ mod tests {
         use crate::pieces::PieceType;
 
         use super::*;
+        use std::str::FromStr;
 
         #[test]
         fn test_empty() {
@@ -451,6 +464,72 @@ mod tests {
                 dark_king_side: false,
                 dark_queen_side: false,
             }, board.castle_state);
+        }
+
+        #[test]
+        fn test_get_pieces() {
+            let b = Board::default();
+            assert_eq!(32, b.pieces.len());
+            assert_eq!(32, Board::default().get_pieces().len());
+
+            let mut b = Board::from(Fen::from_str("2k5/8/8/8/8/4R3/8/2K5 b - - 3 6").unwrap());
+            assert_eq!(3, b.pieces.len());
+            assert_eq!(3, b.get_pieces().len());
+
+            b.add_piece(BoardPiece::new_from_type(PieceType::Pawn, (1, 1).into(), PieceColor::Light));
+            assert_eq!(4, b.pieces.len());
+            assert_eq!(4, b.get_pieces().len());
+
+        }
+    }
+
+    mod board_castle_state {
+        use super::*;
+
+        #[test]
+        fn test_is_any_possible() {
+            assert!(!BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: true,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: true,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: true,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: false,
+                dark_king_side: true,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: true,
+                dark_queen_side: true,
+            }.is_any_possible());
         }
     }
 }

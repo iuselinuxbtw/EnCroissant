@@ -8,9 +8,11 @@ use regex::Regex;
 use thiserror::Error;
 
 use crate::coordinate::{char_to_x_coordinate, Coordinate};
-use crate::pieces::{PieceColor, PieceType};
-use crate::board::BoardCastleState;
+use crate::pieces::{PieceColor, PieceType, BoardPiece};
+use crate::board::{BoardCastleState, Board};
 use std::str::FromStr;
+use std::ops::Deref;
+use std::fmt::{self, Display};
 
 lazy_static! {
     /// This is the regex pattern that we use to split the string. What may be a bit confusing is
@@ -53,14 +55,54 @@ pub struct Fen {
     pub move_number: usize,
 }
 
+impl Display for Fen {
+    /// Converts the [`Fen`] struct into the FEN string itself.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f, "{} {} {} {} {} {}",
+            self.piece_placements.to_string(),
+            match self.light_to_move {
+                true => "w",
+                false => "b",
+            },
+            {
+                if self.castles.is_any_possible() {
+                    let mut s = String::new();
+                    if self.castles.light_king_side {
+                        s.push('K');
+                    }
+                    if self.castles.light_queen_side {
+                        s.push('Q');
+                    }
+                    if self.castles.dark_king_side {
+                        s.push('k');
+                    }
+                    if self.castles.dark_queen_side {
+                        s.push('q');
+                    }
+                    s
+                } else {
+                    String::from("-")
+                }
+            },
+            match self.en_passant {
+                Some(c) => c.to_string(),
+                None => String::from("-"),
+            },
+            self.half_moves,
+            self.move_number,
+        )
+    }
+}
+
 impl FromStr for Fen {
     type Err = FenError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // First we split the string with regex
+        // First we split the string using regex
         let caps = match FEN_REGEX.captures(s) {
             None => Err(FenError::InvalidFenString),
-            Some(v) => Ok(v)
+            Some(v) => Ok(v),
         }?;
         Ok(Fen {
             // Unwrapping is safe here since the FEN string got already validated so this does not
@@ -74,10 +116,11 @@ impl FromStr for Fen {
             en_passant: match &caps["en_passant"] {
                 "-" => None,
                 v => Some({
-                    // If there are en_passant options in the string, then we just save those as a
-                    // string (for now).
                     let coordinates: Vec<char> = v.chars().collect();
-                    (char_to_x_coordinate(coordinates[0]), coordinates[1] as u8).into()
+                    // Unwrapping is safe here since we checked the format beforehand using the
+                    // regex. We have to subtract 1 from the y coordinate because we start to count
+                    // at y coordinate 0.
+                    (char_to_x_coordinate(coordinates[0]), coordinates[1].to_string().parse::<u8>().unwrap() - 1).into()
                 }),
             },
             half_moves: (&caps["half_moves"]).parse()?,
@@ -86,9 +129,37 @@ impl FromStr for Fen {
     }
 }
 
+impl From<Board> for Fen {
+    fn from(board: Board) -> Self {
+        let mut fen = Fen {
+            piece_placements: FenPiecePlacements {
+                pieces: Vec::new(),
+            },
+            light_to_move: board.get_light_to_move(),
+            castles: board.get_castle_state().clone(),
+            en_passant: board.get_en_passant_target(),
+            half_moves: board.get_half_move_amount(),
+            move_number: board.get_move_number(),
+        };
+
+        // Add all pieces
+        for p in board.get_pieces() {
+            fen.piece_placements.pieces.push((p.borrow().deref()).clone().into());
+        }
+
+        fen
+    }
+}
+
 /// Contains information about a piece that is stored inside Fen. This is their [`Coordinate`],
 /// their [`PieceColor`] and their [`PieceType`].
 pub type FenPiece = (Coordinate, PieceColor, PieceType);
+
+impl From<BoardPiece> for FenPiece {
+    fn from(piece: BoardPiece) -> Self {
+        (piece.get_coordinate(), piece.get_color(), piece.get_piece().get_type())
+    }
+}
 
 /// Stores all pieces notated in the FEN.
 #[derive(Debug, PartialEq, Clone)]
@@ -141,6 +212,75 @@ impl FromStr for FenPiecePlacements {
         Ok(FenPiecePlacements {
             pieces: result,
         })
+    }
+}
+
+impl Display for FenPiecePlacements {
+    /// Turns the list of [`FenPiece`]s into the FEN format.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut pieces = self.pieces.clone();
+        // Sorting by coordinate, so that the first coordinate in the Vec is the lowest one
+        // one and two can be compared, therefore unwrapping is safe here
+        pieces.sort_by(|one, two| two.0.partial_cmp(&one.0).unwrap());
+
+        // Convert the piece list into a two-dimensional array of pieces for ease of use when
+        // generating the FEN.
+        let mut pieces_array = [[None; 8]; 8];
+        for p in pieces {
+            pieces_array[p.0.get_y() as usize][p.0.get_x() as usize] = Some(p);
+        }
+
+        let mut s = String::new();
+        // Loop over all rows
+        for y in 0..=7 {
+            // Holds the last x coordinate on which a piece was parsed
+            let mut last_x: i8 = -1;
+            // Loop over all columns
+            for x in 0 as usize..=7 {
+                // Only do something if there actually is a piece on the square
+                if let Some(v) = pieces_array[y][x] {
+                    if x as i8 - last_x > 1 {
+                        s.push_str(&(x as i8 - last_x - 1).to_string());
+                    }
+
+                    // Create the piece code according to the type and color of it
+                    // TODO: Make a own function for this
+                    let mut piece_code = match v.2 {
+                        PieceType::Pawn => 'p',
+                        PieceType::Knight => 'n',
+                        PieceType::Bishop => 'b',
+                        PieceType::Rook => 'r',
+                        PieceType::Queen => 'q',
+                        PieceType::King => 'k',
+                    };
+                    if v.1 == PieceColor::Light {
+                        piece_code = piece_code.to_ascii_uppercase();
+                    }
+                    s.push(piece_code);
+
+                    last_x = x as i8;
+                }
+            }
+
+            // When the last x coordinate that was parsed is not equal to 7 (the maximum x
+            // coordinate) we have to write the difference as a number for the empty squares between
+            // the last x coordinate and the max x coordinate (7) into the FEN piece placement group
+            if last_x < 7 {
+                s.push_str(&(7 - last_x).to_string())
+            }
+
+            // We need to append a / to end a row but only if it's not the last one
+            if y != 7 {
+                s.push('/');
+            }
+        }
+
+        // Since we sorted the coordinates from the lowest to the highest, we have to invert the
+        // groups that were produced because the FEN starts from row 8 and not from row 1.
+        // Afterwards, join them again by using a / as a separator.
+        s = itertools::join(s.split('/').rev(), "/");
+
+        write!(f, "{}", s)
     }
 }
 
@@ -285,8 +425,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_from_str_string() {
-            let fen = Fen::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
+        fn test_from_str() {
             assert_eq!(Fen {
                 piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR".parse().unwrap(),
                 light_to_move: true,
@@ -294,20 +433,70 @@ mod tests {
                     light_king_side: true,
                     light_queen_side: true,
                     dark_king_side: true,
-                    dark_queen_side: true
+                    dark_queen_side: true,
                 },
                 en_passant: None,
                 half_moves: 0,
                 move_number: 1,
-            }, fen);
+            }, Fen::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap());
+
+            // Regression test: En passant coordinates weren't parsed the right way
+            assert_eq!(Fen {
+                piece_placements: "8/8/8/8/8/8/8/8".parse().unwrap(),
+                light_to_move: false,
+                castles: BoardCastleState {
+                    light_king_side: true,
+                    light_queen_side: false,
+                    dark_king_side: false,
+                    dark_queen_side: true,
+                },
+                en_passant: Some((4, 5).into()),
+                half_moves: 10,
+                move_number: 37,
+            }, Fen::from_str("8/8/8/8/8/8/8/8 b Kq e6 10 37").unwrap());
+        }
+
+        #[test]
+        fn test_to_string() {
+            assert_eq!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", Fen::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap().to_string());
+            assert_eq!("rnbqkbnr/ppp2ppp/3p4/3Pp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 3", Fen::from_str("rnbqkbnr/ppp2ppp/3p4/3Pp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 3").unwrap().to_string());
+            assert_eq!("rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2", Fen::from_str("rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2").unwrap().to_string());
+            assert_eq!("4k3/8/8/8/8/8/4P3/4K3 w - - 5 39", Fen::from_str("4k3/8/8/8/8/8/4P3/4K3 w - - 5 39").unwrap().to_string());
+        }
+
+        #[test]
+        fn test_from_board() {
+            let mut b = Board::empty();
+            b.add_piece(BoardPiece::new_from_type(PieceType::Pawn, (5, 3).into(), PieceColor::Light));
+            b.add_piece(BoardPiece::new_from_type(PieceType::King, (4, 0).into(), PieceColor::Light));
+            b.add_piece(BoardPiece::new_from_type(PieceType::King, (4, 7).into(), PieceColor::Dark));
+
+            assert_eq!(Fen {
+                piece_placements: FenPiecePlacements {
+                    pieces: vec![
+                        ((5, 3).into(), PieceColor::Light, PieceType::Pawn).into(),
+                        ((4, 0).into(), PieceColor::Light, PieceType::King).into(),
+                        ((4, 7).into(), PieceColor::Dark, PieceType::King).into(),
+                    ],
+                },
+                light_to_move: true,
+                castles: BoardCastleState {
+                    light_king_side: true,
+                    light_queen_side: true,
+                    dark_king_side: true,
+                    dark_queen_side: true,
+                },
+                en_passant: None,
+                half_moves: 0,
+                move_number: 1,
+            }, b.into());
         }
     }
 
     mod fen_piece_placements {
         use super::*;
 
-        #[test]
-        fn test_from_str_valid_input() {
+        fn get_fen_piece_placements_gotc() -> FenPiecePlacements {
             let mut expected = FenPiecePlacements {
                 pieces: Vec::new(),
             };
@@ -347,7 +536,12 @@ mod tests {
             expected.pieces.push(((5, 0).into(), PieceColor::Light, PieceType::King));
             expected.pieces.push(((7, 0).into(), PieceColor::Light, PieceType::Rook));
 
-            assert_eq!(expected, "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R".parse().unwrap());
+            expected
+        }
+
+        #[test]
+        fn test_from_str_valid_input() {
+            assert_eq!(get_fen_piece_placements_gotc(), "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R".parse().unwrap());
         }
 
         #[test]
@@ -377,6 +571,29 @@ mod tests {
             assert_eq!(None, p1_iter.next());
             assert_eq!(None, p2_iter.next());
             assert_eq!(p1_iter.next(), p2_iter.next());
+        }
+
+        #[test]
+        fn test_to_string() {
+            assert_eq!(String::from("2k5/8/8/8/8/4R3/8/2K5"), FenPiecePlacements::from_str("2k5/8/8/8/8/4R3/8/2K5").unwrap().to_string());
+            assert_eq!(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"), FenPiecePlacements::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR").unwrap().to_string());
+            assert_eq!(String::from("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R"), FenPiecePlacements::from_str("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R").unwrap().to_string());
+            assert_eq!(String::from("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R"), FenPiecePlacements::from_str("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R").unwrap().to_string());
+            assert_eq!(String::from("5k2/ppp5/4P3/3R3p/6P1/1K2Nr2/PP3P2/8"), FenPiecePlacements::from_str("5k2/ppp5/4P3/3R3p/6P1/1K2Nr2/PP3P2/8").unwrap().to_string());
+            assert_eq!(String::from("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R"), get_fen_piece_placements_gotc().to_string());
+        }
+    }
+
+    mod fen_piece {
+        use super::*;
+
+        #[test]
+        fn test_from_board_piece() {
+            let p = BoardPiece::new_from_type(PieceType::Queen, (2, 1).into(), PieceColor::Dark);
+            assert_eq!((Coordinate::new(2, 1), PieceColor::Dark, PieceType::Queen), p.into());
+
+            let p = BoardPiece::new_from_type(PieceType::Rook, (7, 7).into(), PieceColor::Light);
+            assert_eq!((Coordinate::new(7, 7), PieceColor::Light, PieceType::Rook), p.into());
         }
     }
 
