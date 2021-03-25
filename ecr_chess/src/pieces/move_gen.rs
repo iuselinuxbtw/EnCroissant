@@ -19,8 +19,9 @@ enum MoveType {
     Castle,
 }
 
-/// Returns the possible linear moves of a given coordinate as a vector of coordinates and also
-/// checks whether there are pieces in the way.
+/// Returns the possible linear moves of a piece with the given coordinates as a vector of
+/// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
+/// this way is a rook.
 fn linear_moves(start: Coordinate) -> Vec<Coordinate> {
     // First we initialize a new vector, which we later return
     let mut result: Vec<Coordinate> = Vec::new();
@@ -44,18 +45,26 @@ fn linear_moves(start: Coordinate) -> Vec<Coordinate> {
 
     // Iterate through the possible x coordinates.
     for x in potential_x{
-        let square:Coordinate = (x as u8,*&from_y as u8).into();
-        let square_checked = square_check(&square, &team_color);
-        if square_checked.is_none(){
+        let square_checked = coordinate_check(&x, &(from_y as usize), &team_color);
+        if square_checked.1{
+            if square_checked.0.is_none() {
+                break;
+            }
+            let square = square_checked.unwrap();
+            &result.push(square);
             break;
         }
         &result.push(square);
     }
     // Do the same for y coordinates.
     for y in potential_y{
-        let square:Coordinate = (*&from_x as u8,y as u8).into();
-        let square_checked = square_check(&square, &team_color);
-        if square_checked.is_none(){
+        let square_checked = coordinate_check(&(from_x as usize), &y, &team_color);
+        if square_checked.1{
+            if square_checked.0.is_none() {
+                break;
+            }
+            let square = square_checked.unwrap();
+            &result.push(square);
             break;
         }
         &result.push(square);
@@ -63,21 +72,51 @@ fn linear_moves(start: Coordinate) -> Vec<Coordinate> {
     return result;
 }
 
-/// This function checks if a square is occupied and if it is, it checks whether it can be captured
-/// or if it is the teams own piece, in which case it returns None.
-fn square_check(square:&Coordinate, team_color: &PieceColor) -> Option<Coordinate> {
+/// Returns the possible diagonal moves of a piece with the given coordinates as a vector of
+/// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
+/// this way is a bishop.
+fn diagonal_moves(start: Coordinate) -> Vec<Coordinate> {
+    // Create a vector that will be returned at the end.
+    let mut result:Vec<Coordinate> = Vec::new();
+
+    // Bind the starting coordinates to variables
+    let from_x = start.get_x();
+    let from_y = start.get_y();
+
+    
+    // TODO: We need the actual team color here.
+    let team_color = PieceColor::Light;
+    // We need to generate all coordinates in the diagonal rows the Piece is in. Then we remove the original coordinates from the result vector.
+
+
+    // Retain only the results, which are not the original Coordinates.
+    result.retain(|&x| x!= start);
+    result
+}
+
+/// Calculates a square and then just calls square_check()
+fn coordinate_check(x:&usize, y:&usize , team_color: &PieceColor) -> (Option<Coordinate>, bool) {
+    let square = (*x as u8,*y as u8).into();
+    square_check(&square, team_color)
+}
+
+/// Checks if a square is occupied and if it is checks whether it can be captured
+/// or if it is the teams own piece, in which case it returns None. The bool returns true if the
+/// square is occupied.
+fn square_check(square:&Coordinate, team_color: &PieceColor) -> (Option<Coordinate>, bool) {
     // We need to check if the square is occupied to avoid calculating non-reachable coordinates
     let square_occupied = piece_is_on_square(*square);
     if !square_occupied.is_none() {
         // Check whether it is our own piece.
         if &square_occupied.unwrap().color == team_color {
-            return None;
+            return (None, true);
         }
+        return (Some(*square), true)
     }
-    Some(*square)
+    (Some(*square), false)
 }
 
-// Returns the Piece a square is occupied by.
+// Returns the Piece a square is occupied by. If the square is not occupied it returns None
 fn piece_is_on_square(square: Coordinate) -> Option<BoardPiece> {
     // TODO: Get access to the board here.
     return None;
