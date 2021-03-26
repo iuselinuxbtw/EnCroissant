@@ -75,8 +75,9 @@ impl Display for Coordinate {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cmp::Ordering;
+
+    use super::*;
 
     fn get_coordinate() -> Coordinate {
         Coordinate {

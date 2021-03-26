@@ -1,18 +1,18 @@
 //! Contains an implementation for the Forsyth-Edwards Notation (FEN). More information about it can
 //! be found in [chess programming wiki](https://www.chessprogramming.org/Forsyth-Edwards_Notation).
 
+use std::fmt::{self, Display};
 use std::num::ParseIntError;
+use std::ops::Deref;
+use std::str::FromStr;
 
 use lazy_static::lazy_static;
 use regex::Regex;
 use thiserror::Error;
 
+use crate::board::{Board, BoardCastleState};
 use crate::coordinate::{char_to_x_coordinate, Coordinate};
-use crate::pieces::{PieceColor, PieceType, BoardPiece};
-use crate::board::{BoardCastleState, Board};
-use std::str::FromStr;
-use std::ops::Deref;
-use std::fmt::{self, Display};
+use crate::pieces::{BoardPiece, PieceColor, PieceType};
 
 lazy_static! {
     /// This is the regex pattern that we use to split the string. What may be a bit confusing is
@@ -410,11 +410,11 @@ mod tests {
         let piece2 = resolve_piece_code(5, 7, 'P');
         assert_eq!(((5, 7).into(), PieceColor::Light, PieceType::Pawn), piece2);
 
-        let piece3 = resolve_piece_code(7,0, 'n');
-        assert_eq!(((7,0).into(), PieceColor::Dark, PieceType::Knight), piece3);
+        let piece3 = resolve_piece_code(7, 0, 'n');
+        assert_eq!(((7, 0).into(), PieceColor::Dark, PieceType::Knight), piece3);
 
-        let piece4 = resolve_piece_code(2,5, 'B');
-        assert_eq!(((2,5).into(), PieceColor::Light, PieceType::Bishop), piece4);
+        let piece4 = resolve_piece_code(2, 5, 'B');
+        assert_eq!(((2, 5).into(), PieceColor::Light, PieceType::Bishop), piece4);
     }
 
     mod fen {
@@ -594,40 +594,40 @@ mod tests {
     }
 
     #[test]
-    fn test_resolve_board_castle_state(){
+    fn test_resolve_board_castle_state() {
         let castle_state = resolve_board_castle_state(String::from("KQkq"));
-        let expected = BoardCastleState{
+        let expected = BoardCastleState {
             light_king_side: true,
             light_queen_side: true,
             dark_king_side: true,
-            dark_queen_side: true
+            dark_queen_side: true,
         };
         assert_eq!(castle_state, expected);
 
         let castle_state2 = resolve_board_castle_state(String::from("Kq"));
-        let expected2 = BoardCastleState{
+        let expected2 = BoardCastleState {
             light_king_side: true,
             light_queen_side: false,
             dark_king_side: false,
-            dark_queen_side: true
+            dark_queen_side: true,
         };
         assert_eq!(castle_state2, expected2);
 
         let castle_state3 = resolve_board_castle_state(String::from("Qq"));
-        let expected3 = BoardCastleState{
+        let expected3 = BoardCastleState {
             light_king_side: false,
             light_queen_side: true,
             dark_king_side: false,
-            dark_queen_side: true
+            dark_queen_side: true,
         };
         assert_eq!(castle_state3, expected3);
 
         let castle_state4 = resolve_board_castle_state(String::from("-"));
-        let expected4 = BoardCastleState{
+        let expected4 = BoardCastleState {
             light_king_side: false,
             light_queen_side: false,
             dark_king_side: false,
-            dark_queen_side: false
+            dark_queen_side: false,
         };
         assert_eq!(castle_state4, expected4);
     }

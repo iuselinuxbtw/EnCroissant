@@ -2,10 +2,10 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
+use crate::formats::fen::Fen;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::new_rc_refcell;
-use crate::formats::fen::Fen;
 
 /// The inner content of a square. Holds a reference-counted pointer to a `RefCell` that holds a
 /// `BoardPiece`.
@@ -295,11 +295,11 @@ mod tests {
 
     mod board {
         use std::ops::Deref;
+        use std::str::FromStr;
 
         use crate::pieces::PieceType;
 
         use super::*;
-        use std::str::FromStr;
 
         #[test]
         fn test_empty() {
