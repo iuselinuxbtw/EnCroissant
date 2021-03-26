@@ -108,10 +108,7 @@ impl FromStr for Fen {
             // Unwrapping is safe here since the FEN string got already validated so this does not
             // return an error
             piece_placements: (&caps["piece_placements"]).parse().unwrap(),
-            light_to_move: match &caps["to_move"] {
-                "w" => true,
-                _ => false, // Includes "b"
-            },
+            light_to_move: matches!(&caps["to_move"], "w"),
             castles: resolve_board_castle_state(String::from(&caps["castles"])),
             en_passant: match &caps["en_passant"] {
                 "-" => None,
@@ -136,7 +133,7 @@ impl From<Board> for Fen {
                 pieces: Vec::new(),
             },
             light_to_move: board.get_light_to_move(),
-            castles: board.get_castle_state().clone(),
+            castles: *board.get_castle_state(), // Copy is implemented for BoardCastleState
             en_passant: board.get_en_passant_target(),
             half_moves: board.get_half_move_amount(),
             move_number: board.get_move_number(),
@@ -187,9 +184,8 @@ impl FromStr for FenPiecePlacements {
 
         let mut result: Vec<FenPiece> = Vec::new();
 
-        let rows: Vec<&str> = s.split("/").collect();
-        for i in 0..rows.len() {
-            let row = &rows[i];
+        let rows: Vec<&str> = s.split('/').collect();
+        for (i, row) in rows.iter().enumerate() {
             let chars: Vec<char> = row.chars().collect();
 
             let mut x: u8 = 0;
@@ -232,11 +228,11 @@ impl Display for FenPiecePlacements {
 
         let mut s = String::new();
         // Loop over all rows
-        for y in 0..=7 {
+        for (y, _) in pieces_array.iter().enumerate() {
             // Holds the last x coordinate on which a piece was parsed
             let mut last_x: i8 = -1;
             // Loop over all columns
-            for x in 0 as usize..=7 {
+            for x in 0_usize..=7 {
                 // Only do something if there actually is a piece on the square
                 if let Some(v) = pieces_array[y][x] {
                     if x as i8 - last_x > 1 {
@@ -332,16 +328,16 @@ pub fn resolve_board_castle_state(state: String) -> BoardCastleState {
         dark_queen_side: false,
     };
 
-    if state.contains("q") {
+    if state.contains('q') {
         bcs.dark_queen_side = true;
     }
-    if state.contains("k") {
+    if state.contains('k') {
         bcs.dark_king_side = true;
     }
-    if state.contains("K") {
+    if state.contains('K') {
         bcs.light_king_side = true;
     }
-    if state.contains("Q") {
+    if state.contains('Q') {
         bcs.light_queen_side = true;
     }
 
