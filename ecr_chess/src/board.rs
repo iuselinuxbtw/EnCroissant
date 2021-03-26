@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
+use crate::formats::fen::Fen;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::new_rc_refcell;
@@ -32,6 +33,13 @@ impl Default for BoardCastleState {
             dark_king_side: true,
             dark_queen_side: true,
         }
+    }
+}
+
+impl BoardCastleState {
+    /// Returns if any castle action is still allowed.
+    pub fn is_any_possible(&self) -> bool {
+        self.light_king_side || self.light_queen_side || self.dark_king_side || self.dark_queen_side
     }
 }
 
@@ -139,6 +147,11 @@ impl Board {
     pub fn get_en_passant_target(&self) -> Option<Coordinate> {
         self.en_passant_target
     }
+
+    /// Returns all pieces that are on the [`Board`].
+    pub fn get_pieces(&self) -> &Vec<SquareInner> {
+        &self.pieces
+    }
 }
 
 impl Default for Board {
@@ -159,7 +172,7 @@ impl Default for Board {
             // Dark pawns
             board.add_piece(
                 BoardPiece::new_from_type(
-                    PieceType::Pawn, (i as u8, 1).into(), PieceColor::Light,
+                    PieceType::Pawn, (i as u8, 6).into(), PieceColor::Dark,
                 )
             );
         }
@@ -263,12 +276,33 @@ impl Default for Board {
     }
 }
 
+impl From<Fen> for Board {
+    fn from(f: Fen) -> Self {
+        let mut board = Board::empty();
+
+        // Set the attributes of the board state
+        board.move_number = f.move_number;
+        board.half_move_amount = f.half_moves;
+        board.en_passant_target = f.en_passant;
+        board.castle_state = f.castles;
+        board.light_to_move = f.light_to_move;
+
+        // Add all pieces to the board
+        for piece in f.piece_placements {
+            board.add_piece(piece.into());
+        }
+
+        board
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     mod board {
         use std::ops::Deref;
+        use std::str::FromStr;
 
         use crate::pieces::PieceType;
 
@@ -407,10 +441,109 @@ mod tests {
             b.en_passant_target = Some((3, 4).into());
             assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
         }
+
+        #[test]
+        fn test_from_fen() {
+            let fen: Fen = "2k5/8/8/8/8/4R3/8/2K5 b - - 3 6".parse().unwrap();
+            let board: Board = fen.into();
+
+            assert_eq!(3, board.pieces.len());
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::King, (2, 0).into(), PieceColor::Light),
+                board.get_at((2, 0).into()).unwrap().borrow().deref(),
+            );
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::Rook, (4, 2).into(), PieceColor::Light),
+                board.get_at((4, 2).into()).unwrap().borrow().deref(),
+            );
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::King, (2, 7).into(), PieceColor::Dark),
+                board.get_at((2, 7).into()).unwrap().borrow().deref(),
+            );
+
+            assert_eq!(false, board.light_to_move);
+            assert_eq!(None, board.en_passant_target);
+            assert_eq!(3, board.half_move_amount);
+            assert_eq!(6, board.move_number);
+            assert_eq!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }, board.castle_state);
+        }
+
+        #[test]
+        fn test_get_pieces() {
+            let b = Board::default();
+            assert_eq!(32, b.pieces.len());
+            assert_eq!(32, Board::default().get_pieces().len());
+
+            let mut b = Board::from(Fen::from_str("2k5/8/8/8/8/4R3/8/2K5 b - - 3 6").unwrap());
+            assert_eq!(3, b.pieces.len());
+            assert_eq!(3, b.get_pieces().len());
+
+            b.add_piece(BoardPiece::new_from_type(PieceType::Pawn, (1, 1).into(), PieceColor::Light));
+            assert_eq!(4, b.pieces.len());
+            assert_eq!(4, b.get_pieces().len());
+        }
+
+        #[test]
+        fn test_default() {
+            let b = Board::default();
+            let f: Fen = b.into();
+            assert_eq!(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), f.to_string());
+        }
     }
 
     mod board_castle_state {
         use super::*;
+
+        #[test]
+        fn test_is_any_possible() {
+            assert!(!BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: true,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: true,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: true,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: false,
+                dark_king_side: true,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: true,
+                dark_queen_side: true,
+            }.is_any_possible());
+        }
 
         #[test]
         fn test_default() {
