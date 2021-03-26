@@ -165,7 +165,7 @@ impl Default for Board {
             // Dark pawns
             board.add_piece(
                 BoardPiece::new_from_type(
-                    PieceType::Pawn, (i as u8, 1).into(), PieceColor::Light,
+                    PieceType::Pawn, (i as u8, 6).into(), PieceColor::Dark,
                 )
             );
         }
@@ -479,7 +479,13 @@ mod tests {
             b.add_piece(BoardPiece::new_from_type(PieceType::Pawn, (1, 1).into(), PieceColor::Light));
             assert_eq!(4, b.pieces.len());
             assert_eq!(4, b.get_pieces().len());
+        }
 
+        #[test]
+        fn test_default() {
+            let b = Board::default();
+            let f: Fen = b.into();
+            assert_eq!(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), f.to_string());
         }
     }
 
