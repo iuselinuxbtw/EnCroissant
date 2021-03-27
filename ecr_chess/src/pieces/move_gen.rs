@@ -1,5 +1,5 @@
 use crate::coordinate::Coordinate;
-use crate::pieces::{PieceType, BoardPiece, PieceColor};
+use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use std::convert::TryFrom;
 
 /// Defines a move.
@@ -43,7 +43,6 @@ macro_rules! check_square{
     }
 }
 
-
 /// Returns the possible linear moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
 /// this way is a rook.
@@ -53,11 +52,11 @@ fn linear_moves(start: Coordinate) -> Vec<Coordinate> {
 
     // Bind the given coordinates to variables because we obviously can
     let from_x = start.get_x() as usize;
-    let from_y = start.get_y()  as usize;
+    let from_y = start.get_y() as usize;
 
     // Initialize two vectors to through the board coordinates.
-    let mut potential_x:Vec<usize> = vec![0,1,2,3,4,5,6,7];
-    let mut potential_y:Vec<usize> = potential_x.clone();
+    let mut potential_x: Vec<usize> = vec![0, 1, 2, 3, 4, 5, 6, 7];
+    let mut potential_y: Vec<usize> = potential_x.clone();
 
     // We need to remove the given coordinates from the vector, so that we can't output the start
     // coordinates as move coordinates.
@@ -69,35 +68,54 @@ fn linear_moves(start: Coordinate) -> Vec<Coordinate> {
     let team_color = PieceColor::Light;
 
     // Iterate through the possible x coordinates.
-    for x in potential_x{
+    for x in potential_x {
         // Add the square if we can move there.
         check_square!(&x, &from_y, &team_color, result);
     }
     // Do the same for y coordinates.
-    for y in potential_y{
+    for y in potential_y {
         // Add the square if we can move there.
         check_square!(&from_x, &y, &team_color, result);
     }
-    return result;
+    result
 }
 
 /// Returns the possible diagonal moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
 /// this way is a bishop.
-fn diagonal_moves(start: &Coordinate , team_color: &PieceColor) -> Vec<Coordinate> {
+fn diagonal_moves(start: &Coordinate, team_color: &PieceColor) -> Vec<Coordinate> {
     // Create a vector that will be returned at the end.
-    let mut result:Vec<Coordinate> = Vec::new();
+    let mut result: Vec<Coordinate> = Vec::new();
 
     // Bind the starting coordinates to variables
     let from_x = start.get_x() as usize;
     let from_y = start.get_y() as usize;
 
-
     // Explore the moves in all directions.
-    result.append(&mut explore_diagonal_moves(Directions::NW, &from_x, &from_y, team_color));
-    result.append(&mut explore_diagonal_moves(Directions::NE, &from_x, &from_y, team_color));
-    result.append(&mut explore_diagonal_moves(Directions::SE, &from_x, &from_y, team_color));
-    result.append(&mut explore_diagonal_moves(Directions::SW, &from_x, &from_y, team_color));
+    result.append(&mut explore_diagonal_moves(
+        Directions::NW,
+        &from_x,
+        &from_y,
+        team_color,
+    ));
+    result.append(&mut explore_diagonal_moves(
+        Directions::NE,
+        &from_x,
+        &from_y,
+        team_color,
+    ));
+    result.append(&mut explore_diagonal_moves(
+        Directions::SE,
+        &from_x,
+        &from_y,
+        team_color,
+    ));
+    result.append(&mut explore_diagonal_moves(
+        Directions::SW,
+        &from_x,
+        &from_y,
+        team_color,
+    ));
 
     result
 }
@@ -109,50 +127,75 @@ enum Directions {
     NW, // upper-left
     NE, // upper-right
     SE, // down-right
-    SW,  // down-left
+    SW, // down-left
 }
 
 /// This function returns all moves into a particular direction
-fn explore_diagonal_moves(direction: Directions, from_x: &usize, from_y:&usize, team_color: &PieceColor) -> Vec<Coordinate>{
-    let mut x = from_x.clone() as i32;
-    let mut y = from_y.clone() as i32;
+fn explore_diagonal_moves(
+    direction: Directions,
+    from_x: &usize,
+    from_y: &usize,
+    team_color: &PieceColor,
+) -> Vec<Coordinate> {
+    let mut x = *from_x as i32;
+    let mut y = *from_y as i32;
     let mut result = Vec::new();
     match direction {
         // upper-left
         Directions::NW => {
-            while x>0 && y<7{
+            while x > 0 && y < 7 {
                 // First we modify the coordinates so we can calculate the new possible coordinates
-                x-=1;
-                y+=1;
+                x -= 1;
+                y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
-                check_square!(&usize::try_from(x).unwrap(),&usize::try_from(y).unwrap(), &team_color, result);
+                check_square!(
+                    &usize::try_from(x).unwrap(),
+                    &usize::try_from(y).unwrap(),
+                    &team_color,
+                    result
+                );
             }
         }
         // upper-right
         Directions::NE => {
-            while x<7 && y<7 {
-                x+=1;
-                y+=1;
+            while x < 7 && y < 7 {
+                x += 1;
+                y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
-                check_square!(&usize::try_from(x).unwrap(),&usize::try_from(y).unwrap(), &team_color, result);
+                check_square!(
+                    &usize::try_from(x).unwrap(),
+                    &usize::try_from(y).unwrap(),
+                    &team_color,
+                    result
+                );
             }
         }
         // down-right
         Directions::SE => {
-            while x<7 && y>0{
-                x+=1;
-                y-=1;
+            while x < 7 && y > 0 {
+                x += 1;
+                y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
-                check_square!(&usize::try_from(x).unwrap(),&usize::try_from(y).unwrap(), &team_color, result);
+                check_square!(
+                    &usize::try_from(x).unwrap(),
+                    &usize::try_from(y).unwrap(),
+                    &team_color,
+                    result
+                );
             }
         }
         // down-left
         Directions::SW => {
-            while x>0 && y>0{
-                x-=1;
-                y-=1;
+            while x > 0 && y > 0 {
+                x -= 1;
+                y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
-                check_square!(&usize::try_from(x).unwrap(),&usize::try_from(y).unwrap(), &team_color, result);
+                check_square!(
+                    &usize::try_from(x).unwrap(),
+                    &usize::try_from(y).unwrap(),
+                    &team_color,
+                    result
+                );
             }
         }
     }
@@ -160,76 +203,97 @@ fn explore_diagonal_moves(direction: Directions, from_x: &usize, from_y:&usize, 
 }
 
 /// Calculates a square and then just calls square_check()
-fn coordinate_check(x:&usize, y:&usize , team_color: &PieceColor) -> (Option<Coordinate>, bool) {
-    let square = (*x as u8,*y as u8).into();
+fn coordinate_check(x: &usize, y: &usize, team_color: &PieceColor) -> (Option<Coordinate>, bool) {
+    let square = (*x as u8, *y as u8).into();
     square_check(&square, team_color)
 }
 
 /// Checks if a square is occupied and if it is checks whether it can be captured
 /// or if it is the teams own piece, in which case it returns None. The bool returns true if the
 /// square is occupied.
-fn square_check(square:&Coordinate, team_color: &PieceColor) -> (Option<Coordinate>, bool) {
+fn square_check(square: &Coordinate, team_color: &PieceColor) -> (Option<Coordinate>, bool) {
     // We need to check if the square is occupied to avoid calculating non-reachable coordinates
     let square_occupied = piece_is_on_square(*square);
-    if !square_occupied.is_none() {
+    match square_occupied {
         // Check whether it is our own piece.
-        if &square_occupied.unwrap().color == team_color {
-            return (None, true);
+        Some(i) => {
+            if &i.color == team_color {
+                (None, true)
+            } else {
+                (Some(*square), true)
+            }
         }
-        return (Some(*square), true)
+        None => (Some(*square), false),
     }
-    (Some(*square), false)
 }
 
 // Returns the Piece a square is occupied by. If the square is not occupied it returns None
 fn piece_is_on_square(square: Coordinate) -> Option<BoardPiece> {
     // TODO: Get access to the board here.
-    return None;
+    None
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn test_linear_moves(){
-        let result = linear_moves((3,2).into());
+    fn test_linear_moves() {
+        let result = linear_moves((3, 2).into());
         // Make a new Vector and fill it with all possible Coordinates
-        let mut expected :Vec<Coordinate> = Vec::new();
-        for x in 0..=7{
+        let mut expected: Vec<Coordinate> = Vec::new();
+        for x in 0..=7 {
             &expected.push((x, 2).into());
         }
-        for y in 0..=7{
+        for y in 0..=7 {
             &expected.push((3, y).into());
         }
         // Remove the orininal position in the Vector
-        expected.retain(|&x| x !=(3,2).into());
+        expected.retain(|&x| x != (3, 2).into());
         assert_eq!(result, expected);
     }
     #[test]
-    fn test_explore_diagonal_moves(){
+    fn test_explore_diagonal_moves() {
         // Calculate the moves in the North-east (upper-right) direction from 3,2(d3)
         let result = explore_diagonal_moves(Directions::NE, &3, &2, &PieceColor::Light);
-        let expected: Vec<Coordinate> = vec![(4,3).into(),(5,4).into(),(6,5).into(),(7,6).into()];
+        let expected: Vec<Coordinate> =
+            vec![(4, 3).into(), (5, 4).into(), (6, 5).into(), (7, 6).into()];
         assert_eq!(result, expected);
 
         // Do the same for the North-west (upper-left) direction from h1
         let result2 = explore_diagonal_moves(Directions::NW, &7, &0, &PieceColor::Dark);
-        let expected2: Vec<Coordinate> = vec![(6,1).into(),(5,2).into(),(4,3).into(),(3,4).into(),(2,5).into(), (1,6).into(),(0,7).into()];
+        let expected2: Vec<Coordinate> = vec![
+            (6, 1).into(),
+            (5, 2).into(),
+            (4, 3).into(),
+            (3, 4).into(),
+            (2, 5).into(),
+            (1, 6).into(),
+            (0, 7).into(),
+        ];
         assert_eq!(result2, expected2);
     }
 
     #[test]
-    fn test_diagonal_moves(){
-        let result = diagonal_moves(&(4 ,3).into(),&PieceColor::Dark);
-        let mut expected :Vec<Coordinate> = vec![
+    fn test_diagonal_moves() {
+        let result = diagonal_moves(&(4, 3).into(), &PieceColor::Dark);
+        let mut expected: Vec<Coordinate> = vec![
             // North-west (upper left)
-            (3,4).into(),(2,5).into(),(1,6).into(),(0,7).into(),
+            (3, 4).into(),
+            (2, 5).into(),
+            (1, 6).into(),
+            (0, 7).into(),
             // North-east (upper right)
-            (5,4).into(),(6,5).into(),(7,6).into(),
+            (5, 4).into(),
+            (6, 5).into(),
+            (7, 6).into(),
             // South-east (lower right)
-            (5,2).into(),(6,1).into(),(7,0).into(),
+            (5, 2).into(),
+            (6, 1).into(),
+            (7, 0).into(),
             // South-west (lower left)
-            (3,2).into(),(2,1).into(),(1,0).into(),
+            (3, 2).into(),
+            (2, 1).into(),
+            (1, 0).into(),
         ];
         assert_eq!(result, expected);
     }
