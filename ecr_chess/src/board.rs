@@ -156,7 +156,6 @@ impl Board {
 
 impl Default for Board {
     /// Returns the board with the default chess pieces placed on it.
-    // TODO: Test this when FEN is finished
     fn default() -> Self {
         let mut board = Board::empty();
 
