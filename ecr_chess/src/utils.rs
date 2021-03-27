@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-/// Returns the supplied value wrapped inside a `Rc` that contains a `RefCell` with the value.
+/// Returns the supplied value wrapped inside a [`Rc`] that contains a [`RefCell`] with the value.
 pub fn new_rc_refcell<T>(value: T) -> Rc<RefCell<T>> {
     Rc::new(RefCell::new(value))
 }

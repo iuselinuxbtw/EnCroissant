@@ -2,12 +2,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
+use crate::formats::fen::Fen;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::new_rc_refcell;
 
-/// The inner content of a square. Holds a reference-counted pointer to a `RefCell` that holds a
-/// `BoardPiece`.
+/// The inner content of a square. Holds a reference-counted pointer to a [`RefCell`] that holds a
+/// [`BoardPiece`].
 pub type SquareInner = Rc<RefCell<BoardPiece>>;
 
 /// Holds information whether castling is allowed on the specific sides.
@@ -23,13 +24,32 @@ pub struct BoardCastleState {
     pub dark_queen_side: bool,
 }
 
-/// A `Board` contains the current game of chess.
+impl Default for BoardCastleState {
+    /// By default, every castle action is possible.
+    fn default() -> Self {
+        BoardCastleState {
+            light_king_side: true,
+            light_queen_side: true,
+            dark_king_side: true,
+            dark_queen_side: true,
+        }
+    }
+}
+
+impl BoardCastleState {
+    /// Returns if any castle action is still allowed.
+    pub fn is_any_possible(&self) -> bool {
+        self.light_king_side || self.light_queen_side || self.dark_king_side || self.dark_queen_side
+    }
+}
+
+/// A [`Board`] contains the current game of chess.
 #[derive(Debug, Clone)]
 pub struct Board {
     /// The representation of the board. A board consists of 8x8 squares. The first array is for the
     /// x, the second for the y coordinate. Since the board has 8 squares on each axis, an index of
-    /// `0` to `7` is possible. Contains an `Option<BoardPiece>` since a square can be empty, which
-    /// means that squares with `None` as value will be empty.
+    /// `0` to `7` is possible. Contains an [`Option<BoardPiece>`] since a square can be empty, which
+    /// means that squares with [`None`] as value will be empty.
     board: Vec<Vec<Option<SquareInner>>>,
     /// Since a hybrid solution for saving the pieces is used, we save all pieces as well as
     pieces: Vec<SquareInner>,
@@ -43,7 +63,7 @@ pub struct Board {
     /// `false`.
     move_number: usize,
     /// The amount of half moves done. A half move is any move where nothing gets captured and no
-    /// pawn is moved. Resets to 0 if a non-half move occurs.
+    /// pawn is moved. Resets to `0` if a non-half move occurs.
     half_move_amount: usize,
     /// Which castle actions are allowed? Only contains if it would be theoretically allowed, not
     /// representing if the castle would be blocked by another piece or similar.
@@ -63,12 +83,7 @@ impl Board {
             light_to_move: true,
             move_number: 1,
             half_move_amount: 0,
-            castle_state: BoardCastleState {
-                light_king_side: true,
-                light_queen_side: true,
-                dark_king_side: true,
-                dark_queen_side: true,
-            },
+            castle_state: BoardCastleState::default(),
             en_passant_target: None,
         }
     }
@@ -92,7 +107,7 @@ impl Board {
     }
 
     /// Adds a piece to the board. Since a hybrid solution for saving the board is used, the piece
-    /// gets added into the board array as well as the apiece list.
+    /// gets added into the board array as well as the piece list.
     pub fn add_piece(&mut self, piece: BoardPiece) {
         let x_coordinate = piece.get_coordinate().get_x() as usize;
         let y_coordinate = piece.get_coordinate().get_y() as usize;
@@ -132,6 +147,11 @@ impl Board {
     pub fn get_en_passant_target(&self) -> Option<Coordinate> {
         self.en_passant_target
     }
+
+    /// Returns all pieces that are on the [`Board`].
+    pub fn get_pieces(&self) -> &Vec<SquareInner> {
+        &self.pieces
+    }
 }
 
 impl Default for Board {
@@ -152,7 +172,7 @@ impl Default for Board {
             // Dark pawns
             board.add_piece(
                 BoardPiece::new_from_type(
-                    PieceType::Pawn, (i as u8, 1).into(), PieceColor::Light,
+                    PieceType::Pawn, (i as u8, 6).into(), PieceColor::Dark,
                 )
             );
         }
@@ -256,12 +276,33 @@ impl Default for Board {
     }
 }
 
+impl From<Fen> for Board {
+    fn from(f: Fen) -> Self {
+        let mut board = Board::empty();
+
+        // Set the attributes of the board state
+        board.move_number = f.move_number;
+        board.half_move_amount = f.half_moves;
+        board.en_passant_target = f.en_passant;
+        board.castle_state = f.castles;
+        board.light_to_move = f.light_to_move;
+
+        // Add all pieces to the board
+        for piece in f.piece_placements {
+            board.add_piece(piece.into());
+        }
+
+        board
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     mod board {
         use std::ops::Deref;
+        use std::str::FromStr;
 
         use crate::pieces::PieceType;
 
@@ -399,6 +440,119 @@ mod tests {
 
             b.en_passant_target = Some((3, 4).into());
             assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
+        }
+
+        #[test]
+        fn test_from_fen() {
+            let fen: Fen = "2k5/8/8/8/8/4R3/8/2K5 b - - 3 6".parse().unwrap();
+            let board: Board = fen.into();
+
+            assert_eq!(3, board.pieces.len());
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::King, (2, 0).into(), PieceColor::Light),
+                board.get_at((2, 0).into()).unwrap().borrow().deref(),
+            );
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::Rook, (4, 2).into(), PieceColor::Light),
+                board.get_at((4, 2).into()).unwrap().borrow().deref(),
+            );
+            assert_eq!(
+                &BoardPiece::new_from_type(PieceType::King, (2, 7).into(), PieceColor::Dark),
+                board.get_at((2, 7).into()).unwrap().borrow().deref(),
+            );
+
+            assert_eq!(false, board.light_to_move);
+            assert_eq!(None, board.en_passant_target);
+            assert_eq!(3, board.half_move_amount);
+            assert_eq!(6, board.move_number);
+            assert_eq!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }, board.castle_state);
+        }
+
+        #[test]
+        fn test_get_pieces() {
+            let b = Board::default();
+            assert_eq!(32, b.pieces.len());
+            assert_eq!(32, Board::default().get_pieces().len());
+
+            let mut b = Board::from(Fen::from_str("2k5/8/8/8/8/4R3/8/2K5 b - - 3 6").unwrap());
+            assert_eq!(3, b.pieces.len());
+            assert_eq!(3, b.get_pieces().len());
+
+            b.add_piece(BoardPiece::new_from_type(PieceType::Pawn, (1, 1).into(), PieceColor::Light));
+            assert_eq!(4, b.pieces.len());
+            assert_eq!(4, b.get_pieces().len());
+        }
+
+        #[test]
+        fn test_default() {
+            let b = Board::default();
+            let f: Fen = b.into();
+            assert_eq!(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), f.to_string());
+        }
+    }
+
+    mod board_castle_state {
+        use super::*;
+
+        #[test]
+        fn test_is_any_possible() {
+            assert!(!BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: true,
+                dark_king_side: false,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: true,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: false,
+                light_queen_side: false,
+                dark_king_side: false,
+                dark_queen_side: true,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: false,
+                dark_king_side: true,
+                dark_queen_side: false,
+            }.is_any_possible());
+            assert!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: true,
+                dark_queen_side: true,
+            }.is_any_possible());
+        }
+
+        #[test]
+        fn test_default() {
+            assert_eq!(BoardCastleState {
+                light_king_side: true,
+                light_queen_side: true,
+                dark_king_side: true,
+                dark_queen_side: true,
+            }, BoardCastleState::default());
         }
     }
 }
