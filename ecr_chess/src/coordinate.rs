@@ -3,8 +3,8 @@ use std::fmt::{self, Display};
 /// A [`Coordinate`] represents a square on the chess board.
 #[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
 pub struct Coordinate {
-    y: u8,
-    x: u8,
+    pub(crate) y: u8,
+    pub(crate) x: u8,
 }
 
 impl Coordinate {

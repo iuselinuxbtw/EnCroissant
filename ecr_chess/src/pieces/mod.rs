@@ -82,6 +82,7 @@ pub struct BoardPiece {
     color: PieceColor,
     coordinate: Coordinate,
     out_of_game: bool,
+    has_moved: bool,
 }
 
 impl BoardPiece {
@@ -91,6 +92,7 @@ impl BoardPiece {
             color,
             coordinate,
             out_of_game: false,
+            has_moved: false,
         }
     }
 
@@ -110,6 +112,10 @@ impl BoardPiece {
 
     pub fn get_piece(&self) -> &dyn Piece {
         self.piece.deref()
+    }
+
+    pub fn get_has_moved(&self) -> bool {
+        self.has_moved
     }
 }
 
@@ -284,6 +290,14 @@ mod tests {
                 BoardPiece::new_from_type(PieceType::Pawn, (6, 0).into(), PieceColor::Dark),
                 ((6, 0).into(), PieceColor::Dark, PieceType::Pawn).into(),
             );
+        }
+
+        #[test]
+        fn test_get_has_moved() {
+            let mut p = BoardPiece::new_from_type(PieceType::Pawn, (1, 2).into(), PieceColor::Light);
+            assert!(!p.get_has_moved());
+            p.has_moved = true;
+            assert!(p.get_has_moved());
         }
     }
 

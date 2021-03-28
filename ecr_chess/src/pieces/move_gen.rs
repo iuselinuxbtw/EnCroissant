@@ -1,17 +1,21 @@
+//! Pseudo-legal moves are generated here. For moves during check we'll use another generator.
+
 use std::convert::TryFrom;
 use std::rc::Rc;
 
 use crate::board;
 use crate::board::SquareInner;
 use crate::coordinate::Coordinate;
-use crate::pieces::{BoardPiece, PieceColor, PieceType};
+use crate::pieces::PieceColor;
+use std::ops::Deref;
 
-/// Defines a move.
-struct Move {
-    from: Coordinate,
+/// Defines a move in the most basic form.
+///
+/// Only defines where the move goes and whether or not the move is a capture.
+#[derive(Debug, PartialEq, Copy, Clone)]
+struct BasicMove {
     to: Coordinate,
-    piece_type: PieceType,
-    //move_type: Vec<MoveType>,
+    capture: bool,
 }
 
 enum MoveType {
@@ -64,11 +68,10 @@ macro_rules! check_square {
             }
             // It's safe to use unwrap here since we already know that it's not None.
             // If it is the enemies piece we can capture it.
-            // TODO: Change the type to capture if there is an enemy piece on this square.
-            $result.push(possible_square.0.unwrap());
+            $result.push(BasicMove{to: possible_square.0.unwrap(), capture: true});
             break;
         }
-        $result.push(possible_square.0.unwrap());
+        $result.push(BasicMove{to: possible_square.0.unwrap(), capture: false});
     }
 }
 
@@ -79,9 +82,9 @@ fn linear_moves(
     start: Coordinate,
     board: &board::Board,
     team_color: &PieceColor,
-) -> Vec<Coordinate> {
+) -> Vec<BasicMove> {
     // First we initialize a new vector, which we later return
-    let mut result: Vec<Coordinate> = Vec::new();
+    let mut result: Vec<BasicMove> = Vec::new();
 
     // Bind the given coordinates to variables because we obviously can
     let from_x = start.get_x() as usize;
@@ -126,9 +129,9 @@ fn explore_linear_direction(
     from_y: usize,
     team_color: &PieceColor,
     board: &board::Board,
-) -> Vec<Coordinate> {
+) -> Vec<BasicMove> {
     // Create a vector that will be returned at the end.
-    let mut result: Vec<Coordinate> = Vec::new();
+    let mut result: Vec<BasicMove> = Vec::new();
     let mut x = from_x;
     let mut y = from_y;
     match direction {
@@ -160,6 +163,65 @@ fn explore_linear_direction(
     result
 }
 
+/// Used for generating moves for pawns.
+fn pawn_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board, has_moved: bool) -> Vec<BasicMove> {
+    let mut result: Vec<BasicMove> = Vec::new();
+    let from_x = start.get_x() as u8;
+    let from_y = start.get_y() as u8;
+
+    let next_r = next_row(from_y, team_color, 1);
+    
+    // If there is no piece in front of our pawn we can move there.
+    if !piece_in_front(start,team_color,board,1){
+        &result.push(BasicMove{to:(from_x, next_r).into(), capture: false});
+        // If this is the first move of the pawn and there is not a Piece in the way we can move two squares.
+        if !piece_in_front(start, team_color,board, 2) && !has_moved{
+            &result.push(BasicMove{to: (from_x, next_row(from_y, team_color, 2)).into(), capture: false});
+        }
+    }
+
+    // Pawns can capture diagonally
+    // This could be moved into a function that returns whether the piece on the square is the own team color.
+    let capture_diagonal:Vec<Coordinate> = vec![(from_x-1, next_r).into(), (from_x+1, next_r).into()];
+    for possible_capture in capture_diagonal{
+        let square_inner = piece_on_square(&possible_capture, board);
+        if let Some(e) = square_inner {
+            if &e.as_ref().borrow().deref().get_color() != team_color {
+                &result.push(BasicMove{ to: e.as_ref().borrow().deref().get_coordinate(), capture: true});
+            }
+        }
+    }
+    result
+}
+
+fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8{
+    let mut result = y.clone();
+    // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
+    if team_color == &PieceColor::Light{
+        result+=1;
+    }
+    else {
+        result-=1;
+    }
+    result
+}
+
+/// This functions is useful for finding out whether or not a pawn can move forwards by returning
+/// true if there is a piece in front. Steps determine how far it will go.
+fn piece_in_front(from: &Coordinate, team_color: &PieceColor, board: &board::Board, step: usize) -> bool{
+    let mut next_coordinate :Coordinate= from.clone();
+
+    next_coordinate.y = next_row(from.get_y(), team_color, step);
+    // Return false if there is not a piece in front of it.
+    if piece_on_square(&next_coordinate, board).is_none(){
+        false
+    }
+    else {
+        true
+    }
+}
+
+
 /// Returns the possible diagonal moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
 /// this way is a bishop.
@@ -167,9 +229,9 @@ fn diagonal_moves(
     start: &Coordinate,
     team_color: &PieceColor,
     board: &board::Board,
-) -> Vec<Coordinate> {
+) -> Vec<BasicMove> {
     // Create a vector that will be returned at the end.
-    let mut result: Vec<Coordinate> = Vec::new();
+    let mut result: Vec<BasicMove> = Vec::new();
 
     // Bind the starting coordinates to variables
     let from_x = start.get_x() as usize;
@@ -214,10 +276,10 @@ fn explore_diagonal_direction(
     from_y: &usize,
     team_color: &PieceColor,
     board: &board::Board,
-) -> Vec<Coordinate> {
+) -> Vec<BasicMove> {
     let mut x = *from_x as i32;
     let mut y = *from_y as i32;
-    let mut result = Vec::new();
+    let mut result: Vec<BasicMove> = Vec::new();
     match direction {
         // upper-left
         DiagonalDirections::NW => {
@@ -304,11 +366,11 @@ fn square_check(
     board: &board::Board,
 ) -> (Option<Coordinate>, bool) {
     // We need to check if the square is occupied to avoid calculating non-reachable coordinates
-    let square_occupied = piece_is_on_square(square, board);
+    let square_occupied = piece_on_square(square, board);
     match square_occupied {
         // Check whether it is our own piece.
         Some(i) => {
-            if &i.borrow().get_color() == team_color {
+            if i.as_ref().borrow().deref().get_color() == *team_color {
                 (None, true)
             } else {
                 (Some(*square), true)
@@ -319,7 +381,7 @@ fn square_check(
 }
 
 // Returns the Piece a square is occupied by. If the square is not occupied it returns None
-fn piece_is_on_square(square: &Coordinate, board: &board::Board) -> Option<SquareInner> {
+fn piece_on_square(square: &Coordinate, board: &board::Board) -> Option<SquareInner> {
     // Get the SquareInner
     match board.get_at(*square) {
         // Match it
@@ -336,28 +398,62 @@ mod tests {
     use crate::formats::fen::*;
 
     use super::*;
+    use crate::pieces::{BoardPiece, PieceType};
 
     #[test]
     fn test_linear_moves() {
         let board = board::Board::default();
-        let mut result = linear_moves((4, 3).into(), &board, &PieceColor::Light);
+        let result = linear_moves((4, 3).into(), &board, &PieceColor::Light);
         // Make a new Vector and fill it with all possible Coordinates
-        let expected = vec![
+        let expected: Vec<BasicMove> = vec![
             // North
-            (4, 4).into(),
-            (4, 5).into(),
-            (4, 6).into(),
+            BasicMove {
+                to: (4, 4).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (4, 5).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (4, 6).into(),
+                capture: true,
+            },
             // East
-            (5, 3).into(),
-            (6, 3).into(),
-            (7, 3).into(),
+            BasicMove {
+                to: (5, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (6, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (7, 3).into(),
+                capture: false,
+            },
             // South
-            (4, 2).into(),
+            BasicMove {
+                to: (4, 2).into(),
+                capture: false,
+            },
             // West
-            (3, 3).into(),
-            (2, 3).into(),
-            (1, 3).into(),
-            (0, 3).into(),
+            BasicMove {
+                to: (3, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (2, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (1, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (0, 3).into(),
+                capture: false,
+            },
         ];
 
         assert_eq!(result, expected);
@@ -367,7 +463,20 @@ mod tests {
                 .unwrap()
                 .into();
         let moves_a1 = linear_moves((0, 7).into(), &gotc, &PieceColor::Dark);
-        let expected_moves_a1: Vec<Coordinate> = vec![(1, 7).into(), (2, 7).into(), (3, 7).into()];
+        let expected_moves_a1: Vec<BasicMove> = vec![
+            BasicMove {
+                to: (1, 7).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (2, 7).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (3, 7).into(),
+                capture: false,
+            },
+        ];
         assert_eq!(moves_a1, expected_moves_a1);
     }
 
@@ -382,8 +491,24 @@ mod tests {
             &PieceColor::Light,
             &empty_board,
         );
-        let expected: Vec<Coordinate> =
-            vec![(4, 3).into(), (5, 4).into(), (6, 5).into(), (7, 6).into()];
+        let expected: Vec<BasicMove> = vec![
+            BasicMove {
+                to: (4, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (5, 4).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (6, 5).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (7, 6).into(),
+                capture: false,
+            },
+        ];
         assert_eq!(result, expected);
 
         // Do the same for the North-west (upper-left) direction from h1
@@ -394,18 +519,40 @@ mod tests {
             &PieceColor::Dark,
             &empty_board,
         );
-        let expected2: Vec<Coordinate> = vec![
-            (6, 1).into(),
-            (5, 2).into(),
-            (4, 3).into(),
-            (3, 4).into(),
-            (2, 5).into(),
-            (1, 6).into(),
-            (0, 7).into(),
+        let expected2: Vec<BasicMove> = vec![
+            BasicMove {
+                to: (6, 1).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (5, 2).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (4, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (3, 4).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (2, 5).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (1, 6).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (0, 7).into(),
+                capture: false,
+            },
         ];
         assert_eq!(result2, expected2);
 
-        // Now do the whole thing with a filled board.
+        // Now do the whole thing with a filled board in the direction of NW (upper left) from e3
+        // The fen string for the bishop from this position would be: 'rnbqkbnr/pppppppp/8/8/8/4B3/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         let default_board = Board::default();
         let result3 = explore_diagonal_direction(
             DiagonalDirections::NW,
@@ -414,10 +561,27 @@ mod tests {
             &PieceColor::Light,
             &default_board,
         );
-        let expected3: Vec<Coordinate> =
-            vec![(3, 3).into(), (2, 4).into(), (1, 5).into(), (0, 6).into()];
+        let expected3: Vec<BasicMove> = vec![
+            BasicMove {
+                to: (3, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (2, 4).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (1, 5).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (0, 6).into(),
+                capture: true,
+            },
+        ];
         assert_eq!(result3, expected3);
 
+        // This should be empty as there are only two of our own pieces in that direction.
         let result4 = explore_diagonal_direction(
             DiagonalDirections::SE,
             &3,
@@ -425,7 +589,7 @@ mod tests {
             &PieceColor::Light,
             &default_board,
         );
-        let expected4: Vec<Coordinate> = vec![];
+        let expected4: Vec<BasicMove> = vec![];
         assert_eq!(result4, expected4);
     }
 
@@ -433,26 +597,66 @@ mod tests {
     fn test_diagonal_moves() {
         let board = Board::empty();
         let result = diagonal_moves(&(4, 3).into(), &PieceColor::Dark, &board);
-        let expected: Vec<Coordinate> = vec![
+        let expected: Vec<BasicMove> = vec![
             // North-west (upper left)
-            (3, 4).into(),
-            (2, 5).into(),
-            (1, 6).into(),
-            (0, 7).into(),
+            BasicMove {
+                to: (3, 4).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (2, 5).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (1, 6).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (0, 7).into(),
+                capture: false,
+            },
             // North-east (upper right)
-            (5, 4).into(),
-            (6, 5).into(),
-            (7, 6).into(),
+            BasicMove {
+                to: (5, 4).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (6, 5).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (7, 6).into(),
+                capture: false,
+            },
             // South-east (lower right)
-            (5, 2).into(),
-            (6, 1).into(),
-            (7, 0).into(),
+            BasicMove {
+                to: (5, 2).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (6, 1).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (7, 0).into(),
+                capture: false,
+            },
             // South-west (lower left)
-            (3, 2).into(),
-            (2, 1).into(),
-            (1, 0).into(),
+            BasicMove {
+                to: (3, 2).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (2, 1).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (1, 0).into(),
+                capture: false,
+            },
         ];
         assert_eq!(result, expected);
+        // TODO: Test this with a filled board
     }
 
     #[test]
@@ -461,12 +665,16 @@ mod tests {
         // Check where the pawn is in the default position
         let pawn_coords: Coordinate = (0, 1).into();
         let pawn = BoardPiece::new_from_type(PieceType::Pawn, pawn_coords, PieceColor::Light);
-        let mut piece = piece_is_on_square(&pawn_coords, &default_board);
-        assert_eq!(piece.unwrap().borrow().clone(), pawn);
+        let piece = piece_on_square(&pawn_coords, &default_board);
+        assert_eq!(*piece.unwrap().as_ref().borrow().deref(), pawn);
 
         let king_coords: Coordinate = (4, 7).into();
         let king = BoardPiece::new_from_type(PieceType::King, king_coords, PieceColor::Dark);
-        piece = piece_is_on_square(&king_coords, &default_board);
-        assert_eq!(piece.unwrap().borrow().clone(), king);
+        let piece2 = piece_on_square(&king_coords, &default_board);
+        assert_eq!(*piece2.unwrap().as_ref().borrow().deref(), king);
+    }
+
+    #[test]
+    fn test_pawn_moves(){
     }
 }
