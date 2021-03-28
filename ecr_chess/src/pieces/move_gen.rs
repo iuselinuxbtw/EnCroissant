@@ -676,5 +676,13 @@ mod tests {
 
     #[test]
     fn test_pawn_moves(){
+        let default_board = board::Board::default();
+        let result = pawn_moves(&(0,1).into(), &PieceColor::Light, &default_board, false);
+        let expected = vec![BasicMove{to: (0,2).into(), capture: false}, BasicMove{to: (0,3).into(), capture: false}];
+        assert_eq!(result, expected);
+
+        let result2 = pawn_moves(&(2, 5).into(), &PieceColor::Light, &default_board, false);
+        let expected2 = vec![BasicMove{to: (1,6).into(), capture: true}, BasicMove{to: (3,6).into(), capture: true}];
+        assert_eq!(result2, expected2);
     }
 }
