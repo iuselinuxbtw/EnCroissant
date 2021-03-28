@@ -195,7 +195,7 @@ fn pawn_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board,
 }
 
 fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8{
-    let mut result = y.clone();
+    let mut result:usize = y.clone() as usize;
     // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
     if team_color == &PieceColor::Light{
         result+=step;
@@ -203,7 +203,7 @@ fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8{
     else {
         result-=step;
     }
-    result
+    result as u8
 }
 
 /// This functions is useful for finding out whether or not a pawn can move forwards by returning
