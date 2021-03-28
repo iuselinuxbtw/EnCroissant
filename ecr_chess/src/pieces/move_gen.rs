@@ -198,10 +198,10 @@ fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8{
     let mut result = y.clone();
     // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
     if team_color == &PieceColor::Light{
-        result+=1;
+        result+=step;
     }
     else {
-        result-=1;
+        result-=step;
     }
     result
 }
