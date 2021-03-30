@@ -1,4 +1,5 @@
 //! Pseudo-legal moves are generated here. For moves during check we'll use another generator.
+// TODO: As these functions are used often and use a lot of resources they have to be optimized well, so implementing benchmarks here would be great.
 
 use std::convert::TryFrom;
 use std::rc::Rc;
@@ -28,19 +29,23 @@ enum MoveType {
     Castle,
 }
 
-/// Utility enum for the function explore_diagonal_moves. Assigns each direction a on the chess
-/// board a cardinal direction. You can look up the cardinal directions
+/// Utility enum for the function explore_diagonal_moves. Assigns each diagonal direction a on the
+/// chess board a cardinal direction. You can look up the cardinal directions
 /// [here](https://en.wikipedia.org/wiki/Cardinal_direction).
 enum DiagonalDirections {
-    NW,
     // upper-left
-    NE,
+    NW,
     // upper-right
-    SE,
+    NE,
     // down-right
-    SW, // down-left
+    SE,
+    // down-left
+    SW,
 }
 
+/// Utility enum for the function explore_linear_moves. Assigns each linear direction a on the chess
+/// board a cardinal direction. You can look up the cardinal directions
+/// [here](https://en.wikipedia.org/wiki/Cardinal_direction).
 enum LinearDirections {
     // up
     N,
@@ -50,6 +55,28 @@ enum LinearDirections {
     S,
     // left
     W,
+}
+
+/// This enum combines LinearDirections and DiagonalDirections. Useful for the explore_knight_moves
+enum Directions{
+    // First the linear directions.
+    // up
+    N,
+    // right
+    E,
+    // down
+    S,
+    // left
+    W,
+    // And the diagonal ones as well.
+    // upper-left
+    NW,
+    // upper-right
+    NE,
+    // down-right
+    SE,
+    // down-left
+    SW,
 }
 
 /// This macro is used to break the loop of calculating positions when the current square is
@@ -182,7 +209,13 @@ fn pawn_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board,
 
     // Pawns can capture diagonally
     // This could be moved into a function that returns whether the piece on the square is the own team color.
-    let capture_diagonal:Vec<Coordinate> = vec![(from_x-1, next_r).into(), (from_x+1, next_r).into()];
+    let capture_diagonal:Vec<Coordinate>;
+    if from_x==0 {
+        capture_diagonal = vec![(from_x+1, next_r).into()];
+    }
+    else {
+        capture_diagonal = vec![(from_x-1, next_r).into(), (from_x+1, next_r).into()];
+    }
     for possible_capture in capture_diagonal{
         let square_inner = piece_on_square(&possible_capture, board);
         if let Some(e) = square_inner {
@@ -193,6 +226,64 @@ fn pawn_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board,
     }
     result
 }
+
+
+fn knight_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board) -> Vec<BasicMove> {
+    let mut result :Vec<BasicMove>= Vec::new();
+    let border_distances = distance_to_border(start);
+    // First we want to check if our knight can move freely in all directions.
+    if border_distances.left >1 && border_distances.up >1 &&border_distances.down >1 && border_distances.right >1 {
+        result.append(&mut explore_knight_moves(start, team_color, board, Directions::NW));
+        result.append(&mut explore_knight_moves(start, team_color, board, Directions::NE));
+        result.append(&mut explore_knight_moves(start, team_color, board, Directions::SE));
+        result.append(&mut explore_knight_moves(start, team_color, board, Directions::SW));
+    }
+    
+    result
+}
+
+/// This function returns the knight moves in a particular direction.
+fn explore_knight_moves(start: &Coordinate, team_color: &PieceColor, board: &board, direction: Directions)-> Vec<BasicMove>{
+    // TODO: Make exploration in all Directions available
+    let from_x = start.get_x();
+    let from_y = start.get_y();
+    let result:Vec<BasicMove> = vec![];
+    match direction {
+        Directions::N => {}
+        Directions::E => {}
+        Directions::S => {}
+        Directions::W => {}
+        Directions::NW => {}
+        Directions::NE => {}
+        Directions::SE => {}
+        Directions::SW => {}
+    }
+    result
+}
+
+/// This struct holds the distance to the different borders of a coordinate. Useful for calculating
+/// in which directions the knight can go.
+struct DistanceToBorder{
+    // Distance to the upper border
+    up: usize,
+    // Distance to the right border
+    right: usize,
+    // Distance to the lower border
+    down: usize,
+    // Distance to the left border
+    left: usize,
+}
+
+fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
+    let x = coords.get_x() as usize;
+    let y = coords.get_y() as usize;
+    let up = 7-y;
+    let right = 7-x;
+    let down = y;
+    let left = x;
+    DistanceToBorder{up, right, down, left}
+}
+
 
 fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8{
     let mut result:usize = y.clone() as usize;
@@ -269,7 +360,7 @@ fn diagonal_moves(
     result
 }
 
-/// This function returns all moves into a particular direction
+/// This function returns all moves into a particular diagonal direction
 fn explore_diagonal_direction(
     direction: DiagonalDirections,
     from_x: &usize,
@@ -684,5 +775,9 @@ mod tests {
         let result2 = pawn_moves(&(2, 5).into(), &PieceColor::Light, &default_board, false);
         let expected2 = vec![BasicMove{to: (1,6).into(), capture: true}, BasicMove{to: (3,6).into(), capture: true}];
         assert_eq!(result2, expected2);
+
+        let result3 = pawn_moves(&(7,1).into(), &PieceColor::Light, &default_board, true);
+        let expected3 = vec![BasicMove{to: (7,2).into(), capture: false}];
+        assert_eq!(result3, expected3);
     }
 }
