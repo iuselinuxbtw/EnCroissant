@@ -57,25 +57,27 @@ enum LinearDirections {
     W,
 }
 
-/// This enum combines LinearDirections and DiagonalDirections. Useful for the explore_knight_moves
-enum Directions{
+/// This enum combines LinearDirections and DiagonalDirections. Useful for the explore_knight_moves.
+/// The first direction always refers to the direction where the knight jumps further. These are
+/// cardinal directions, which you can look up [here](https://en.wikipedia.org/wiki/Cardinal_direction).
+enum Directions {
     // First the linear directions.
-    // up
-    N,
-    // right
-    E,
-    // down
-    S,
-    // left
-    W,
+    // left-then-up
+    WN,
+    // right-then-up
+    EN,
+    // right-then-down
+    ES,
+    // left-then-down
+    WS,
     // And the diagonal ones as well.
-    // upper-left
+    // up-then-left
     NW,
-    // upper-right
+    // up-then-right
     NE,
-    // down-right
+    // down-then-right
     SE,
-    // down-left
+    // down-then-left
     SW,
 }
 
@@ -191,79 +193,162 @@ fn explore_linear_direction(
 }
 
 /// Used for generating moves for pawns.
-fn pawn_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board, has_moved: bool) -> Vec<BasicMove> {
+fn pawn_moves(
+    start: &Coordinate,
+    team_color: &PieceColor,
+    board: &board::Board,
+    has_moved: bool,
+) -> Vec<BasicMove> {
     let mut result: Vec<BasicMove> = Vec::new();
     let from_x = start.get_x() as u8;
     let from_y = start.get_y() as u8;
 
     let next_r = next_row(from_y, team_color, 1);
-    
+
     // If there is no piece in front of our pawn we can move there.
-    if !piece_in_front(start,team_color,board,1){
-        &result.push(BasicMove{to:(from_x, next_r).into(), capture: false});
+    if !piece_in_front(start, team_color, board, 1) {
+        &result.push(BasicMove {
+            to: (from_x, next_r).into(),
+            capture: false,
+        });
         // If this is the first move of the pawn and there is not a Piece in the way we can move two squares.
-        if !piece_in_front(start, team_color,board, 2) && !has_moved{
-            &result.push(BasicMove{to: (from_x, next_row(from_y, team_color, 2)).into(), capture: false});
+        if !piece_in_front(start, team_color, board, 2) && !has_moved {
+            &result.push(BasicMove {
+                to: (from_x, next_row(from_y, team_color, 2)).into(),
+                capture: false,
+            });
         }
     }
 
     // Pawns can capture diagonally
     // This could be moved into a function that returns whether the piece on the square is the own team color.
-    let capture_diagonal:Vec<Coordinate>;
-    if from_x==0 {
-        capture_diagonal = vec![(from_x+1, next_r).into()];
+    let capture_diagonal: Vec<Coordinate>;
+    if from_x == 0 {
+        capture_diagonal = vec![(from_x + 1, next_r).into()];
+    } else {
+        capture_diagonal = vec![(from_x - 1, next_r).into(), (from_x + 1, next_r).into()];
     }
-    else {
-        capture_diagonal = vec![(from_x-1, next_r).into(), (from_x+1, next_r).into()];
-    }
-    for possible_capture in capture_diagonal{
+    for possible_capture in capture_diagonal {
         let square_inner = piece_on_square(&possible_capture, board);
         if let Some(e) = square_inner {
             if &e.as_ref().borrow().deref().get_color() != team_color {
-                &result.push(BasicMove{ to: e.as_ref().borrow().deref().get_coordinate(), capture: true});
+                &result.push(BasicMove {
+                    to: e.as_ref().borrow().deref().get_coordinate(),
+                    capture: true,
+                });
             }
         }
     }
     result
 }
 
-
-fn knight_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board) -> Vec<BasicMove> {
-    let mut result :Vec<BasicMove>= Vec::new();
+fn knight_moves(
+    start: &Coordinate,
+    team_color: &PieceColor,
+    board: &board::Board,
+) -> Vec<BasicMove> {
+    let mut result: Vec<BasicMove> = Vec::new();
     let border_distances = distance_to_border(start);
     // First we want to check if our knight can move freely in all directions.
-    if border_distances.left >1 && border_distances.up >1 &&border_distances.down >1 && border_distances.right >1 {
-        result.append(&mut explore_knight_moves(start, team_color, board, Directions::NW));
-        result.append(&mut explore_knight_moves(start, team_color, board, Directions::NE));
-        result.append(&mut explore_knight_moves(start, team_color, board, Directions::SE));
-        result.append(&mut explore_knight_moves(start, team_color, board, Directions::SW));
+    if border_distances.left > 1
+        && border_distances.up > 1
+        && border_distances.down > 1
+        && border_distances.right > 1
+    {
+        result.append(&mut explore_knight_moves(
+            start,
+            team_color,
+            board,
+            Directions::NW,
+        ));
+        result.append(&mut explore_knight_moves(
+            start,
+            team_color,
+            board,
+            Directions::NE,
+        ));
+        result.append(&mut explore_knight_moves(
+            start,
+            team_color,
+            board,
+            Directions::SE,
+        ));
+        result.append(&mut explore_knight_moves(
+            start,
+            team_color,
+            board,
+            Directions::SW,
+        ));
     }
-    
+
     result
 }
 
-/// This function returns the knight moves in a particular direction.
-fn explore_knight_moves(start: &Coordinate, team_color: &PieceColor, board: &board, direction: Directions)-> Vec<BasicMove>{
+macro_rules! check_knight_move {
+    ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
+        let possible_square =  coordinate_check($x as &usize, $y as &usize, $team_color, $board);
+        // If the square is occupied by a piece
+        if possible_square.1{
+            // Check if it is our own piece.
+            if possible_square.0.is_none() {
+                // If it is, we shouldn't add that square to the array since we can't capture our own pieces.
+                return $result
+            }
+            // It's safe to use unwrap here since we already know that it's not None.
+            // If it is the enemies piece we can capture it.
+            $result.push(BasicMove{to: possible_square.0.unwrap(), capture: true});
+            return $result
+        }
+        $result.push(BasicMove{to: possible_square.0.unwrap(), capture: false});
+    }
+}
+
+/// This function returns the knight moves in a particular direction. This function does not check
+/// whether or the square is valid so to avoid overflows check the corner distance and call the
+/// directions accordingly.
+fn explore_knight_moves(
+    start: &Coordinate,
+    team_color: &PieceColor,
+    board: &board::Board,
+    direction: Directions,
+) -> Vec<BasicMove> {
     // TODO: Make exploration in all Directions available
-    let from_x = start.get_x();
-    let from_y = start.get_y();
-    let result:Vec<BasicMove> = vec![];
+    // TODO: Return whether the moves contain a fork
+    let from_x: usize = start.get_x() as usize;
+    let from_y: usize = start.get_y() as usize;
+    let mut result: Vec<BasicMove> = vec![];
     match direction {
-        Directions::N => {}
-        Directions::E => {}
-        Directions::S => {}
-        Directions::W => {}
-        Directions::NW => {}
-        Directions::NE => {}
-        Directions::SE => {}
-        Directions::SW => {}
+        Directions::WN => {
+            check_knight_move!(&(from_x - 2), &(from_y + 1), team_color, result, board);
+        }
+        Directions::EN => {
+            check_knight_move!(&(from_x + 2), &(from_y + 1), team_color, result, board);
+        }
+        Directions::ES => {
+            check_knight_move!(&(from_x + 2), &(from_y - 1), team_color, result, board);
+        }
+        Directions::WS => {
+            check_knight_move!(&(from_x - 2), &(from_y - 1), team_color, result, board);
+        }
+        Directions::NW => {
+            check_knight_move!(&(from_x - 1), &(from_y + 2), team_color, result, board);
+        }
+        Directions::NE => {
+            check_knight_move!(&(from_x + 1), &(from_y + 2), team_color, result, board);
+        }
+        Directions::SE => {
+            check_knight_move!(&(from_x + 1), &(from_y - 2), team_color, result, board);
+        }
+        Directions::SW => {
+            check_knight_move!(&(from_x - 1), &(from_y - 2), team_color, result, board);
+        }
     }
     result
 }
 
 /// This struct holds the distance to the different borders of a coordinate. Useful for calculating
 /// in which directions the knight can go.
-struct DistanceToBorder{
+struct DistanceToBorder {
     // Distance to the upper border
     up: usize,
     // Distance to the right border
@@ -277,41 +362,47 @@ struct DistanceToBorder{
 fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
     let x = coords.get_x() as usize;
     let y = coords.get_y() as usize;
-    let up = 7-y;
-    let right = 7-x;
+    let up = 7 - y;
+    let right = 7 - x;
     let down = y;
     let left = x;
-    DistanceToBorder{up, right, down, left}
+    DistanceToBorder {
+        up,
+        right,
+        down,
+        left,
+    }
 }
 
-
-fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8{
-    let mut result:usize = y.clone() as usize;
+fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8 {
+    let mut result: usize = y.clone() as usize;
     // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
-    if team_color == &PieceColor::Light{
-        result+=step;
-    }
-    else {
-        result-=step;
+    if team_color == &PieceColor::Light {
+        result += step;
+    } else {
+        result -= step;
     }
     result as u8
 }
 
 /// This functions is useful for finding out whether or not a pawn can move forwards by returning
 /// true if there is a piece in front. Steps determine how far it will go.
-fn piece_in_front(from: &Coordinate, team_color: &PieceColor, board: &board::Board, step: usize) -> bool{
-    let mut next_coordinate :Coordinate= from.clone();
+fn piece_in_front(
+    from: &Coordinate,
+    team_color: &PieceColor,
+    board: &board::Board,
+    step: usize,
+) -> bool {
+    let mut next_coordinate: Coordinate = from.clone();
 
     next_coordinate.y = next_row(from.get_y(), team_color, step);
     // Return false if there is not a piece in front of it.
-    if piece_on_square(&next_coordinate, board).is_none(){
+    if piece_on_square(&next_coordinate, board).is_none() {
         false
-    }
-    else {
+    } else {
         true
     }
 }
-
 
 /// Returns the possible diagonal moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
@@ -766,18 +857,39 @@ mod tests {
     }
 
     #[test]
-    fn test_pawn_moves(){
+    fn test_pawn_moves() {
         let default_board = board::Board::default();
-        let result = pawn_moves(&(0,1).into(), &PieceColor::Light, &default_board, false);
-        let expected = vec![BasicMove{to: (0,2).into(), capture: false}, BasicMove{to: (0,3).into(), capture: false}];
+        let result = pawn_moves(&(0, 1).into(), &PieceColor::Light, &default_board, false);
+        let expected = vec![
+            BasicMove {
+                to: (0, 2).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (0, 3).into(),
+                capture: false,
+            },
+        ];
         assert_eq!(result, expected);
 
         let result2 = pawn_moves(&(2, 5).into(), &PieceColor::Light, &default_board, false);
-        let expected2 = vec![BasicMove{to: (1,6).into(), capture: true}, BasicMove{to: (3,6).into(), capture: true}];
+        let expected2 = vec![
+            BasicMove {
+                to: (1, 6).into(),
+                capture: true,
+            },
+            BasicMove {
+                to: (3, 6).into(),
+                capture: true,
+            },
+        ];
         assert_eq!(result2, expected2);
 
-        let result3 = pawn_moves(&(7,1).into(), &PieceColor::Light, &default_board, true);
-        let expected3 = vec![BasicMove{to: (7,2).into(), capture: false}];
+        let result3 = pawn_moves(&(7, 1).into(), &PieceColor::Light, &default_board, true);
+        let expected3 = vec![BasicMove {
+            to: (7, 2).into(),
+            capture: false,
+        }];
         assert_eq!(result3, expected3);
     }
 }
