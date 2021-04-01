@@ -247,40 +247,57 @@ fn knight_moves(
     team_color: &PieceColor,
     board: &board::Board,
 ) -> Vec<BasicMove> {
+    let mut all_directions: Vec<Directions> = vec![
+        Directions::NW,
+        Directions::NE,
+        Directions::SW,
+        Directions::SE,
+        Directions::ES,
+        Directions::EN,
+        Directions::WN,
+        Directions::WS,
+    ];
+    // This queue is used to add the directions which can be scanned without resulting in invalid coordinates.
+    let mut queue: Vec<Directions> = vec![];
+    // TODO: Return whether the moves contain a fork
     let mut result: Vec<BasicMove> = Vec::new();
     let border_distances = distance_to_border(start);
-    // First we want to check if our knight can move freely in all directions.
-    if border_distances.left > 1
-        && border_distances.up > 1
-        && border_distances.down > 1
-        && border_distances.right > 1
-    {
-        result.append(&mut explore_knight_moves(
-            start,
-            team_color,
-            board,
-            Directions::NW,
-        ));
-        result.append(&mut explore_knight_moves(
-            start,
-            team_color,
-            board,
-            Directions::NE,
-        ));
-        result.append(&mut explore_knight_moves(
-            start,
-            team_color,
-            board,
-            Directions::SE,
-        ));
-        result.append(&mut explore_knight_moves(
-            start,
-            team_color,
-            board,
-            Directions::SW,
-        ));
+    // TODO: Make this another function and the directions as macros
+    if border_distances.rigth>1 {
+        if border_distances.up>0 {
+            queue.push(Directions::ES);
+        }
+        if border_distances.down>0 {
+            queue.push(Directions::EN);
+        }
     }
-
+    if border_distances.up>1 {
+        if border_distances.left>0 {
+            queue.push(Directions::NW);
+        }
+        if border_distances.right>0 {
+            queue.push(Directions::NE);
+        }
+    }
+    if border_distances.left>1{
+        if border_distances.left>0 {
+            queue.push(Directions::SW);
+        }
+        if border_distances.right>0 {
+            queue.push(Directions::SE);
+        }
+    }
+    if border_distances.left>1 {
+        if border_distances.up>0 {
+            queue.push(Directions::ES);
+        }
+        if border_distances.down>0 {
+            queue.push(Directions::EN);
+        }
+    }
+    for e in queue {
+        result.append(&mut explore_knight_moves(start, team_color, board, e));
+    }
     result
 }
 
@@ -312,8 +329,6 @@ fn explore_knight_moves(
     board: &board::Board,
     direction: Directions,
 ) -> Vec<BasicMove> {
-    // TODO: Make exploration in all Directions available
-    // TODO: Return whether the moves contain a fork
     let from_x: usize = start.get_x() as usize;
     let from_y: usize = start.get_y() as usize;
     let mut result: Vec<BasicMove> = vec![];
