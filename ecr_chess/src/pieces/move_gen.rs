@@ -263,7 +263,8 @@ fn knight_moves(
     let mut result: Vec<BasicMove> = Vec::new();
     let border_distances = distance_to_border(start);
     // TODO: Make this another function and the directions as macros
-    if border_distances.rigth>1 {
+    // This covers the positions from the fight against the clock to the left and then down
+    if border_distances.right>1 {
         if border_distances.up>0 {
             queue.push(Directions::ES);
         }
@@ -273,26 +274,26 @@ fn knight_moves(
     }
     if border_distances.up>1 {
         if border_distances.left>0 {
-            queue.push(Directions::NW);
+            queue.push(Directions::NE);
         }
         if border_distances.right>0 {
-            queue.push(Directions::NE);
+            queue.push(Directions::NW);
         }
     }
     if border_distances.left>1{
+        if border_distances.left>0 {
+            queue.push(Directions::WN);
+        }
+        if border_distances.right>0 {
+            queue.push(Directions::WS);
+        }
+    }
+    if border_distances.down>1 {
         if border_distances.left>0 {
             queue.push(Directions::SW);
         }
         if border_distances.right>0 {
             queue.push(Directions::SE);
-        }
-    }
-    if border_distances.left>1 {
-        if border_distances.up>0 {
-            queue.push(Directions::ES);
-        }
-        if border_distances.down>0 {
-            queue.push(Directions::EN);
         }
     }
     for e in queue {
@@ -906,5 +907,20 @@ mod tests {
             capture: false,
         }];
         assert_eq!(result3, expected3);
+    }
+
+    #[test]
+    fn test_knight_moves(){
+        let default_board = board::Board::default();
+        let result = knight_moves(&(3,3).into(), &PieceColor::Light, &default_board);
+        let expected: Vec<BasicMove> = vec![
+            BasicMove{to:(5,2).into(), capture:false},
+            BasicMove{to:(5,4).into(), capture:false},
+            BasicMove{to:(4,5).into(), capture:false},
+            BasicMove{to:(2,5).into(), capture:false},
+            BasicMove{to:(1,4).into(), capture:false},
+            BasicMove{to:(1,2).into(), capture:false},
+        ];
+        assert_eq!(result, expected);
     }
 }
