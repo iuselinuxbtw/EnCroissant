@@ -19,6 +19,9 @@ mod tests {
     #[test]
     fn test_new_rc_refcell() {
         let r = new_rc_refcell(String::from("Test"));
-        assert_eq!("alloc::rc::Rc<core::cell::RefCell<alloc::string::String>>", get_type_name(&r));
+        assert_eq!(
+            "alloc::rc::Rc<core::cell::RefCell<alloc::string::String>>",
+            get_type_name(&r)
+        );
     }
 }

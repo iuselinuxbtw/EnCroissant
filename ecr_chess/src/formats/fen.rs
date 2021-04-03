@@ -59,7 +59,8 @@ impl Display for Fen {
     /// Converts the [`Fen`] struct into the FEN string itself.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
-            f, "{} {} {} {} {} {}",
+            f,
+            "{} {} {} {} {} {}",
             self.piece_placements.to_string(),
             match self.light_to_move {
                 true => "w",
@@ -117,7 +118,11 @@ impl FromStr for Fen {
                     // Unwrapping is safe here since we checked the format beforehand using the
                     // regex. We have to subtract 1 from the y coordinate because we start to count
                     // at y coordinate 0.
-                    (char_to_x_coordinate(coordinates[0]), coordinates[1].to_string().parse::<u8>().unwrap() - 1).into()
+                    (
+                        char_to_x_coordinate(coordinates[0]),
+                        coordinates[1].to_string().parse::<u8>().unwrap() - 1,
+                    )
+                        .into()
                 }),
             },
             half_moves: (&caps["half_moves"]).parse()?,
@@ -129,9 +134,7 @@ impl FromStr for Fen {
 impl From<Board> for Fen {
     fn from(board: Board) -> Self {
         let mut fen = Fen {
-            piece_placements: FenPiecePlacements {
-                pieces: Vec::new(),
-            },
+            piece_placements: FenPiecePlacements { pieces: Vec::new() },
             light_to_move: board.get_light_to_move(),
             castles: *board.get_castle_state(), // Copy is implemented for BoardCastleState
             en_passant: board.get_en_passant_target(),
@@ -141,7 +144,9 @@ impl From<Board> for Fen {
 
         // Add all pieces
         for p in board.get_pieces() {
-            fen.piece_placements.pieces.push((p.borrow().deref()).clone().into());
+            fen.piece_placements
+                .pieces
+                .push((p.borrow().deref()).clone().into());
         }
 
         fen
@@ -154,7 +159,11 @@ pub type FenPiece = (Coordinate, PieceColor, PieceType);
 
 impl From<BoardPiece> for FenPiece {
     fn from(piece: BoardPiece) -> Self {
-        (piece.get_coordinate(), piece.get_color(), piece.get_piece().get_type())
+        (
+            piece.get_coordinate(),
+            piece.get_color(),
+            piece.get_piece().get_type(),
+        )
     }
 }
 
@@ -180,7 +189,9 @@ impl FromStr for FenPiecePlacements {
 
     /// Parses the FEN positions string into actual chess pieces with positions.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        FEN_PIECE_PLACEMENT_REGEX.captures(s).ok_or(FenError::InvalidFenPiecePlacementString)?;
+        FEN_PIECE_PLACEMENT_REGEX
+            .captures(s)
+            .ok_or(FenError::InvalidFenPiecePlacementString)?;
 
         let mut result: Vec<FenPiece> = Vec::new();
 
@@ -203,11 +214,9 @@ impl FromStr for FenPiecePlacements {
                     x += 1;
                 }
             }
-        };
+        }
 
-        Ok(FenPiecePlacements {
-            pieces: result,
-        })
+        Ok(FenPiecePlacements { pieces: result })
     }
 }
 
@@ -300,7 +309,7 @@ fn resolve_piece_code(x: u8, y: u8, code: char) -> FenPiece {
         'k' => PieceType::King,
         'p' => PieceType::Pawn,
         // Can't happen because of the applied regex pattern
-        _ => PieceType::King
+        _ => PieceType::King,
     };
 
     (coordinates, color, piece_type)
@@ -353,18 +362,25 @@ mod tests {
 
         #[test]
         fn test_input() {
-            let caps = FEN_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
-            assert_eq!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", &caps["piece_placements"]);
+            let caps = FEN_REGEX
+                .captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+                .unwrap();
+            assert_eq!(
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
+                &caps["piece_placements"]
+            );
             assert_eq!("w", &caps["to_move"]);
             assert_eq!("KQkq", &caps["castles"]);
             assert_eq!("-", &caps["en_passant"]);
             assert_eq!("0", &caps["half_moves"]);
             assert_eq!("1", &caps["move_number"]);
 
-
             let example_string = "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17";
             let gotc = FEN_REGEX.captures(example_string).unwrap();
-            assert_eq!("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R", &gotc["piece_placements"]);
+            assert_eq!(
+                "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R",
+                &gotc["piece_placements"]
+            );
             assert_eq!("b", &gotc["to_move"]);
             assert_eq!("-", &gotc["castles"]);
             assert_eq!("-", &gotc["en_passant"]);
@@ -372,16 +388,20 @@ mod tests {
             assert_eq!("17", &gotc["move_number"]);
 
             // Invalid FENs
-            let mut invalid_caps = FEN_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 0 1");
+            let mut invalid_caps =
+                FEN_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 0 1");
             assert!(invalid_caps.is_none());
-            invalid_caps = FEN_REGEX.captures("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R z - - 3 17");
+            invalid_caps = FEN_REGEX
+                .captures("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R z - - 3 17");
             assert!(invalid_caps.is_none());
         }
 
         #[test]
         #[should_panic]
         fn test_invalid_input() {
-            FEN_REGEX.captures("r3r1k1/pp3pbp/1Bp1b1p1/8/2BP4/Q1n2N2/P4PPP/3R1K1R/ b - - 0 18").unwrap();
+            FEN_REGEX
+                .captures("r3r1k1/pp3pbp/1Bp1b1p1/8/2BP4/Q1n2N2/P4PPP/3R1K1R/ b - - 0 18")
+                .unwrap();
         }
     }
 
@@ -390,13 +410,19 @@ mod tests {
 
         #[test]
         fn test_valid_input() {
-            FEN_PIECE_PLACEMENT_REGEX.captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR").unwrap();
-            FEN_PIECE_PLACEMENT_REGEX.captures("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R").unwrap();
+            FEN_PIECE_PLACEMENT_REGEX
+                .captures("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+                .unwrap();
+            FEN_PIECE_PLACEMENT_REGEX
+                .captures("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R")
+                .unwrap();
         }
 
         #[test]
         fn test_invalid_input() {
-            assert!(FEN_PIECE_PLACEMENT_REGEX.captures("r3r1k1/pp3pbp/1Bp1b1p1/8/2BP4/Q1n2N2/P4PPP/3R1K1R/").is_none());
+            assert!(FEN_PIECE_PLACEMENT_REGEX
+                .captures("r3r1k1/pp3pbp/1Bp1b1p1/8/2BP4/Q1n2N2/P4PPP/3R1K1R/")
+                .is_none());
             assert!(FEN_PIECE_PLACEMENT_REGEX.captures("").is_none());
             assert!(FEN_PIECE_PLACEMENT_REGEX.captures("r/r").is_none());
         }
@@ -414,7 +440,10 @@ mod tests {
         assert_eq!(((7, 0).into(), PieceColor::Dark, PieceType::Knight), piece3);
 
         let piece4 = resolve_piece_code(2, 5, 'B');
-        assert_eq!(((2, 5).into(), PieceColor::Light, PieceType::Bishop), piece4);
+        assert_eq!(
+            ((2, 5).into(), PieceColor::Light, PieceType::Bishop),
+            piece4
+        );
     }
 
     mod fen {
@@ -422,70 +451,113 @@ mod tests {
 
         #[test]
         fn test_from_str() {
-            assert_eq!(Fen {
-                piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR".parse().unwrap(),
-                light_to_move: true,
-                castles: BoardCastleState {
-                    light_king_side: true,
-                    light_queen_side: true,
-                    dark_king_side: true,
-                    dark_queen_side: true,
+            assert_eq!(
+                Fen {
+                    piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+                        .parse()
+                        .unwrap(),
+                    light_to_move: true,
+                    castles: BoardCastleState {
+                        light_king_side: true,
+                        light_queen_side: true,
+                        dark_king_side: true,
+                        dark_queen_side: true,
+                    },
+                    en_passant: None,
+                    half_moves: 0,
+                    move_number: 1,
                 },
-                en_passant: None,
-                half_moves: 0,
-                move_number: 1,
-            }, Fen::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap());
+                Fen::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
+            );
 
             // Regression test: En passant coordinates weren't parsed the right way
-            assert_eq!(Fen {
-                piece_placements: "8/8/8/8/8/8/8/8".parse().unwrap(),
-                light_to_move: false,
-                castles: BoardCastleState {
-                    light_king_side: true,
-                    light_queen_side: false,
-                    dark_king_side: false,
-                    dark_queen_side: true,
+            assert_eq!(
+                Fen {
+                    piece_placements: "8/8/8/8/8/8/8/8".parse().unwrap(),
+                    light_to_move: false,
+                    castles: BoardCastleState {
+                        light_king_side: true,
+                        light_queen_side: false,
+                        dark_king_side: false,
+                        dark_queen_side: true,
+                    },
+                    en_passant: Some((4, 5).into()),
+                    half_moves: 10,
+                    move_number: 37,
                 },
-                en_passant: Some((4, 5).into()),
-                half_moves: 10,
-                move_number: 37,
-            }, Fen::from_str("8/8/8/8/8/8/8/8 b Kq e6 10 37").unwrap());
+                Fen::from_str("8/8/8/8/8/8/8/8 b Kq e6 10 37").unwrap()
+            );
         }
 
         #[test]
         fn test_to_string() {
-            assert_eq!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", Fen::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap().to_string());
-            assert_eq!("rnbqkbnr/ppp2ppp/3p4/3Pp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 3", Fen::from_str("rnbqkbnr/ppp2ppp/3p4/3Pp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 3").unwrap().to_string());
-            assert_eq!("rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2", Fen::from_str("rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2").unwrap().to_string());
-            assert_eq!("4k3/8/8/8/8/8/4P3/4K3 w - - 5 39", Fen::from_str("4k3/8/8/8/8/8/4P3/4K3 w - - 5 39").unwrap().to_string());
+            assert_eq!(
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                Fen::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+                    .unwrap()
+                    .to_string()
+            );
+            assert_eq!(
+                "rnbqkbnr/ppp2ppp/3p4/3Pp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 3",
+                Fen::from_str("rnbqkbnr/ppp2ppp/3p4/3Pp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 3")
+                    .unwrap()
+                    .to_string()
+            );
+            assert_eq!(
+                "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2",
+                Fen::from_str("rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2")
+                    .unwrap()
+                    .to_string()
+            );
+            assert_eq!(
+                "4k3/8/8/8/8/8/4P3/4K3 w - - 5 39",
+                Fen::from_str("4k3/8/8/8/8/8/4P3/4K3 w - - 5 39")
+                    .unwrap()
+                    .to_string()
+            );
         }
 
         #[test]
         fn test_from_board() {
             let mut b = Board::empty();
-            b.add_piece(BoardPiece::new_from_type(PieceType::Pawn, (5, 3).into(), PieceColor::Light));
-            b.add_piece(BoardPiece::new_from_type(PieceType::King, (4, 0).into(), PieceColor::Light));
-            b.add_piece(BoardPiece::new_from_type(PieceType::King, (4, 7).into(), PieceColor::Dark));
+            b.add_piece(BoardPiece::new_from_type(
+                PieceType::Pawn,
+                (5, 3).into(),
+                PieceColor::Light,
+            ));
+            b.add_piece(BoardPiece::new_from_type(
+                PieceType::King,
+                (4, 0).into(),
+                PieceColor::Light,
+            ));
+            b.add_piece(BoardPiece::new_from_type(
+                PieceType::King,
+                (4, 7).into(),
+                PieceColor::Dark,
+            ));
 
-            assert_eq!(Fen {
-                piece_placements: FenPiecePlacements {
-                    pieces: vec![
-                        ((5, 3).into(), PieceColor::Light, PieceType::Pawn).into(),
-                        ((4, 0).into(), PieceColor::Light, PieceType::King).into(),
-                        ((4, 7).into(), PieceColor::Dark, PieceType::King).into(),
-                    ],
+            assert_eq!(
+                Fen {
+                    piece_placements: FenPiecePlacements {
+                        pieces: vec![
+                            ((5, 3).into(), PieceColor::Light, PieceType::Pawn).into(),
+                            ((4, 0).into(), PieceColor::Light, PieceType::King).into(),
+                            ((4, 7).into(), PieceColor::Dark, PieceType::King).into(),
+                        ],
+                    },
+                    light_to_move: true,
+                    castles: BoardCastleState {
+                        light_king_side: true,
+                        light_queen_side: true,
+                        dark_king_side: true,
+                        dark_queen_side: true,
+                    },
+                    en_passant: None,
+                    half_moves: 0,
+                    move_number: 1,
                 },
-                light_to_move: true,
-                castles: BoardCastleState {
-                    light_king_side: true,
-                    light_queen_side: true,
-                    dark_king_side: true,
-                    dark_queen_side: true,
-                },
-                en_passant: None,
-                half_moves: 0,
-                move_number: 1,
-            }, b.into());
+                b.into()
+            );
         }
     }
 
@@ -493,60 +565,128 @@ mod tests {
         use super::*;
 
         fn get_fen_piece_placements_gotc() -> FenPiecePlacements {
-            let mut expected = FenPiecePlacements {
-                pieces: Vec::new(),
-            };
+            let mut expected = FenPiecePlacements { pieces: Vec::new() };
             // We have to implement the entire board manually. You can view the position here:
             // https://lichess.org/study/UZlSqSLA/Ku9M59je#31
             // Eighth row
-            expected.pieces.push(((0, 7).into(), PieceColor::Dark, PieceType::Rook));
-            expected.pieces.push(((4, 7).into(), PieceColor::Dark, PieceType::Rook));
-            expected.pieces.push(((6, 7).into(), PieceColor::Dark, PieceType::King));
+            expected
+                .pieces
+                .push(((0, 7).into(), PieceColor::Dark, PieceType::Rook));
+            expected
+                .pieces
+                .push(((4, 7).into(), PieceColor::Dark, PieceType::Rook));
+            expected
+                .pieces
+                .push(((6, 7).into(), PieceColor::Dark, PieceType::King));
             // Seventh row
-            expected.pieces.push(((0, 6).into(), PieceColor::Dark, PieceType::Pawn));
-            expected.pieces.push(((1, 6).into(), PieceColor::Dark, PieceType::Pawn));
-            expected.pieces.push(((5, 6).into(), PieceColor::Dark, PieceType::Pawn));
-            expected.pieces.push(((6, 6).into(), PieceColor::Dark, PieceType::Bishop));
-            expected.pieces.push(((7, 6).into(), PieceColor::Dark, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((0, 6).into(), PieceColor::Dark, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((1, 6).into(), PieceColor::Dark, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((5, 6).into(), PieceColor::Dark, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((6, 6).into(), PieceColor::Dark, PieceType::Bishop));
+            expected
+                .pieces
+                .push(((7, 6).into(), PieceColor::Dark, PieceType::Pawn));
             // Sixth row
-            expected.pieces.push(((1, 5).into(), PieceColor::Dark, PieceType::Queen));
-            expected.pieces.push(((2, 5).into(), PieceColor::Dark, PieceType::Pawn));
-            expected.pieces.push(((6, 5).into(), PieceColor::Dark, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((1, 5).into(), PieceColor::Dark, PieceType::Queen));
+            expected
+                .pieces
+                .push(((2, 5).into(), PieceColor::Dark, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((6, 5).into(), PieceColor::Dark, PieceType::Pawn));
             // Fifth row
-            expected.pieces.push(((2, 4).into(), PieceColor::Light, PieceType::Bishop));
+            expected
+                .pieces
+                .push(((2, 4).into(), PieceColor::Light, PieceType::Bishop));
             // Fourth row
-            expected.pieces.push(((2, 3).into(), PieceColor::Light, PieceType::Bishop));
-            expected.pieces.push(((3, 3).into(), PieceColor::Light, PieceType::Pawn));
-            expected.pieces.push(((6, 3).into(), PieceColor::Dark, PieceType::Bishop));
+            expected
+                .pieces
+                .push(((2, 3).into(), PieceColor::Light, PieceType::Bishop));
+            expected
+                .pieces
+                .push(((3, 3).into(), PieceColor::Light, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((6, 3).into(), PieceColor::Dark, PieceType::Bishop));
             // Third row
-            expected.pieces.push(((0, 2).into(), PieceColor::Light, PieceType::Queen));
-            expected.pieces.push(((2, 2).into(), PieceColor::Dark, PieceType::Knight));
-            expected.pieces.push(((5, 2).into(), PieceColor::Light, PieceType::Knight));
+            expected
+                .pieces
+                .push(((0, 2).into(), PieceColor::Light, PieceType::Queen));
+            expected
+                .pieces
+                .push(((2, 2).into(), PieceColor::Dark, PieceType::Knight));
+            expected
+                .pieces
+                .push(((5, 2).into(), PieceColor::Light, PieceType::Knight));
             // Second row
-            expected.pieces.push(((0, 1).into(), PieceColor::Light, PieceType::Pawn));
-            expected.pieces.push(((5, 1).into(), PieceColor::Light, PieceType::Pawn));
-            expected.pieces.push(((6, 1).into(), PieceColor::Light, PieceType::Pawn));
-            expected.pieces.push(((7, 1).into(), PieceColor::Light, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((0, 1).into(), PieceColor::Light, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((5, 1).into(), PieceColor::Light, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((6, 1).into(), PieceColor::Light, PieceType::Pawn));
+            expected
+                .pieces
+                .push(((7, 1).into(), PieceColor::Light, PieceType::Pawn));
             // First row
-            expected.pieces.push(((3, 0).into(), PieceColor::Light, PieceType::Rook));
-            expected.pieces.push(((5, 0).into(), PieceColor::Light, PieceType::King));
-            expected.pieces.push(((7, 0).into(), PieceColor::Light, PieceType::Rook));
+            expected
+                .pieces
+                .push(((3, 0).into(), PieceColor::Light, PieceType::Rook));
+            expected
+                .pieces
+                .push(((5, 0).into(), PieceColor::Light, PieceType::King));
+            expected
+                .pieces
+                .push(((7, 0).into(), PieceColor::Light, PieceType::Rook));
 
             expected
         }
 
         #[test]
         fn test_from_str_valid_input() {
-            assert_eq!(get_fen_piece_placements_gotc(), "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R".parse().unwrap());
+            assert_eq!(
+                get_fen_piece_placements_gotc(),
+                "r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R"
+                    .parse()
+                    .unwrap()
+            );
         }
 
         #[test]
         fn test_from_str_invalid_input() {
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str(""));
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str("asdfjknasdfjkndasjknf"));
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str("0/0/0/0/0/0/0/0"));
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str("a/b/c/d/e"));
-            assert_eq!(Err(FenError::InvalidFenPiecePlacementString), FenPiecePlacements::from_str("aaaaaa/AAAA4A/b6B"));
+            assert_eq!(
+                Err(FenError::InvalidFenPiecePlacementString),
+                FenPiecePlacements::from_str("")
+            );
+            assert_eq!(
+                Err(FenError::InvalidFenPiecePlacementString),
+                FenPiecePlacements::from_str("asdfjknasdfjkndasjknf")
+            );
+            assert_eq!(
+                Err(FenError::InvalidFenPiecePlacementString),
+                FenPiecePlacements::from_str("0/0/0/0/0/0/0/0")
+            );
+            assert_eq!(
+                Err(FenError::InvalidFenPiecePlacementString),
+                FenPiecePlacements::from_str("a/b/c/d/e")
+            );
+            assert_eq!(
+                Err(FenError::InvalidFenPiecePlacementString),
+                FenPiecePlacements::from_str("aaaaaa/AAAA4A/b6B")
+            );
         }
 
         #[test]
@@ -571,12 +711,40 @@ mod tests {
 
         #[test]
         fn test_to_string() {
-            assert_eq!(String::from("2k5/8/8/8/8/4R3/8/2K5"), FenPiecePlacements::from_str("2k5/8/8/8/8/4R3/8/2K5").unwrap().to_string());
-            assert_eq!(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"), FenPiecePlacements::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR").unwrap().to_string());
-            assert_eq!(String::from("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R"), FenPiecePlacements::from_str("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R").unwrap().to_string());
-            assert_eq!(String::from("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R"), FenPiecePlacements::from_str("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R").unwrap().to_string());
-            assert_eq!(String::from("5k2/ppp5/4P3/3R3p/6P1/1K2Nr2/PP3P2/8"), FenPiecePlacements::from_str("5k2/ppp5/4P3/3R3p/6P1/1K2Nr2/PP3P2/8").unwrap().to_string());
-            assert_eq!(String::from("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R"), get_fen_piece_placements_gotc().to_string());
+            assert_eq!(
+                String::from("2k5/8/8/8/8/4R3/8/2K5"),
+                FenPiecePlacements::from_str("2k5/8/8/8/8/4R3/8/2K5")
+                    .unwrap()
+                    .to_string()
+            );
+            assert_eq!(
+                String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
+                FenPiecePlacements::from_str("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+                    .unwrap()
+                    .to_string()
+            );
+            assert_eq!(
+                String::from("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R"),
+                FenPiecePlacements::from_str("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R")
+                    .unwrap()
+                    .to_string()
+            );
+            assert_eq!(
+                String::from("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R"),
+                FenPiecePlacements::from_str("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R")
+                    .unwrap()
+                    .to_string()
+            );
+            assert_eq!(
+                String::from("5k2/ppp5/4P3/3R3p/6P1/1K2Nr2/PP3P2/8"),
+                FenPiecePlacements::from_str("5k2/ppp5/4P3/3R3p/6P1/1K2Nr2/PP3P2/8")
+                    .unwrap()
+                    .to_string()
+            );
+            assert_eq!(
+                String::from("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R"),
+                get_fen_piece_placements_gotc().to_string()
+            );
         }
     }
 
@@ -586,10 +754,16 @@ mod tests {
         #[test]
         fn test_from_board_piece() {
             let p = BoardPiece::new_from_type(PieceType::Queen, (2, 1).into(), PieceColor::Dark);
-            assert_eq!((Coordinate::new(2, 1), PieceColor::Dark, PieceType::Queen), p.into());
+            assert_eq!(
+                (Coordinate::new(2, 1), PieceColor::Dark, PieceType::Queen),
+                p.into()
+            );
 
             let p = BoardPiece::new_from_type(PieceType::Rook, (7, 7).into(), PieceColor::Light);
-            assert_eq!((Coordinate::new(7, 7), PieceColor::Light, PieceType::Rook), p.into());
+            assert_eq!(
+                (Coordinate::new(7, 7), PieceColor::Light, PieceType::Rook),
+                p.into()
+            );
         }
     }
 

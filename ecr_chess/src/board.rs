@@ -162,114 +162,114 @@ impl Default for Board {
         // Pawns
         for i in 0..=7 {
             // Light pawns
-            board.add_piece(
-                BoardPiece::new_from_type(
-                    PieceType::Pawn, (i as u8, 1).into(), PieceColor::Light,
-                )
-            );
+            board.add_piece(BoardPiece::new_from_type(
+                PieceType::Pawn,
+                (i as u8, 1).into(),
+                PieceColor::Light,
+            ));
 
             // Dark pawns
-            board.add_piece(
-                BoardPiece::new_from_type(
-                    PieceType::Pawn, (i as u8, 6).into(), PieceColor::Dark,
-                )
-            );
+            board.add_piece(BoardPiece::new_from_type(
+                PieceType::Pawn,
+                (i as u8, 6).into(),
+                PieceColor::Dark,
+            ));
         }
 
         // Light king
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::King, (4, 0).into(), PieceColor::Light,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::King,
+            (4, 0).into(),
+            PieceColor::Light,
+        ));
         // Dark king
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::King, (4, 7).into(), PieceColor::Dark,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::King,
+            (4, 7).into(),
+            PieceColor::Dark,
+        ));
 
         // Light queen
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Queen, (3, 0).into(), PieceColor::Light,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Queen,
+            (3, 0).into(),
+            PieceColor::Light,
+        ));
         // Dark queen
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Queen, (3, 7).into(), PieceColor::Dark,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Queen,
+            (3, 7).into(),
+            PieceColor::Dark,
+        ));
 
         // Light rooks
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Rook, (0, 0).into(), PieceColor::Light,
-            )
-        );
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Rook, (7, 0).into(), PieceColor::Light,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Rook,
+            (0, 0).into(),
+            PieceColor::Light,
+        ));
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Rook,
+            (7, 0).into(),
+            PieceColor::Light,
+        ));
         // Dark rooks
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Rook, (0, 7).into(), PieceColor::Dark,
-            )
-        );
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Rook, (7, 7).into(), PieceColor::Dark,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Rook,
+            (0, 7).into(),
+            PieceColor::Dark,
+        ));
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Rook,
+            (7, 7).into(),
+            PieceColor::Dark,
+        ));
 
         // Light knights
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Knight, (1, 0).into(), PieceColor::Light,
-            )
-        );
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Knight, (6, 0).into(), PieceColor::Light,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Knight,
+            (1, 0).into(),
+            PieceColor::Light,
+        ));
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Knight,
+            (6, 0).into(),
+            PieceColor::Light,
+        ));
         // Dark knights
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Knight, (1, 7).into(), PieceColor::Dark,
-            )
-        );
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Knight, (6, 7).into(), PieceColor::Dark,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Knight,
+            (1, 7).into(),
+            PieceColor::Dark,
+        ));
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Knight,
+            (6, 7).into(),
+            PieceColor::Dark,
+        ));
 
         // Light bishops
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Bishop, (2, 0).into(), PieceColor::Light,
-            )
-        );
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Bishop, (5, 0).into(), PieceColor::Light,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Bishop,
+            (2, 0).into(),
+            PieceColor::Light,
+        ));
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Bishop,
+            (5, 0).into(),
+            PieceColor::Light,
+        ));
         // Dark bishops
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Bishop, (2, 7).into(), PieceColor::Dark,
-            )
-        );
-        board.add_piece(
-            BoardPiece::new_from_type(
-                PieceType::Bishop, (5, 7).into(), PieceColor::Dark,
-            )
-        );
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Bishop,
+            (2, 7).into(),
+            PieceColor::Dark,
+        ));
+        board.add_piece(BoardPiece::new_from_type(
+            PieceType::Bishop,
+            (5, 7).into(),
+            PieceColor::Dark,
+        ));
 
         board
     }
@@ -314,12 +314,15 @@ mod tests {
             assert!(b.light_to_move);
             assert_eq!(1, b.move_number);
             assert_eq!(0, b.half_move_amount);
-            assert_eq!(BoardCastleState {
-                light_king_side: true,
-                light_queen_side: true,
-                dark_king_side: true,
-                dark_queen_side: true,
-            }, b.castle_state);
+            assert_eq!(
+                BoardCastleState {
+                    light_king_side: true,
+                    light_queen_side: true,
+                    dark_king_side: true,
+                    dark_queen_side: true,
+                },
+                b.castle_state
+            );
             assert_eq!(None, b.en_passant_target);
 
             assert_eq!(0, b.moves.len());
@@ -364,7 +367,8 @@ mod tests {
         #[test]
         fn test_add_piece() {
             let mut b = Board::empty();
-            let pawn1 = BoardPiece::new_from_type(PieceType::Pawn, (2, 1).into(), PieceColor::Light);
+            let pawn1 =
+                BoardPiece::new_from_type(PieceType::Pawn, (2, 1).into(), PieceColor::Light);
             let pawn2 = BoardPiece::new_from_type(PieceType::Pawn, (5, 6).into(), PieceColor::Dark);
 
             b.add_piece(pawn1.clone());
@@ -415,21 +419,27 @@ mod tests {
         #[test]
         fn test_get_castle_state() {
             let mut b = Board::empty();
-            assert_eq!(&BoardCastleState {
-                light_king_side: true,
-                light_queen_side: true,
-                dark_king_side: true,
-                dark_queen_side: true,
-            }, b.get_castle_state());
+            assert_eq!(
+                &BoardCastleState {
+                    light_king_side: true,
+                    light_queen_side: true,
+                    dark_king_side: true,
+                    dark_queen_side: true,
+                },
+                b.get_castle_state()
+            );
 
             b.castle_state.dark_king_side = false;
             b.castle_state.dark_queen_side = false;
-            assert_eq!(&BoardCastleState {
-                light_king_side: true,
-                light_queen_side: true,
-                dark_king_side: false,
-                dark_queen_side: false,
-            }, b.get_castle_state());
+            assert_eq!(
+                &BoardCastleState {
+                    light_king_side: true,
+                    light_queen_side: true,
+                    dark_king_side: false,
+                    dark_queen_side: false,
+                },
+                b.get_castle_state()
+            );
         }
 
         #[test]
@@ -464,12 +474,15 @@ mod tests {
             assert_eq!(None, board.en_passant_target);
             assert_eq!(3, board.half_move_amount);
             assert_eq!(6, board.move_number);
-            assert_eq!(BoardCastleState {
-                light_king_side: false,
-                light_queen_side: false,
-                dark_king_side: false,
-                dark_queen_side: false,
-            }, board.castle_state);
+            assert_eq!(
+                BoardCastleState {
+                    light_king_side: false,
+                    light_queen_side: false,
+                    dark_king_side: false,
+                    dark_queen_side: false,
+                },
+                board.castle_state
+            );
         }
 
         #[test]
@@ -482,7 +495,11 @@ mod tests {
             assert_eq!(3, b.pieces.len());
             assert_eq!(3, b.get_pieces().len());
 
-            b.add_piece(BoardPiece::new_from_type(PieceType::Pawn, (1, 1).into(), PieceColor::Light));
+            b.add_piece(BoardPiece::new_from_type(
+                PieceType::Pawn,
+                (1, 1).into(),
+                PieceColor::Light,
+            ));
             assert_eq!(4, b.pieces.len());
             assert_eq!(4, b.get_pieces().len());
         }
@@ -491,7 +508,10 @@ mod tests {
         fn test_default() {
             let b = Board::default();
             let f: Fen = b.into();
-            assert_eq!(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), f.to_string());
+            assert_eq!(
+                String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
+                f.to_string()
+            );
         }
     }
 
@@ -505,53 +525,63 @@ mod tests {
                 light_queen_side: false,
                 dark_king_side: false,
                 dark_queen_side: false,
-            }.is_any_possible());
+            }
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: true,
                 light_queen_side: false,
                 dark_king_side: false,
                 dark_queen_side: false,
-            }.is_any_possible());
+            }
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: false,
                 light_queen_side: true,
                 dark_king_side: false,
                 dark_queen_side: false,
-            }.is_any_possible());
+            }
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: false,
                 light_queen_side: false,
                 dark_king_side: true,
                 dark_queen_side: false,
-            }.is_any_possible());
+            }
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: false,
                 light_queen_side: false,
                 dark_king_side: false,
                 dark_queen_side: true,
-            }.is_any_possible());
+            }
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: true,
                 light_queen_side: false,
                 dark_king_side: true,
                 dark_queen_side: false,
-            }.is_any_possible());
+            }
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: true,
                 light_queen_side: true,
                 dark_king_side: true,
                 dark_queen_side: true,
-            }.is_any_possible());
+            }
+            .is_any_possible());
         }
 
         #[test]
         fn test_default() {
-            assert_eq!(BoardCastleState {
-                light_king_side: true,
-                light_queen_side: true,
-                dark_king_side: true,
-                dark_queen_side: true,
-            }, BoardCastleState::default());
+            assert_eq!(
+                BoardCastleState {
+                    light_king_side: true,
+                    light_queen_side: true,
+                    dark_king_side: true,
+                    dark_queen_side: true,
+                },
+                BoardCastleState::default()
+            );
         }
     }
 }

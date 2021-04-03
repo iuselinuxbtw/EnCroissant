@@ -60,7 +60,7 @@ enum LinearDirections {
 /// This enum combines LinearDirections and DiagonalDirections. Useful for the explore_knight_moves.
 /// The first direction always refers to the direction where the knight jumps further. These are
 /// cardinal directions, which you can look up [here](https://en.wikipedia.org/wiki/Cardinal_direction).
-enum Directions {
+enum KnightDirections {
     // First the linear directions.
     // left-then-up
     WN,
@@ -78,6 +78,28 @@ enum Directions {
     // down-then-right
     SE,
     // down-then-left
+    SW,
+}
+/// This enum holds the combined directions of LinearDirections and DiagonalDirections. Used for
+/// e.g. KingDirections
+enum Directions {
+    // Linear Directions
+    // up
+    N,
+    // right
+    E,
+    // down
+    S,
+    // left
+    W,
+    // Diagonal Directions
+    // upper-left
+    NW,
+    // upper-right
+    NE,
+    // down-right
+    SE,
+    // down-left
     SW,
 }
 
@@ -247,53 +269,53 @@ fn knight_moves(
     team_color: &PieceColor,
     board: &board::Board,
 ) -> Vec<BasicMove> {
-    let mut all_directions: Vec<Directions> = vec![
-        Directions::NW,
-        Directions::NE,
-        Directions::SW,
-        Directions::SE,
-        Directions::ES,
-        Directions::EN,
-        Directions::WN,
-        Directions::WS,
+    let mut all_directions: Vec<KnightDirections> = vec![
+        KnightDirections::NW,
+        KnightDirections::NE,
+        KnightDirections::SW,
+        KnightDirections::SE,
+        KnightDirections::ES,
+        KnightDirections::EN,
+        KnightDirections::WN,
+        KnightDirections::WS,
     ];
     // This queue is used to add the directions which can be scanned without resulting in invalid coordinates.
-    let mut queue: Vec<Directions> = vec![];
+    let mut queue: Vec<KnightDirections> = vec![];
     // TODO: Return whether the moves contain a fork
     let mut result: Vec<BasicMove> = Vec::new();
     let border_distances = distance_to_border(start);
     // TODO: Make this another function and the directions as macros
     // This covers the positions from the fight against the clock to the left and then down
-    if border_distances.right>1 {
-        if border_distances.up>0 {
-            queue.push(Directions::ES);
+    if border_distances.right > 1 {
+        if border_distances.up > 0 {
+            &queue.push(KnightDirections::ES);
         }
-        if border_distances.down>0 {
-            queue.push(Directions::EN);
-        }
-    }
-    if border_distances.up>1 {
-        if border_distances.left>0 {
-            queue.push(Directions::NE);
-        }
-        if border_distances.right>0 {
-            queue.push(Directions::NW);
+        if border_distances.down > 0 {
+            &queue.push(KnightDirections::EN);
         }
     }
-    if border_distances.left>1{
-        if border_distances.left>0 {
-            queue.push(Directions::WN);
+    if border_distances.up > 1 {
+        if border_distances.left > 0 {
+            &queue.push(KnightDirections::NE);
         }
-        if border_distances.right>0 {
-            queue.push(Directions::WS);
+        if border_distances.right > 0 {
+            &queue.push(KnightDirections::NW);
         }
     }
-    if border_distances.down>1 {
-        if border_distances.left>0 {
-            queue.push(Directions::SW);
+    if border_distances.left > 1 {
+        if border_distances.left > 0 {
+            &queue.push(KnightDirections::WN);
         }
-        if border_distances.right>0 {
-            queue.push(Directions::SE);
+        if border_distances.right > 0 {
+            &queue.push(KnightDirections::WS);
+        }
+    }
+    if border_distances.down > 1 {
+        if border_distances.left > 0 {
+            &queue.push(KnightDirections::SW);
+        }
+        if border_distances.right > 0 {
+            &queue.push(KnightDirections::SE);
         }
     }
     for e in queue {
@@ -301,8 +323,9 @@ fn knight_moves(
     }
     result
 }
-
-macro_rules! check_knight_move {
+/// This macro is essentially the same as check_square without the 'break' statements so that it can
+/// be used outside of a loop.
+macro_rules! check_move {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
         let possible_square =  coordinate_check($x as &usize, $y as &usize, $team_color, $board);
         // If the square is occupied by a piece
@@ -328,35 +351,110 @@ fn explore_knight_moves(
     start: &Coordinate,
     team_color: &PieceColor,
     board: &board::Board,
-    direction: Directions,
+    direction: KnightDirections,
 ) -> Vec<BasicMove> {
     let from_x: usize = start.get_x() as usize;
     let from_y: usize = start.get_y() as usize;
     let mut result: Vec<BasicMove> = vec![];
     match direction {
-        Directions::WN => {
-            check_knight_move!(&(from_x - 2), &(from_y + 1), team_color, result, board);
+        KnightDirections::WN => {
+            check_move!(&(from_x - 2), &(from_y + 1), team_color, result, board);
         }
-        Directions::EN => {
-            check_knight_move!(&(from_x + 2), &(from_y + 1), team_color, result, board);
+        KnightDirections::EN => {
+            check_move!(&(from_x + 2), &(from_y + 1), team_color, result, board);
         }
-        Directions::ES => {
-            check_knight_move!(&(from_x + 2), &(from_y - 1), team_color, result, board);
+        KnightDirections::ES => {
+            check_move!(&(from_x + 2), &(from_y - 1), team_color, result, board);
         }
-        Directions::WS => {
-            check_knight_move!(&(from_x - 2), &(from_y - 1), team_color, result, board);
+        KnightDirections::WS => {
+            check_move!(&(from_x - 2), &(from_y - 1), team_color, result, board);
+        }
+        KnightDirections::NW => {
+            check_move!(&(from_x - 1), &(from_y + 2), team_color, result, board);
+        }
+        KnightDirections::NE => {
+            check_move!(&(from_x + 1), &(from_y + 2), team_color, result, board);
+        }
+        KnightDirections::SE => {
+            check_move!(&(from_x + 1), &(from_y - 2), team_color, result, board);
+        }
+        KnightDirections::SW => {
+            check_move!(&(from_x - 1), &(from_y - 2), team_color, result, board);
+        }
+    }
+    result
+}
+/// This function gives back the possible moves for the king (For now?) without castling.
+fn king_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board) -> Vec<BasicMove> {
+    let mut result: Vec<BasicMove> = vec![];
+    let border_distances = distance_to_border(start);
+    let mut queue: Vec<Directions> = vec![];
+
+    // This can be made smarter by only adding the linear directions and filling the diagonals afterwards
+    if border_distances.right > 0 {
+        &queue.push(Directions::E);
+        if border_distances.up > 0 {
+            &queue.push(Directions::NE);
+        }
+    }
+    if border_distances.up < 0 {
+        &queue.push(Directions::N);
+        if border_distances.left > 0 {
+            &queue.push(Directions::NW);
+        }
+    }
+    if border_distances.left < 0 {
+        &queue.push(Directions::W);
+        if border_distances.down > 0 {
+            &queue.push(Directions::SW);
+        }
+    }
+    if border_distances.down < 0 {
+        &queue.push(Directions::S);
+        if border_distances.right > 0 {
+            &queue.push(Directions::SE);
+        }
+    }
+    // Now we iterate through the possible directions and check if the positions are possible.
+    for d in queue {
+        result.append(&mut explore_king_moves(start, team_color, board, d));
+    }
+    result
+}
+
+fn explore_king_moves(
+    start: &Coordinate,
+    team_color: &PieceColor,
+    board: &board::Board,
+    direction: Directions,
+) -> Vec<BasicMove> {
+    let result: Vec<BasicMove> = vec![];
+    let from_x = start.get_x();
+    let from_y = start.get_y();
+    match direction {
+        Directions::N => {
+            check_move!(&(from_x), &(from_y + 1), team_color, result, board);
+        }
+        Directions::E => {
+            check_move!(&(from_x + 1), &(from_y), team_color, result, board);
+        }
+        Directions::S => {
+            check_move!(&(from_x), &(from_y - 1), team_color, result, board);
+        }
+        Directions::W => {
+            check_move!(&(from_x - 1), &(from_y), team_color, result, board);
         }
         Directions::NW => {
-            check_knight_move!(&(from_x - 1), &(from_y + 2), team_color, result, board);
+            check_move!(&(from_x - 1), &(from_y + 1), team_color, result, board);
         }
         Directions::NE => {
-            check_knight_move!(&(from_x + 1), &(from_y + 2), team_color, result, board);
+            check_move!(&(from_x + 1), &(from_y + 1), team_color, result, board);
         }
         Directions::SE => {
-            check_knight_move!(&(from_x + 1), &(from_y - 2), team_color, result, board);
+            check_move!(&(from_x + 1), &(from_y - 1), team_color, result, board);
         }
         Directions::SW => {
-            check_knight_move!(&(from_x - 1), &(from_y - 2), team_color, result, board);
+            check_move!(&(from_x - 1), &(from_y - 1), team_color, result, board);
         }
     }
     result
@@ -375,6 +473,7 @@ struct DistanceToBorder {
     left: usize,
 }
 
+/// Returns the distance of a coordinate to every border.
 fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
     let x = coords.get_x() as usize;
     let y = coords.get_y() as usize;
@@ -910,16 +1009,34 @@ mod tests {
     }
 
     #[test]
-    fn test_knight_moves(){
+    fn test_knight_moves() {
         let default_board = board::Board::default();
-        let result = knight_moves(&(3,3).into(), &PieceColor::Light, &default_board);
+        let result = knight_moves(&(3, 3).into(), &PieceColor::Light, &default_board);
         let expected: Vec<BasicMove> = vec![
-            BasicMove{to:(5,2).into(), capture:false},
-            BasicMove{to:(5,4).into(), capture:false},
-            BasicMove{to:(4,5).into(), capture:false},
-            BasicMove{to:(2,5).into(), capture:false},
-            BasicMove{to:(1,4).into(), capture:false},
-            BasicMove{to:(1,2).into(), capture:false},
+            BasicMove {
+                to: (5, 2).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (5, 4).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (4, 5).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (2, 5).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (1, 4).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (1, 2).into(),
+                capture: false,
+            },
         ];
         assert_eq!(result, expected);
     }

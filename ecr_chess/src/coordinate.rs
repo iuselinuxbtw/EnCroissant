@@ -10,10 +10,7 @@ pub struct Coordinate {
 impl Coordinate {
     /// Returns a new instance of [`Coordinate`] with the supplied x and y coordinates set.
     pub fn new(x: u8, y: u8) -> Coordinate {
-        Coordinate {
-            x,
-            y,
-        }
+        Coordinate { x, y }
     }
 
     /// Returns the x coordinate.
@@ -80,10 +77,7 @@ mod tests {
     use super::*;
 
     fn get_coordinate() -> Coordinate {
-        Coordinate {
-            x: 3,
-            y: 4,
-        }
+        Coordinate { x: 3, y: 4 }
     }
 
     #[test]
@@ -144,11 +138,29 @@ mod tests {
 
     #[test]
     fn test_partial_cmp() {
-        assert_eq!(Some(Ordering::Greater), Coordinate::new(7, 7).partial_cmp(&Coordinate::new(0, 0)));
-        assert_eq!(Some(Ordering::Equal), Coordinate::new(4, 4).partial_cmp(&Coordinate::new(4, 4)));
-        assert_eq!(Some(Ordering::Less), Coordinate::new(4, 3).partial_cmp(&Coordinate::new(4, 4)));
-        assert_eq!(Some(Ordering::Less), Coordinate::new(3, 4).partial_cmp(&Coordinate::new(4, 4)));
-        assert_eq!(Some(Ordering::Greater), Coordinate::new(5, 4).partial_cmp(&Coordinate::new(4, 4)));
-        assert_eq!(Some(Ordering::Less), Coordinate::new(7, 1).partial_cmp(&Coordinate::new(1, 7)));
+        assert_eq!(
+            Some(Ordering::Greater),
+            Coordinate::new(7, 7).partial_cmp(&Coordinate::new(0, 0))
+        );
+        assert_eq!(
+            Some(Ordering::Equal),
+            Coordinate::new(4, 4).partial_cmp(&Coordinate::new(4, 4))
+        );
+        assert_eq!(
+            Some(Ordering::Less),
+            Coordinate::new(4, 3).partial_cmp(&Coordinate::new(4, 4))
+        );
+        assert_eq!(
+            Some(Ordering::Less),
+            Coordinate::new(3, 4).partial_cmp(&Coordinate::new(4, 4))
+        );
+        assert_eq!(
+            Some(Ordering::Greater),
+            Coordinate::new(5, 4).partial_cmp(&Coordinate::new(4, 4))
+        );
+        assert_eq!(
+            Some(Ordering::Less),
+            Coordinate::new(7, 1).partial_cmp(&Coordinate::new(1, 7))
+        );
     }
 }

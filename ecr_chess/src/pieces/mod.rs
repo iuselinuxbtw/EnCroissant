@@ -8,13 +8,13 @@ use dyn_clonable::clonable;
 use crate::coordinate::Coordinate;
 use crate::formats::fen::FenPiece;
 
+pub mod bishop;
 pub mod king;
+pub mod knight;
+pub mod move_gen;
+pub mod pawn;
 pub mod queen;
 pub mod rook;
-pub mod bishop;
-pub mod knight;
-pub mod pawn;
-pub mod move_gen;
 
 /// A [`Piece`] represents a chess figure on the [`Board`](struct@crate::board::Board).
 #[clonable]
@@ -98,7 +98,11 @@ impl BoardPiece {
 
     /// Creates a new piece from the supplied [`PieceType`]. Under the hood, this method calls
     /// [`BoardPiece::new`] with a [`Box<dyn Piece>`] generated according to the supplied piece type.
-    pub fn new_from_type(piece_type: PieceType, coordinate: Coordinate, color: PieceColor) -> BoardPiece {
+    pub fn new_from_type(
+        piece_type: PieceType,
+        coordinate: Coordinate,
+        color: PieceColor,
+    ) -> BoardPiece {
         BoardPiece::new(piece_type.into(), coordinate, color)
     }
 
@@ -159,8 +163,7 @@ mod tests {
 
     impl Debug for MockPiece {
         fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-            f.debug_struct("MockPiece")
-                .finish()
+            f.debug_struct("MockPiece").finish()
         }
     }
 
@@ -193,20 +196,17 @@ mod tests {
         fn test_eq_and_new() {
             // Everything is equal
             let mut mock1 = MockPiece::new();
-            mock1.expect_get_shortcode_algebraic()
-                .return_const("Q");
+            mock1.expect_get_shortcode_algebraic().return_const("Q");
             let p1 = BoardPiece::new(Box::new(mock1), (3, 4).into(), PieceColor::Dark);
 
             let mut mock2 = MockPiece::new();
-            mock2.expect_get_shortcode_algebraic()
-                .return_const("Q");
+            mock2.expect_get_shortcode_algebraic().return_const("Q");
             let mut p2 = BoardPiece::new(Box::new(mock2), (3, 4).into(), PieceColor::Dark);
             assert_eq!(p1, p2);
 
             // Piece does not has the same short code
             let mut mock3 = MockPiece::new();
-            mock3.expect_get_shortcode_algebraic()
-                .return_const("K");
+            mock3.expect_get_shortcode_algebraic().return_const("K");
             let p3 = BoardPiece::new(Box::new(mock3), (3, 4).into(), PieceColor::Dark);
             assert_ne!(p1, p3);
 
@@ -233,49 +233,41 @@ mod tests {
         fn test_new_from_type() {
             // Pawn
             assert_eq!(
-                BoardPiece::new(
-                    Box::new(pawn::Pawn {}), (7, 1).into(), PieceColor::Dark,
-                ),
+                BoardPiece::new(Box::new(pawn::Pawn {}), (7, 1).into(), PieceColor::Dark,),
                 BoardPiece::new_from_type(PieceType::Pawn, (7, 1).into(), PieceColor::Dark),
             );
 
             // Knight
             assert_eq!(
                 BoardPiece::new(
-                    Box::new(knight::Knight {}), (1, 3).into(), PieceColor::Light,
+                    Box::new(knight::Knight {}),
+                    (1, 3).into(),
+                    PieceColor::Light,
                 ),
                 BoardPiece::new_from_type(PieceType::Knight, (1, 3).into(), PieceColor::Light),
             );
 
             // Bishop
             assert_eq!(
-                BoardPiece::new(
-                    Box::new(bishop::Bishop {}), (4, 4).into(), PieceColor::Dark,
-                ),
+                BoardPiece::new(Box::new(bishop::Bishop {}), (4, 4).into(), PieceColor::Dark,),
                 BoardPiece::new_from_type(PieceType::Bishop, (4, 4).into(), PieceColor::Dark),
             );
 
             // Rook
             assert_eq!(
-                BoardPiece::new(
-                    Box::new(rook::Rook {}), (3, 5).into(), PieceColor::Light,
-                ),
+                BoardPiece::new(Box::new(rook::Rook {}), (3, 5).into(), PieceColor::Light,),
                 BoardPiece::new_from_type(PieceType::Rook, (3, 5).into(), PieceColor::Light),
             );
 
             // Queen
             assert_eq!(
-                BoardPiece::new(
-                    Box::new(queen::Queen {}), (5, 5).into(), PieceColor::Dark,
-                ),
+                BoardPiece::new(Box::new(queen::Queen {}), (5, 5).into(), PieceColor::Dark,),
                 BoardPiece::new_from_type(PieceType::Queen, (5, 5).into(), PieceColor::Dark),
             );
 
             // King
             assert_eq!(
-                BoardPiece::new(
-                    Box::new(king::King {}), (2, 7).into(), PieceColor::Light,
-                ),
+                BoardPiece::new(Box::new(king::King {}), (2, 7).into(), PieceColor::Light,),
                 BoardPiece::new_from_type(PieceType::King, (2, 7).into(), PieceColor::Light),
             );
         }
@@ -294,7 +286,8 @@ mod tests {
 
         #[test]
         fn test_get_has_moved() {
-            let mut p = BoardPiece::new_from_type(PieceType::Pawn, (1, 2).into(), PieceColor::Light);
+            let mut p =
+                BoardPiece::new_from_type(PieceType::Pawn, (1, 2).into(), PieceColor::Light);
             assert!(!p.get_has_moved());
             p.has_moved = true;
             assert!(p.get_has_moved());
@@ -315,13 +308,32 @@ mod tests {
         }
 
         #[test]
-        fn test_into_box_dyn_piece() { // Actually this is `impl From<PieceType> for Box<dyn Piece>`
-            assert_eq!(Box::new(pawn::Pawn {}).get_type(), Box::<dyn Piece>::from(PieceType::Pawn).get_type());
-            assert_eq!(Box::new(knight::Knight {}).get_type(), Box::<dyn Piece>::from(PieceType::Knight).get_type());
-            assert_eq!(Box::new(bishop::Bishop {}).get_type(), Box::<dyn Piece>::from(PieceType::Bishop).get_type());
-            assert_eq!(Box::new(rook::Rook {}).get_type(), Box::<dyn Piece>::from(PieceType::Rook).get_type());
-            assert_eq!(Box::new(queen::Queen {}).get_type(), Box::<dyn Piece>::from(PieceType::Queen).get_type());
-            assert_eq!(Box::new(king::King {}).get_type(), Box::<dyn Piece>::from(PieceType::King).get_type());
+        fn test_into_box_dyn_piece() {
+            // Actually this is `impl From<PieceType> for Box<dyn Piece>`
+            assert_eq!(
+                Box::new(pawn::Pawn {}).get_type(),
+                Box::<dyn Piece>::from(PieceType::Pawn).get_type()
+            );
+            assert_eq!(
+                Box::new(knight::Knight {}).get_type(),
+                Box::<dyn Piece>::from(PieceType::Knight).get_type()
+            );
+            assert_eq!(
+                Box::new(bishop::Bishop {}).get_type(),
+                Box::<dyn Piece>::from(PieceType::Bishop).get_type()
+            );
+            assert_eq!(
+                Box::new(rook::Rook {}).get_type(),
+                Box::<dyn Piece>::from(PieceType::Rook).get_type()
+            );
+            assert_eq!(
+                Box::new(queen::Queen {}).get_type(),
+                Box::<dyn Piece>::from(PieceType::Queen).get_type()
+            );
+            assert_eq!(
+                Box::new(king::King {}).get_type(),
+                Box::<dyn Piece>::from(PieceType::King).get_type()
+            );
         }
     }
 }
