@@ -397,19 +397,19 @@ fn king_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board)
             &queue.push(Directions::NE);
         }
     }
-    if border_distances.up < 0 {
+    if border_distances.up > 0 {
         &queue.push(Directions::N);
         if border_distances.left > 0 {
             &queue.push(Directions::NW);
         }
     }
-    if border_distances.left < 0 {
+    if border_distances.left > 0 {
         &queue.push(Directions::W);
         if border_distances.down > 0 {
             &queue.push(Directions::SW);
         }
     }
-    if border_distances.down < 0 {
+    if border_distances.down > 0 {
         &queue.push(Directions::S);
         if border_distances.right > 0 {
             &queue.push(Directions::SE);
@@ -428,9 +428,9 @@ fn explore_king_moves(
     board: &board::Board,
     direction: Directions,
 ) -> Vec<BasicMove> {
-    let result: Vec<BasicMove> = vec![];
-    let from_x = start.get_x();
-    let from_y = start.get_y();
+    let mut result: Vec<BasicMove> = vec![];
+    let from_x = start.get_x() as usize;
+    let from_y = start.get_y() as usize;
     match direction {
         Directions::N => {
             check_move!(&(from_x), &(from_y + 1), team_color, result, board);
@@ -1039,5 +1039,21 @@ mod tests {
             },
         ];
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_king_moves() {
+        let result = king_moves(&(4,0).into(), &PieceColor::Light, &Default::default());
+        let expected: Vec<BasicMove> = vec![];
+        assert_eq!(result, expected);
+        let result2 = king_moves(&(4,2).into(), &PieceColor::Light, &Default::default());
+        let expected2: Vec<BasicMove> = vec![
+            BasicMove{to:(5,2).into(), capture:false},
+            BasicMove{to:(5,3).into(), capture:false},
+            BasicMove{to:(4,3).into(), capture:false},
+            BasicMove{to:(3,3).into(), capture:false},
+            BasicMove{to:(3,2).into(), capture:false},
+        ];
+        assert_eq!(result2, expected2);
     }
 }
