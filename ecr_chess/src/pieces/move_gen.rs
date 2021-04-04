@@ -375,7 +375,7 @@ fn explore_knight_moves(
     result
 }
 /// This function gives back the possible moves for the king (For now?) without castling.
-fn king_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board) -> Vec<BasicMove> {
+pub fn king_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board) -> Vec<BasicMove> {
     let mut result: Vec<BasicMove> = vec![];
     let border_distances = distance_to_border(start);
     let mut queue: Vec<Directions> = vec![];

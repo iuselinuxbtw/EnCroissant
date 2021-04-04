@@ -4,7 +4,7 @@ use ecr_chess::pieces::move_gen::*;
 use ecr_chess::pieces::PieceColor;
 
 fn bench_pawn_moves(b: &mut Criterion) {
-    b.bench_function("diagonal_moves", |c| {
+    b.bench_function("Pawn moves", |c| {
         c.iter(|| {
             pawn_moves(
                 &black_box((5, 6).into()),
@@ -16,7 +16,7 @@ fn bench_pawn_moves(b: &mut Criterion) {
     });
 }
 fn bench_linear_moves(b: &mut Criterion) {
-    b.bench_function("linear_moves", |c| {
+    b.bench_function("Linear moves", |c| {
         c.iter(|| {
             linear_moves(
                 &black_box((5, 6).into()),
@@ -27,7 +27,31 @@ fn bench_linear_moves(b: &mut Criterion) {
     });
 }
 fn bench_diagonal_moves(b: &mut Criterion) {
-    b.bench_function("diagonal_moves", |c| {
+    b.bench_function("Diagonal moves", |c| {
+        c.iter(|| {
+            diagonal_moves(
+                &black_box((5, 6).into()),
+                &PieceColor::Light,
+                &Default::default(),
+            )
+        })
+    });
+}
+
+fn bench_king_moves(b: &mut Criterion) {
+    b.bench_function("King moves", |c| {
+        c.iter(|| {
+            king_moves(
+                &black_box((5, 6).into()),
+                &PieceColor::Light,
+                &Default::default(),
+            )
+        })
+    });
+}
+
+fn bench_knight_moves(b: &mut Criterion) {
+    b.bench_function("Knight moves", |c| {
         c.iter(|| {
             diagonal_moves(
                 &black_box((5, 6).into()),
@@ -41,6 +65,6 @@ fn bench_diagonal_moves(b: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = bench_pawn_moves, bench_linear_moves, bench_diagonal_moves()
+    targets = bench_pawn_moves, bench_linear_moves, bench_diagonal_moves, bench_king_moves, bench_knight_moves
 }
 criterion_main!(benches);
