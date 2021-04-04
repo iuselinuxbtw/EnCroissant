@@ -14,12 +14,12 @@ use std::ops::Deref;
 ///
 /// Only defines where the move goes and whether or not the move is a capture.
 #[derive(Debug, PartialEq, Copy, Clone)]
-struct BasicMove {
+pub struct BasicMove {
     to: Coordinate,
     capture: bool,
 }
 
-enum MoveType {
+/*enum MoveType {
     Check,
     Capture,
     Evasion,
@@ -27,7 +27,7 @@ enum MoveType {
     Sacrifice,
     Promotion,
     Castle,
-}
+}*/
 
 /// Utility enum for the function explore_diagonal_moves. Assigns each diagonal direction a on the
 /// chess board a cardinal direction. You can look up the cardinal directions
@@ -129,8 +129,8 @@ macro_rules! check_square {
 /// Returns the possible linear moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
 /// this way is a rook.
-fn linear_moves(
-    start: Coordinate,
+pub fn linear_moves(
+    start: &Coordinate,
     board: &board::Board,
     team_color: &PieceColor,
 ) -> Vec<BasicMove> {
@@ -215,7 +215,7 @@ fn explore_linear_direction(
 }
 
 /// Used for generating moves for pawns.
-fn pawn_moves(
+pub fn pawn_moves(
     start: &Coordinate,
     team_color: &PieceColor,
     board: &board::Board,
@@ -269,16 +269,6 @@ fn knight_moves(
     team_color: &PieceColor,
     board: &board::Board,
 ) -> Vec<BasicMove> {
-    let mut all_directions: Vec<KnightDirections> = vec![
-        KnightDirections::NW,
-        KnightDirections::NE,
-        KnightDirections::SW,
-        KnightDirections::SE,
-        KnightDirections::ES,
-        KnightDirections::EN,
-        KnightDirections::WN,
-        KnightDirections::WS,
-    ];
     // This queue is used to add the directions which can be scanned without resulting in invalid coordinates.
     let mut queue: Vec<KnightDirections> = vec![];
     // TODO: Return whether the moves contain a fork
@@ -522,7 +512,7 @@ fn piece_in_front(
 /// Returns the possible diagonal moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
 /// this way is a bishop.
-fn diagonal_moves(
+pub fn diagonal_moves(
     start: &Coordinate,
     team_color: &PieceColor,
     board: &board::Board,
@@ -700,7 +690,7 @@ mod tests {
     #[test]
     fn test_linear_moves() {
         let board = board::Board::default();
-        let result = linear_moves((4, 3).into(), &board, &PieceColor::Light);
+        let result = linear_moves(&(4, 3).into(), &board, &PieceColor::Light);
         // Make a new Vector and fill it with all possible Coordinates
         let expected: Vec<BasicMove> = vec![
             // North
@@ -759,7 +749,7 @@ mod tests {
             Fen::from_str("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17")
                 .unwrap()
                 .into();
-        let moves_a1 = linear_moves((0, 7).into(), &gotc, &PieceColor::Dark);
+        let moves_a1 = linear_moves(&(0, 7).into(), &gotc, &PieceColor::Dark);
         let expected_moves_a1: Vec<BasicMove> = vec![
             BasicMove {
                 to: (1, 7).into(),
@@ -1043,16 +1033,31 @@ mod tests {
 
     #[test]
     fn test_king_moves() {
-        let result = king_moves(&(4,0).into(), &PieceColor::Light, &Default::default());
+        let result = king_moves(&(4, 0).into(), &PieceColor::Light, &Default::default());
         let expected: Vec<BasicMove> = vec![];
         assert_eq!(result, expected);
-        let result2 = king_moves(&(4,2).into(), &PieceColor::Light, &Default::default());
+        let result2 = king_moves(&(4, 2).into(), &PieceColor::Light, &Default::default());
         let expected2: Vec<BasicMove> = vec![
-            BasicMove{to:(5,2).into(), capture:false},
-            BasicMove{to:(5,3).into(), capture:false},
-            BasicMove{to:(4,3).into(), capture:false},
-            BasicMove{to:(3,3).into(), capture:false},
-            BasicMove{to:(3,2).into(), capture:false},
+            BasicMove {
+                to: (5, 2).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (5, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (4, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (3, 3).into(),
+                capture: false,
+            },
+            BasicMove {
+                to: (3, 2).into(),
+                capture: false,
+            },
         ];
         assert_eq!(result2, expected2);
     }
