@@ -3,6 +3,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ecr_chess::pieces::move_gen::*;
 use ecr_chess::pieces::PieceColor;
 
+// TODO: Do these with other values. Maybe iterate through all values.
 fn bench_pawn_moves(b: &mut Criterion) {
     b.bench_function("Pawn moves", |c| {
         c.iter(|| {
@@ -15,6 +16,7 @@ fn bench_pawn_moves(b: &mut Criterion) {
         })
     });
 }
+
 fn bench_linear_moves(b: &mut Criterion) {
     b.bench_function("Linear moves", |c| {
         c.iter(|| {
@@ -26,6 +28,7 @@ fn bench_linear_moves(b: &mut Criterion) {
         })
     });
 }
+
 fn bench_diagonal_moves(b: &mut Criterion) {
     b.bench_function("Diagonal moves", |c| {
         c.iter(|| {

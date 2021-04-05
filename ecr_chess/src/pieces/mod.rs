@@ -5,8 +5,10 @@ use std::ops::Deref;
 
 use dyn_clonable::clonable;
 
+use crate::board::Board;
 use crate::coordinate::Coordinate;
 use crate::formats::fen::FenPiece;
+use crate::pieces::move_gen::BasicMove;
 
 pub mod bishop;
 pub mod king;
@@ -26,6 +28,14 @@ pub trait Piece: Debug + Clone {
 
     /// Returns the [`PieceType`] of the piece.
     fn get_type(&self) -> PieceType;
+
+    fn get_pseudo_legal_moves(
+        &self,
+        board: &Board,
+        piece_coordinate: &Coordinate,
+        piece_color: &PieceColor,
+        has_moved: bool,
+    ) -> Vec<BasicMove>;
 }
 
 /// All available pieces.

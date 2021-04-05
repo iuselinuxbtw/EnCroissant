@@ -217,8 +217,8 @@ fn explore_linear_direction(
 /// Used for generating moves for pawns.
 pub fn pawn_moves(
     start: &Coordinate,
-    team_color: &PieceColor,
     board: &board::Board,
+    team_color: &PieceColor,
     has_moved: bool,
 ) -> Vec<BasicMove> {
     let mut result: Vec<BasicMove> = Vec::new();
@@ -264,10 +264,10 @@ pub fn pawn_moves(
     result
 }
 
-fn knight_moves(
+pub fn knight_moves(
     start: &Coordinate,
-    team_color: &PieceColor,
     board: &board::Board,
+    team_color: &PieceColor,
 ) -> Vec<BasicMove> {
     // This queue is used to add the directions which can be scanned without resulting in invalid coordinates.
     let mut queue: Vec<KnightDirections> = vec![];
@@ -375,7 +375,11 @@ fn explore_knight_moves(
     result
 }
 /// This function gives back the possible moves for the king (For now?) without castling.
-pub fn king_moves(start: &Coordinate, team_color: &PieceColor, board: &board::Board) -> Vec<BasicMove> {
+pub fn king_moves(
+    start: &Coordinate,
+    board: &board::Board,
+    team_color: &PieceColor,
+) -> Vec<BasicMove> {
     let mut result: Vec<BasicMove> = vec![];
     let border_distances = distance_to_border(start);
     let mut queue: Vec<Directions> = vec![];
@@ -514,8 +518,8 @@ fn piece_in_front(
 /// this way is a bishop.
 pub fn diagonal_moves(
     start: &Coordinate,
-    team_color: &PieceColor,
     board: &board::Board,
+    team_color: &PieceColor,
 ) -> Vec<BasicMove> {
     // Create a vector that will be returned at the end.
     let mut result: Vec<BasicMove> = Vec::new();

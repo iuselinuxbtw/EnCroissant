@@ -1,6 +1,9 @@
-use crate::pieces::PieceType;
+use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;
+use crate::board::Board;
+use crate::coordinate::Coordinate;
+use crate::pieces::move_gen::{linear_moves, BasicMove, diagonal_moves};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bishop {}
@@ -8,6 +11,15 @@ pub struct Bishop {}
 impl Piece for Bishop {
     fn get_type(&self) -> PieceType {
         PieceType::Bishop
+    }
+    fn get_pseudo_legal_moves(
+        &self,
+        board: &Board,
+        piece_coordinate: &Coordinate,
+        piece_color: &PieceColor,
+        has_moved: bool,
+    ) -> Vec<BasicMove> {
+        diagonal_moves(piece_coordinate, board, piece_color)
     }
 }
 
