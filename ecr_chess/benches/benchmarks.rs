@@ -9,8 +9,8 @@ fn bench_pawn_moves(b: &mut Criterion) {
         c.iter(|| {
             pawn_moves(
                 &black_box((5, 6).into()),
-                &PieceColor::Light,
                 &Default::default(),
+                &PieceColor::Light,
                 false,
             )
         })
@@ -34,8 +34,8 @@ fn bench_diagonal_moves(b: &mut Criterion) {
         c.iter(|| {
             diagonal_moves(
                 &black_box((5, 6).into()),
-                &PieceColor::Light,
                 &Default::default(),
+                &PieceColor::Light,
             )
         })
     });
@@ -46,8 +46,8 @@ fn bench_king_moves(b: &mut Criterion) {
         c.iter(|| {
             king_moves(
                 &black_box((5, 6).into()),
-                &PieceColor::Light,
                 &Default::default(),
+                &PieceColor::Light,
             )
         })
     });
@@ -58,8 +58,8 @@ fn bench_knight_moves(b: &mut Criterion) {
         c.iter(|| {
             diagonal_moves(
                 &black_box((5, 6).into()),
-                &PieceColor::Light,
                 &Default::default(),
+                &PieceColor::Light,
             )
         })
     });

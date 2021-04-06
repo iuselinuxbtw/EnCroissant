@@ -887,7 +887,7 @@ mod tests {
     #[test]
     fn test_diagonal_moves() {
         let board = Board::empty();
-        let result = diagonal_moves(&(4, 3).into(), &PieceColor::Dark, &board);
+        let result = diagonal_moves(&(4, 3).into(), &board ,&PieceColor::Dark);
         let expected: Vec<BasicMove> = vec![
             // North-west (upper left)
             BasicMove {
@@ -968,7 +968,7 @@ mod tests {
     #[test]
     fn test_pawn_moves() {
         let default_board = board::Board::default();
-        let result = pawn_moves(&(0, 1).into(), &PieceColor::Light, &default_board, false);
+        let result = pawn_moves(&(0, 1).into(), &default_board, &PieceColor::Light, false);
         let expected = vec![
             BasicMove {
                 to: (0, 2).into(),
@@ -981,7 +981,7 @@ mod tests {
         ];
         assert_eq!(result, expected);
 
-        let result2 = pawn_moves(&(2, 5).into(), &PieceColor::Light, &default_board, false);
+        let result2 = pawn_moves(&(2, 5).into(),&default_board , &PieceColor::Light, false);
         let expected2 = vec![
             BasicMove {
                 to: (1, 6).into(),
@@ -994,7 +994,7 @@ mod tests {
         ];
         assert_eq!(result2, expected2);
 
-        let result3 = pawn_moves(&(7, 1).into(), &PieceColor::Light, &default_board, true);
+        let result3 = pawn_moves(&(7, 1).into(),&default_board , &PieceColor::Light, true);
         let expected3 = vec![BasicMove {
             to: (7, 2).into(),
             capture: false,
@@ -1005,7 +1005,7 @@ mod tests {
     #[test]
     fn test_knight_moves() {
         let default_board = board::Board::default();
-        let result = knight_moves(&(3, 3).into(), &PieceColor::Light, &default_board);
+        let result = knight_moves(&(3, 3).into(), &default_board,&PieceColor::Light );
         let expected: Vec<BasicMove> = vec![
             BasicMove {
                 to: (5, 2).into(),
@@ -1037,10 +1037,10 @@ mod tests {
 
     #[test]
     fn test_king_moves() {
-        let result = king_moves(&(4, 0).into(), &PieceColor::Light, &Default::default());
+        let result = king_moves(&(4, 0).into(), &Default::default(),&PieceColor::Light );
         let expected: Vec<BasicMove> = vec![];
         assert_eq!(result, expected);
-        let result2 = king_moves(&(4, 2).into(), &PieceColor::Light, &Default::default());
+        let result2 = king_moves(&(4, 2).into(), &Default::default(), &PieceColor::Light);
         let expected2: Vec<BasicMove> = vec![
             BasicMove {
                 to: (5, 2).into(),

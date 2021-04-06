@@ -164,6 +164,13 @@ mod tests {
         impl Piece for MockPiece {
             fn get_shortcode_algebraic(&self) -> &'static str;
             fn get_type(&self) -> PieceType;
+           fn get_pseudo_legal_moves(
+                &self,
+                board: &Board,
+                piece_coordinate: &Coordinate,
+                piece_color: &PieceColor,
+                has_moved: bool,
+                ) -> Vec<BasicMove>;
         }
 
         impl Clone for MockPiece {
