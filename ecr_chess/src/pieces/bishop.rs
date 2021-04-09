@@ -3,7 +3,7 @@ use crate::pieces::{PieceColor, PieceType};
 use super::Piece;
 use crate::board::Board;
 use crate::coordinate::Coordinate;
-use crate::pieces::move_gen::{linear_moves, BasicMove, diagonal_moves};
+use crate::pieces::move_gen::{BasicMove, diagonal_moves};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bishop {}

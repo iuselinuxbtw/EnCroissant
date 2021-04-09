@@ -174,6 +174,8 @@ pub fn linear_moves(
     result
 }
 
+/// This function is useful for exploring the squares in a linear direction of a piece. Used for
+/// rook and Queen move generation.
 fn explore_linear_direction(
     direction: LinearDirections,
     from_x: usize,
@@ -264,6 +266,7 @@ pub fn pawn_moves(
     result
 }
 
+/// This function returns the moves of a knight
 pub fn knight_moves(
     start: &Coordinate,
     board: &board::Board,
@@ -313,6 +316,7 @@ pub fn knight_moves(
     }
     result
 }
+
 /// This macro is essentially the same as check_square without the 'break' statements so that it can
 /// be used outside of a loop.
 macro_rules! check_move {
@@ -374,6 +378,7 @@ fn explore_knight_moves(
     }
     result
 }
+
 /// This function gives back the possible moves for the king (For now?) without castling.
 pub fn king_moves(
     start: &Coordinate,
@@ -416,6 +421,7 @@ pub fn king_moves(
     result
 }
 
+/// This function returns the king moves in a particular direction.
 fn explore_king_moves(
     start: &Coordinate,
     team_color: &PieceColor,
@@ -483,6 +489,10 @@ fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
     }
 }
 
+/// This function returns the next row of the corresponding team. (If the team_color is white it's
+/// higher, otherwise it's lower). So far there is no check whether the returning row is valid but in
+/// most variants it is impossible since the pawn promotes when reaching the last row.
+/// TODO: Promotion(Needs to either be checked here or in the pawn.rs)
 fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8 {
     let mut result: usize = y.clone() as usize;
     // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.

@@ -71,6 +71,17 @@ pub struct Board {
     /// Specifies the en passant target square that is currently possible. Only contains if it
     /// would be allowed theoretically, not checking if it would actually be possible.
     en_passant_target: Option<Coordinate>,
+
+    /// Specifies how many times each square is threatened by a team.
+    threatened_state: Vec<Vec<ThreatenedState>>,
+}
+
+/// Consists of two usizes that tell how many times each team threatens a square. Useful for
+/// castling.
+#[derive(Debug, Clone)]
+pub struct ThreatenedState {
+    threatened_light: usize,
+    threatened_dark: usize,
 }
 
 impl Board {
@@ -85,6 +96,7 @@ impl Board {
             half_move_amount: 0,
             castle_state: BoardCastleState::default(),
             en_passant_target: None,
+            threatened_state: vec![vec![ThreatenedState{threatened_light:0, threatened_dark:0};8];8],
         }
     }
 
@@ -151,6 +163,15 @@ impl Board {
     /// Returns all pieces that are on the [`Board`].
     pub fn get_pieces(&self) -> &Vec<SquareInner> {
         &self.pieces
+    }
+
+    /// This function is useful for castling and checking whether a trade would be beneficial.
+    pub fn is_threatened(&self, square: Coordinate) -> &ThreatenedState {
+        // We assume that the given coordinate is valid.
+        let column = self.threatened_state.get(square.get_x() as usize).unwrap();
+        let state = column.get(square.get_y() as usize).unwrap();
+
+        state
     }
 }
 
@@ -512,6 +533,11 @@ mod tests {
                 String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
                 f.to_string()
             );
+        }
+        #[test]
+        fn test_threatened_state() {
+            let mut empty_board = Board::empty();
+            // TODO: Test the threatened_state here.
         }
     }
 
