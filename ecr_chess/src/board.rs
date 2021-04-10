@@ -78,7 +78,7 @@ pub struct Board {
 
 /// Consists of two usizes that tell how many times each team threatens a square. Useful for
 /// castling.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ThreatenedState {
     threatened_light: usize,
     threatened_dark: usize,
@@ -96,7 +96,7 @@ impl Board {
             half_move_amount: 0,
             castle_state: BoardCastleState::default(),
             en_passant_target: None,
-            threatened_state: vec![vec![ThreatenedState{threatened_light:0, threatened_dark:0};8];8],
+            threatened_state: vec![vec![ThreatenedState { threatened_light: 0, threatened_dark: 0 }; 8]; 8],
         }
     }
 
@@ -172,6 +172,19 @@ impl Board {
         let state = column.get(square.get_y() as usize).unwrap();
 
         state
+    }
+
+    pub fn set_threatened(&mut self, square: Coordinate, state: &ThreatenedState) {
+        // First we need to get the column
+        let column = self.threatened_state.get_mut(square.get_x() as usize).unwrap();
+        // Then we have to create the range which we want to replace but since we only want to
+        // replace one value we create a range from the start to the start
+        let column_index_range = square.get_y() as usize..=square.get_y() as usize;
+
+        // And finally replace it since this function would be pointless otherwise...
+        // We need to create a vector since the replace_with needs to be an iterator.
+        // This can probably be solved more elegantly than with a range and iterator but it works...
+        column.splice(column_index_range, vec![state.clone()]);
     }
 }
 
@@ -537,7 +550,16 @@ mod tests {
         #[test]
         fn test_threatened_state() {
             let mut empty_board = Board::empty();
-            // TODO: Test the threatened_state here.
+            let square = (5,6).into();
+            let state = &ThreatenedState { threatened_light: 1, threatened_dark: 3 };
+            empty_board.set_threatened(square, state);
+            let result = empty_board.is_threatened(square);
+            let expected = &ThreatenedState { threatened_light: 1, threatened_dark: 3 };
+            assert_eq!(result, expected);
+
+            let state = empty_board.is_threatened((0, 0).into());
+            let expected2 = &ThreatenedState{ threatened_light: 0, threatened_dark: 0 };
+            assert_eq!(state, expected2);
         }
     }
 
