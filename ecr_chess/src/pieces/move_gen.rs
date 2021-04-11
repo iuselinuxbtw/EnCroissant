@@ -460,6 +460,16 @@ fn explore_king_moves(
     result
 }
 
+// TODO: We need to implement to implement castling.
+// We can use the threatened_state to determine whether or not a square is threatened, to determine
+// whether we can castle.
+fn castle(start: &Coordinate,
+          board: &board::Board,
+          team_color: &PieceColor,) -> Vec<BasicMove>{
+    let castle_state = board.get_castle_state();
+    // TODO: Do we need a special move type or do we return two moves, which have to be combined? Or do we only determine whether castling is possible and the castling is actually done in the board?
+}
+
 /// This struct holds the distance to the different borders of a coordinate. Useful for calculating
 /// in which directions the knight can go.
 struct DistanceToBorder {
