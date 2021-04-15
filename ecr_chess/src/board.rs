@@ -3,9 +3,11 @@ use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
 use crate::formats::fen::Fen;
+use crate::pieces::move_gen::BasicMove;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::new_rc_refcell;
+use std::ops::Deref;
 
 /// The inner content of a square. Holds a reference-counted pointer to a [`RefCell`] that holds a
 /// [`BoardPiece`].
@@ -96,7 +98,16 @@ impl Board {
             half_move_amount: 0,
             castle_state: BoardCastleState::default(),
             en_passant_target: None,
-            threatened_state: vec![vec![ThreatenedState { threatened_light: 0, threatened_dark: 0 }; 8]; 8],
+            threatened_state: vec![
+                vec![
+                    ThreatenedState {
+                        threatened_light: 0,
+                        threatened_dark: 0
+                    };
+                    8
+                ];
+                8
+            ],
         }
     }
 
@@ -176,7 +187,10 @@ impl Board {
 
     pub fn set_threatened(&mut self, square: Coordinate, state: &ThreatenedState) {
         // First we need to get the column
-        let column = self.threatened_state.get_mut(square.get_x() as usize).unwrap();
+        let column = self
+            .threatened_state
+            .get_mut(square.get_x() as usize)
+            .unwrap();
         // Then we have to create the range which we want to replace but since we only want to
         // replace one value we create a range from the start to the start
         let column_index_range = square.get_y() as usize..=square.get_y() as usize;
@@ -185,6 +199,27 @@ impl Board {
         // We need to create a vector since the replace_with needs to be an iterator.
         // This can probably be solved more elegantly than with a range and iterator but it works...
         column.splice(column_index_range, vec![state.clone()]);
+    }
+
+    /// This function returns all possible moves.
+    pub fn get_all_pseudo_legal_moves(&self) -> Vec<BasicMove> {
+        let mut result: Vec<BasicMove> = vec![];
+        for piece in &self.pieces {
+            result.append(
+                &mut piece
+                    .as_ref()
+                    .borrow()
+                    .deref()
+                    .get_piece()
+                    .get_pseudo_legal_moves(
+                        &self,
+                        &piece.as_ref().borrow().deref().get_coordinate(),
+                        &piece.as_ref().borrow().deref().get_color(),
+                        piece.as_ref().borrow().deref().get_has_moved(),
+                    ),
+            );
+        }
+        result
     }
 }
 
@@ -477,6 +512,14 @@ mod tests {
         }
 
         #[test]
+        fn test_get_all_pseudo_legal_moves() {
+            let mut default_board:Board = board::Board::default();
+            // So turns out this throws an error because a knight tries to move out of the game. This is totally not cool and should not happen.
+            // TODO: Someone should do something against this(obviously not me)
+            println!("{:?}",default_board.get_all_pseudo_legal_moves());
+        }
+
+        #[test]
         fn test_get_en_passant_target() {
             let mut b = Board::empty();
             assert_eq!(None, b.en_passant_target);
@@ -550,15 +593,24 @@ mod tests {
         #[test]
         fn test_threatened_state() {
             let mut empty_board = Board::empty();
-            let square = (5,6).into();
-            let state = &ThreatenedState { threatened_light: 1, threatened_dark: 3 };
+            let square = (5, 6).into();
+            let state = &ThreatenedState {
+                threatened_light: 1,
+                threatened_dark: 3,
+            };
             empty_board.set_threatened(square, state);
             let result = empty_board.is_threatened(square);
-            let expected = &ThreatenedState { threatened_light: 1, threatened_dark: 3 };
+            let expected = &ThreatenedState {
+                threatened_light: 1,
+                threatened_dark: 3,
+            };
             assert_eq!(result, expected);
 
             let state = empty_board.is_threatened((0, 0).into());
-            let expected2 = &ThreatenedState{ threatened_light: 0, threatened_dark: 0 };
+            let expected2 = &ThreatenedState {
+                threatened_light: 0,
+                threatened_dark: 0,
+            };
             assert_eq!(state, expected2);
         }
     }
