@@ -264,8 +264,8 @@ impl Board {
     /// This function returns the pieces of a team. Useful for the eval function as well as the move_gen function.
     pub fn get_team_pieces(&self, team_color: PieceColor) -> Vec<&RefCell<BoardPiece>> {
         let mut result = vec![];
-        for piece in &self.pieces{
-            if piece.as_ref().borrow().deref().get_color().clone()==team_color{
+        for piece in &self.pieces {
+            if piece.as_ref().borrow().deref().get_color().clone() == team_color {
                 result.push(piece.deref());
             }
         }
@@ -561,7 +561,7 @@ mod tests {
             );
         }
 
-/*        #[test]
+        /*        #[test]
         fn test_get_all_pseudo_legal_moves() {
             let mut default_board: Board = board::Board::default();
             // So turns out this throws an error because a knight tries to move out of the game. This is totally not cool and should not happen.
@@ -570,13 +570,13 @@ mod tests {
         }*/
 
         #[test]
-        fn test_eval_board(){
+        fn test_eval_board() {
             let default_board: Board = board::Board::default();
             let result = default_board.eval_board();
-            let expected = Evaluation{
+            let expected = Evaluation {
                 // 100 is the king(for now).
-                value_light: 9.0+2.0*5.0+2.0*3.0+2.0*3.5+9.0+100.0,
-                value_dark: 9.0+2.0*5.0+2.0*3.0+2.0*3.5+9.0+100.0,
+                value_light: 9.0 + 2.0 * 5.0 + 2.0 * 3.0 + 2.0 * 3.5 + 9.0 + 100.0,
+                value_dark: 9.0 + 2.0 * 5.0 + 2.0 * 3.0 + 2.0 * 3.5 + 9.0 + 100.0,
             };
             assert_eq!(expected, result);
         }
