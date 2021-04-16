@@ -86,6 +86,14 @@ pub struct ThreatenedState {
     threatened_dark: usize,
 }
 
+/// Consists of two floats which are the values of both teams(currently only the value of the
+/// pieces).
+#[derive(Clone, PartialEq, Debug)]
+pub struct Evaluation {
+    value_light: f32,
+    value_dark: f32,
+}
+
 impl Board {
     /// Returns an empty board.
     pub fn empty() -> Board {
@@ -201,7 +209,10 @@ impl Board {
         column.splice(column_index_range, vec![state.clone()]);
     }
 
-    /// This function returns all possible moves.
+    /// This function returns all possible pseudo legal moves.
+    ///
+    /// We could also only get one move and bet on it being the best one which would certainly be
+    /// interesting...
     pub fn get_all_pseudo_legal_moves(&self) -> Vec<BasicMove> {
         let mut result: Vec<BasicMove> = vec![];
         for piece in &self.pieces {
@@ -220,6 +231,34 @@ impl Board {
             );
         }
         result
+    }
+
+    /// We should not filter our normal move_gen for legal moves if we are checked, since that would
+    /// be inefficient. We can make a special move generator for legal moves during being checked.
+    pub fn check_move_gen(&self) -> Vec<BasicMove> {
+        let result: Vec<BasicMove> = vec![];
+        todo!();
+        result
+    }
+
+    /// This function could later be moved into another file.
+    pub fn eval_board(&self) -> Evaluation {
+        // This currently only considers the value of the pieces on the board and not the positions.
+        let mut value_light: f32 = 0.0;
+        let mut value_dark: f32 = 0.0;
+        // TODO: Get light and dark pieces.
+        let light_pieces: Vec<SquareInner> = vec![];
+        let dark_pieces: Vec<SquareInner> = vec![];
+        for piece in light_pieces {
+            value_light += piece.as_ref().borrow().deref().get_piece().get_value();
+        }
+        for piece in dark_pieces {
+            value_dark += piece.as_ref().borrow().deref().get_piece().get_value();
+        }
+        Evaluation {
+            value_light,
+            value_dark,
+        }
     }
 }
 
@@ -513,10 +552,10 @@ mod tests {
 
         #[test]
         fn test_get_all_pseudo_legal_moves() {
-            let mut default_board:Board = board::Board::default();
+            let mut default_board: Board = board::Board::default();
             // So turns out this throws an error because a knight tries to move out of the game. This is totally not cool and should not happen.
-            // TODO: Someone should do something against this(obviously not me)
-            println!("{:?}",default_board.get_all_pseudo_legal_moves());
+            // TODO: Someone should do something against this(obviously not me, i'm just an intern)
+            println!("{:?}", default_board.get_all_pseudo_legal_moves());
         }
 
         #[test]

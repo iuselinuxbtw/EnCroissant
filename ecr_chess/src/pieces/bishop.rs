@@ -3,7 +3,7 @@ use crate::pieces::{PieceColor, PieceType};
 use super::Piece;
 use crate::board::Board;
 use crate::coordinate::Coordinate;
-use crate::pieces::move_gen::{BasicMove, diagonal_moves};
+use crate::pieces::move_gen::{diagonal_moves, BasicMove};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bishop {}
@@ -17,8 +17,7 @@ impl Piece for Bishop {
         board: &Board,
         piece_coordinate: &Coordinate,
         piece_color: &PieceColor,
-        #[allow(unused_variables)]
-        has_moved: bool,
+        #[allow(unused_variables)] has_moved: bool,
     ) -> Vec<BasicMove> {
         diagonal_moves(piece_coordinate, board, piece_color)
     }

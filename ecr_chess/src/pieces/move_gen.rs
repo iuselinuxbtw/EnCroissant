@@ -460,7 +460,6 @@ fn explore_king_moves(
     result
 }
 
-
 /// This struct holds the distance to the different borders of a coordinate. Useful for calculating
 /// in which directions the knight can go.
 struct DistanceToBorder {

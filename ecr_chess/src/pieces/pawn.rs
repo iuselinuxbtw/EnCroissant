@@ -1,9 +1,9 @@
-use crate::pieces::{PieceType, PieceColor};
+use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;
-use crate::pieces::move_gen::{BasicMove, pawn_moves};
-use crate::coordinate::Coordinate;
 use crate::board::Board;
+use crate::coordinate::Coordinate;
+use crate::pieces::move_gen::{pawn_moves, BasicMove};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Pawn {}

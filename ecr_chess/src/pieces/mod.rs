@@ -177,6 +177,7 @@ mod tests {
                 piece_color: &PieceColor,
                 has_moved: bool,
                 ) -> Vec<BasicMove>;
+            fn get_value(&self) -> f32;
         }
 
         impl Clone for MockPiece {

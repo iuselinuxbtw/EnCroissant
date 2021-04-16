@@ -1,9 +1,9 @@
-use crate::pieces::{PieceType, PieceColor};
+use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;
 use crate::board::Board;
 use crate::coordinate::Coordinate;
-use crate::pieces::move_gen::{BasicMove, knight_moves};
+use crate::pieces::move_gen::{knight_moves, BasicMove};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Knight {}
@@ -17,8 +17,7 @@ impl Piece for Knight {
         board: &Board,
         piece_coordinate: &Coordinate,
         piece_color: &PieceColor,
-        #[allow(unused_variables)]
-        has_moved: bool,
+        #[allow(unused_variables)] has_moved: bool,
     ) -> Vec<BasicMove> {
         knight_moves(piece_coordinate, board, piece_color)
     }

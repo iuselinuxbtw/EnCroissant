@@ -1,9 +1,9 @@
-use crate::pieces::{PieceType, PieceColor};
+use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;
 use crate::board::Board;
 use crate::coordinate::Coordinate;
-use crate::pieces::move_gen::{BasicMove, linear_moves};
+use crate::pieces::move_gen::{linear_moves, BasicMove};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Rook {}
@@ -17,7 +17,7 @@ impl Piece for Rook {
         board: &Board,
         piece_coordinate: &Coordinate,
         piece_color: &PieceColor,
-        has_moved: bool,
+        #[allow(unused_variables)] has_moved: bool,
     ) -> Vec<BasicMove> {
         linear_moves(piece_coordinate, board, piece_color)
     }
