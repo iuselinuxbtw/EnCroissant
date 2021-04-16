@@ -25,7 +25,7 @@ impl Piece for Queen {
         result
     }
 
-    fn get_value() -> f32 {
+    fn get_value(&self) -> f32 {
         9.0
     }
 }

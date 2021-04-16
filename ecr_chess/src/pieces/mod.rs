@@ -41,7 +41,7 @@ pub trait Piece: Debug + Clone {
     /// Returns the internal value of the piece.
     ///
     /// We use a float here since we want to value the bishop slightly higher than the knight.
-    fn get_value() -> f32;
+    fn get_value(&self) -> f32;
 }
 
 /// All available pieces.

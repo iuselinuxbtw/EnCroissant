@@ -23,7 +23,7 @@ impl Piece for King {
         king_moves(piece_coordinate, board, piece_color)
     }
 
-    fn get_value() -> f32 {
+    fn get_value(&self) -> f32 {
         // Doesn't really matter what we put in here since we lose the game when we lose the king.
         100.0
     }

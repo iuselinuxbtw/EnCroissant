@@ -23,7 +23,7 @@ impl Piece for Knight {
         knight_moves(piece_coordinate, board, piece_color)
     }
 
-    fn get_value() -> f32 {
+    fn get_value(&self) -> f32 {
         3.0
     }
 }
