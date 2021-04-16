@@ -550,13 +550,13 @@ mod tests {
             );
         }
 
-        /*        #[test]
+        #[test]
         fn test_get_all_pseudo_legal_moves() {
             let mut default_board: Board = board::Board::default();
             // So turns out this throws an error because a knight tries to move out of the game. This is totally not cool and should not happen.
             // TODO: Someone should do something against this(obviously not me, i'm just an intern)
             println!("{:?}", default_board.get_all_pseudo_legal_moves());
-        }*/
+        }
 
         #[test]
         fn test_eval_board() {

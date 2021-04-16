@@ -277,12 +277,12 @@ pub fn knight_moves(
     let mut result: Vec<BasicMove> = Vec::new();
     let border_distances = distance_to_border(start);
     // TODO: Make this another function and the directions as macros
-    // This covers the positions from the fight against the clock to the left and then down
+    // This covers the positions from the right against the clock to the left and then down
     if border_distances.right > 1 {
-        if border_distances.up > 0 {
+        if border_distances.down > 0 {
             &queue.push(KnightDirections::ES);
         }
-        if border_distances.down > 0 {
+        if border_distances.up > 0 {
             &queue.push(KnightDirections::EN);
         }
     }
@@ -295,10 +295,10 @@ pub fn knight_moves(
         }
     }
     if border_distances.left > 1 {
-        if border_distances.left > 0 {
+        if border_distances.up > 0 {
             &queue.push(KnightDirections::WN);
         }
-        if border_distances.right > 0 {
+        if border_distances.down > 0 {
             &queue.push(KnightDirections::WS);
         }
     }
