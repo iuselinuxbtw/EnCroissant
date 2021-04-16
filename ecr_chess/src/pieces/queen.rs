@@ -25,8 +25,8 @@ impl Piece for Queen {
         result
     }
 
-    fn get_value(&self) -> f32 {
-        9.0
+    fn get_value(&self) -> usize {
+        90
     }
 }
 

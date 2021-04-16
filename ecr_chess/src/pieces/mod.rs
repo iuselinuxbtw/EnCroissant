@@ -40,8 +40,8 @@ pub trait Piece: Debug + Clone {
 
     /// Returns the internal value of the piece.
     ///
-    /// We use a float here since we want to value the bishop slightly higher than the knight.
-    fn get_value(&self) -> f32;
+    /// We use a usize here since we want to value the bishop slightly higher than the knight.
+    fn get_value(&self) -> usize;
 }
 
 /// All available pieces.
@@ -177,7 +177,7 @@ mod tests {
                 piece_color: &PieceColor,
                 has_moved: bool,
                 ) -> Vec<BasicMove>;
-            fn get_value(&self) -> f32;
+            fn get_value(&self) -> usize;
         }
 
         impl Clone for MockPiece {

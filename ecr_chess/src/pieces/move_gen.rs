@@ -1,5 +1,4 @@
 //! Pseudo-legal moves are generated here. For moves during check we'll use another generator.
-// TODO: As these functions are used often and use a lot of resources they have to be optimized well, so implementing benchmarks here would be great.
 
 use std::convert::TryFrom;
 use std::rc::Rc;

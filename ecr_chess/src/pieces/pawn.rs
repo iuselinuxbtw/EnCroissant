@@ -22,8 +22,8 @@ impl Piece for Pawn {
         pawn_moves(piece_coordinate, board, piece_color, has_moved)
     }
 
-    fn get_value(&self) -> f32 {
-        1.0
+    fn get_value(&self) -> usize {
+        10
     }
 }
 

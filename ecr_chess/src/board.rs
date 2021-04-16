@@ -86,13 +86,6 @@ pub struct ThreatenedState {
     threatened_dark: usize,
 }
 
-/// Consists of two floats which are the values of both teams(currently only the value of the
-/// pieces).
-#[derive(Clone, PartialEq, Debug)]
-pub struct Evaluation {
-    value_light: f32,
-    value_dark: f32,
-}
 
 impl Board {
     /// Returns an empty board.
@@ -236,29 +229,25 @@ impl Board {
     /// We should not filter our normal move_gen for legal moves if we are checked, since that would
     /// be inefficient. We can make a special move generator for legal moves during being checked.
     pub fn check_move_gen(&self) -> Vec<BasicMove> {
-        let result: Vec<BasicMove> = vec![];
-        todo!();
-        result
+        todo!()
     }
 
-    /// This function could later be moved into another file.
-    pub fn eval_board(&self) -> Evaluation {
+    /// This function returns a float, which returns a positive value if light is ahead and a
+    /// negative value if  dark is ahead.
+    pub fn eval_board(&self) -> f32 {
+        // This function will probably be moved to another file as it gets more complex.
         // This currently only considers the value of the pieces on the board and not the positions.
-        let mut value_light: f32 = 0.0;
-        let mut value_dark: f32 = 0.0;
-        // TODO: Get light and dark pieces.
-        let mut light_pieces = self.get_team_pieces(PieceColor::Light);
-        let mut dark_pieces = self.get_team_pieces(PieceColor::Dark);
+        let mut value_light: usize = 0;
+        let mut value_dark: usize = 0;
+        let light_pieces = self.get_team_pieces(PieceColor::Light);
+        let dark_pieces = self.get_team_pieces(PieceColor::Dark);
         for piece in light_pieces {
             value_light += piece.borrow().deref().get_piece().get_value();
         }
         for piece in dark_pieces {
             value_dark += piece.borrow().deref().get_piece().get_value();
         }
-        Evaluation {
-            value_light,
-            value_dark,
-        }
+        (value_light - value_dark) as f32
     }
 
     /// This function returns the pieces of a team. Useful for the eval function as well as the move_gen function.
@@ -573,12 +562,7 @@ mod tests {
         fn test_eval_board() {
             let default_board: Board = board::Board::default();
             let result = default_board.eval_board();
-            let expected = Evaluation {
-                // 100 is the king(for now).
-                value_light: 8.0 + 2.0 * 5.0 + 2.0 * 3.0 + 2.0 * 3.5 + 9.0 + 100.0,
-                value_dark: 8.0 + 2.0 * 5.0 + 2.0 * 3.0 + 2.0 * 3.5 + 9.0 + 100.0,
-            };
-            assert_eq!(expected, result);
+            assert_eq!(0.0, result);
         }
 
         #[test]

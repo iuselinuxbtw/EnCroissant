@@ -22,8 +22,8 @@ impl Piece for Rook {
         linear_moves(piece_coordinate, board, piece_color)
     }
 
-    fn get_value(&self) -> f32 {
-        5.0
+    fn get_value(&self) -> usize {
+        50
     }
 }
 

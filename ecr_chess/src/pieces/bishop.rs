@@ -22,8 +22,8 @@ impl Piece for Bishop {
         diagonal_moves(piece_coordinate, board, piece_color)
     }
 
-    fn get_value(&self) -> f32 {
-        3.5
+    fn get_value(&self) -> usize {
+        35
     }
 }
 
