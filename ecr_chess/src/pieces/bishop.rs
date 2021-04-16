@@ -17,9 +17,14 @@ impl Piece for Bishop {
         board: &Board,
         piece_coordinate: &Coordinate,
         piece_color: &PieceColor,
+        #[allow(unused_variables)]
         has_moved: bool,
     ) -> Vec<BasicMove> {
         diagonal_moves(piece_coordinate, board, piece_color)
+    }
+
+    fn get_value() -> f32 {
+        3.5
     }
 }
 

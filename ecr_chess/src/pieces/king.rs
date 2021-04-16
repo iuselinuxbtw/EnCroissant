@@ -17,9 +17,15 @@ impl Piece for King {
         board: &Board,
         piece_coordinate: &Coordinate,
         piece_color: &PieceColor,
+        #[allow(unused_variables)]
         has_moved: bool,
     ) -> Vec<BasicMove> {
         king_moves(piece_coordinate, board, piece_color)
+    }
+
+    fn get_value() -> f32 {
+        // Doesn't really matter what we put in here since we lose the game when we lose the king.
+        100.0
     }
 }
 

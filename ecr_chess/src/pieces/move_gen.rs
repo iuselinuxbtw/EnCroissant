@@ -1151,6 +1151,7 @@ mod tests {
         ];
         assert_eq!(expected2, result2);
 
+        // This test will be adjusted once we actually
         let result3 = king_moves(&(4, 0).into(), &Default::default(), &PieceColor::Dark);
         let expected3: Vec<BasicMove> = vec![
             BasicMove {

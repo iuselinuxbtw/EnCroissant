@@ -21,6 +21,10 @@ impl Piece for Rook {
     ) -> Vec<BasicMove> {
         linear_moves(piece_coordinate, board, piece_color)
     }
+
+    fn get_value() -> f32 {
+        5.0
+    }
 }
 
 #[cfg(test)]

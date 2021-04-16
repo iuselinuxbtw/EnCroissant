@@ -29,6 +29,7 @@ pub trait Piece: Debug + Clone {
     /// Returns the [`PieceType`] of the piece.
     fn get_type(&self) -> PieceType;
 
+    /// Returns the pseudo legal moves of the piece.
     fn get_pseudo_legal_moves(
         &self,
         board: &Board,
@@ -36,6 +37,11 @@ pub trait Piece: Debug + Clone {
         piece_color: &PieceColor,
         has_moved: bool,
     ) -> Vec<BasicMove>;
+
+    /// Returns the internal value of the piece.
+    ///
+    /// We use a float here since we want to value the bishop slightly higher than the knight.
+    fn get_value() -> f32;
 }
 
 /// All available pieces.

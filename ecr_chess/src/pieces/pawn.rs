@@ -21,6 +21,10 @@ impl Piece for Pawn {
     ) -> Vec<BasicMove> {
         pawn_moves(piece_coordinate, board, piece_color, has_moved)
     }
+
+    fn get_value() -> f32 {
+        1.0
+    }
 }
 
 #[cfg(test)]

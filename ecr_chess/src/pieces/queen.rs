@@ -24,6 +24,10 @@ impl Piece for Queen {
         result.append(&mut diagonal_moves(piece_coordinate, board, piece_color));
         result
     }
+
+    fn get_value() -> f32 {
+        9.0
+    }
 }
 
 #[cfg(test)]
