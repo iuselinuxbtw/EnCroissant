@@ -78,6 +78,6 @@ fn bench_evaluation(b: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = bench_pawn_moves, bench_linear_moves, bench_diagonal_moves, bench_king_moves, bench_knight_moves
+    targets = bench_pawn_moves, bench_linear_moves, bench_diagonal_moves, bench_king_moves, bench_knight_moves, bench_evaluation
 }
 criterion_main!(benches);

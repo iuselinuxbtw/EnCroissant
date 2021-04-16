@@ -233,7 +233,7 @@ impl Board {
     }
 
     /// This function returns a float, which returns a positive value if light is ahead and a
-    /// negative value if  dark is ahead.
+    /// negative value if  dark is ahead(MiniMax Implementation).
     pub fn eval_board(&self) -> f32 {
         // This function will probably be moved to another file as it gets more complex.
         // This currently only considers the value of the pieces on the board and not the positions.
