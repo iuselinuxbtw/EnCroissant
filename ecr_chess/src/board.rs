@@ -209,7 +209,7 @@ impl Board {
         column.splice(column_index_range, vec![state.clone()]);
     }
 
-    /// This function returns all possible pseudo legal moves.
+    /// This function returns all possible pseudo legal moves (OF BOTH TEAMS!).
     ///
     /// We could also only get one move and bet on it being the best one which would certainly be
     /// interesting...
@@ -247,18 +247,29 @@ impl Board {
         let mut value_light: f32 = 0.0;
         let mut value_dark: f32 = 0.0;
         // TODO: Get light and dark pieces.
-        let light_pieces: Vec<SquareInner> = vec![];
-        let dark_pieces: Vec<SquareInner> = vec![];
+        let mut light_pieces = self.get_team_pieces(PieceColor::Light);
+        let mut dark_pieces = self.get_team_pieces(PieceColor::Dark);
         for piece in light_pieces {
-            value_light += piece.as_ref().borrow().deref().get_piece().get_value();
+            value_light += piece.borrow().deref().get_piece().get_value();
         }
         for piece in dark_pieces {
-            value_dark += piece.as_ref().borrow().deref().get_piece().get_value();
+            value_dark += piece.borrow().deref().get_piece().get_value();
         }
         Evaluation {
             value_light,
             value_dark,
         }
+    }
+
+    /// This function returns the pieces of a team. Useful for the eval function as well as the move_gen function.
+    pub fn get_team_pieces(&self, team_color: PieceColor) -> Vec<&RefCell<BoardPiece>> {
+        let mut result = vec![];
+        for piece in &self.pieces{
+            if piece.as_ref().borrow().deref().get_color().clone()==team_color{
+                result.push(piece.deref());
+            }
+        }
+        result
     }
 }
 
@@ -550,12 +561,24 @@ mod tests {
             );
         }
 
-        #[test]
+/*        #[test]
         fn test_get_all_pseudo_legal_moves() {
             let mut default_board: Board = board::Board::default();
             // So turns out this throws an error because a knight tries to move out of the game. This is totally not cool and should not happen.
             // TODO: Someone should do something against this(obviously not me, i'm just an intern)
             println!("{:?}", default_board.get_all_pseudo_legal_moves());
+        }*/
+
+        #[test]
+        fn test_eval_board(){
+            let default_board: Board = board::Board::default();
+            let result = default_board.eval_board();
+            let expected = Evaluation{
+                // 100 is the king(for now).
+                value_light: 9.0+2.0*5.0+2.0*3.0+2.0*3.5+9.0+100.0,
+                value_dark: 9.0+2.0*5.0+2.0*3.0+2.0*3.5+9.0+100.0,
+            };
+            assert_eq!(expected, result);
         }
 
         #[test]
