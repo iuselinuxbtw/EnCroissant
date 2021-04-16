@@ -575,8 +575,8 @@ mod tests {
             let result = default_board.eval_board();
             let expected = Evaluation {
                 // 100 is the king(for now).
-                value_light: 9.0 + 2.0 * 5.0 + 2.0 * 3.0 + 2.0 * 3.5 + 9.0 + 100.0,
-                value_dark: 9.0 + 2.0 * 5.0 + 2.0 * 3.0 + 2.0 * 3.5 + 9.0 + 100.0,
+                value_light: 8.0 + 2.0 * 5.0 + 2.0 * 3.0 + 2.0 * 3.5 + 9.0 + 100.0,
+                value_dark: 8.0 + 2.0 * 5.0 + 2.0 * 3.0 + 2.0 * 3.5 + 9.0 + 100.0,
             };
             assert_eq!(expected, result);
         }
