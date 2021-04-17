@@ -5,7 +5,7 @@ use crate::coordinate::Coordinate;
 use crate::formats::fen::Fen;
 use crate::pieces::move_gen::BasicMove;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
-use crate::r#move::Move;
+use crate::r#move::{Moves, Move};
 use crate::utils::new_rc_refcell;
 use std::ops::Deref;
 
@@ -85,7 +85,6 @@ pub struct ThreatenedState {
     threatened_light: usize,
     threatened_dark: usize,
 }
-
 
 impl Board {
     /// Returns an empty board.
@@ -206,22 +205,18 @@ impl Board {
     ///
     /// We could also only get one move and bet on it being the best one which would certainly be
     /// interesting...
-    pub fn get_all_pseudo_legal_moves(&self) -> Vec<BasicMove> {
-        let mut result: Vec<BasicMove> = vec![];
+    pub fn get_all_pseudo_legal_moves(&self) -> Vec<Moves> {
+        let mut result: Vec<Moves> = vec![];
         for piece in &self.pieces {
-            result.append(
-                &mut piece
-                    .as_ref()
-                    .borrow()
-                    .deref()
-                    .get_piece()
-                    .get_pseudo_legal_moves(
-                        &self,
-                        &piece.as_ref().borrow().deref().get_coordinate(),
-                        &piece.as_ref().borrow().deref().get_color(),
-                        piece.as_ref().borrow().deref().get_has_moved(),
-                    ),
-            );
+            result.push(Moves {
+                from: piece.borrow().deref().get_coordinate(),
+                basic_move: piece.borrow().deref().get_piece().get_pseudo_legal_moves(
+                    &self,
+                    &piece.as_ref().borrow().deref().get_coordinate(),
+                    &piece.as_ref().borrow().deref().get_color(),
+                    piece.as_ref().borrow().deref().get_has_moved(),
+                ),
+            });
         }
         result
     }

@@ -1,5 +1,6 @@
 use crate::coordinate::Coordinate;
 use crate::pieces::PieceType;
+use crate::pieces::move_gen::BasicMove;
 
 /// The type of a move. Can contain various information about
 #[derive(Debug, PartialEq, Clone)]
@@ -18,6 +19,14 @@ pub enum MoveType {
         king_from: Coordinate,
         queen_side: bool,
     },
+}
+
+/// Represents the possible Moves of a Piece on the board with the starting coordinate of that
+/// piece.
+#[derive(Debug, PartialEq, Clone)]
+pub struct Moves {
+    pub from: Coordinate,
+    pub basic_move: Vec<BasicMove>,
 }
 
 /// Represents a move. Can be used to modify the positions of pieces on the board. Does not do any
