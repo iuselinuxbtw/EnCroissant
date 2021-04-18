@@ -1,6 +1,6 @@
 use crate::coordinate::Coordinate;
-use crate::pieces::PieceType;
 use crate::pieces::move_gen::BasicMove;
+use crate::pieces::PieceType;
 
 /// The type of a move. Can contain various information about
 #[derive(Debug, PartialEq, Clone)]

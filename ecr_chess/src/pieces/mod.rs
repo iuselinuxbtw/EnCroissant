@@ -137,6 +137,19 @@ impl BoardPiece {
     pub fn get_has_moved(&self) -> bool {
         self.has_moved
     }
+
+    pub fn get_out_of_game(&self) -> bool {
+        self.out_of_game
+    }
+
+    /// Sets the Piece to out of game.
+    pub fn set_out_of_game(&mut self) {
+        self.out_of_game = true;
+    }
+
+    pub fn set_coordinate(&mut self, target: &Coordinate) {
+        self.coordinate = *target;
+    }
 }
 
 impl PartialEq for BoardPiece {
