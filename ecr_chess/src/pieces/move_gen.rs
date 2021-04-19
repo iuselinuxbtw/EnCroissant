@@ -14,19 +14,16 @@ use std::ops::Deref;
 /// Only defines where the move goes and whether or not the move is a capture.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct BasicMove {
-    pub(crate) to: Coordinate,
-    pub(crate) capture: bool,
+    pub to: Coordinate,
+    pub capture: bool,
 }
 
-/*enum MoveType {
-    Check,
-    Capture,
-    Evasion,
-    Book,
-    Sacrifice,
-    Promotion,
-    Castle,
-}*/
+impl BasicMove {
+    pub fn get_target_square(&self) -> Coordinate {
+        self.to
+    }
+}
+
 
 /// Utility enum for the function explore_diagonal_moves. Assigns each diagonal direction a on the
 /// chess board a cardinal direction. You can look up the cardinal directions
@@ -681,7 +678,7 @@ fn square_check(
 // Returns the Piece a square is occupied by. If the square is not occupied it returns None
 fn piece_on_square(square: &Coordinate, board: &board::Board) -> Option<SquareInner> {
     // Get the SquareInner
-    match board.get_at(*square) {
+    match board.get_at(square) {
         // Match it
         None => None,
         Some(i) => Some(Rc::clone(&i)),

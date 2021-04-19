@@ -75,6 +75,21 @@ fn bench_evaluation(b: &mut Criterion) {
     });
 }
 
+fn bench_move(b: &mut Criterion) {
+    let mut default_board = Board::default();
+    b.bench_function("Move", |c| {
+        c.iter(|| {
+            // The best opening move known to mankind
+            default_board.r#move(
+                &(5, 1).into(),
+                &BasicMove {
+                    to: (5, 2).into(),
+                    capture: false,
+                },
+            )
+        })
+    });
+}
 criterion_group! {
     name = benches;
     config = Criterion::default();
