@@ -5,7 +5,7 @@ use crate::coordinate::Coordinate;
 use crate::formats::fen::Fen;
 use crate::pieces::move_gen::BasicMove;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
-use crate::r#move::Move;
+use crate::r#move::{Move, Moves};
 use crate::utils::new_rc_refcell;
 use std::ops::Deref;
 
@@ -86,7 +86,6 @@ pub struct ThreatenedState {
     threatened_dark: usize,
 }
 
-
 impl Board {
     /// Returns an empty board.
     pub fn empty() -> Board {
@@ -112,13 +111,49 @@ impl Board {
         }
     }
 
+    /// This function moves a piece from a given start square to another square, contained in a
+    /// BasicMove.
+    pub fn r#move(&mut self, start: &Coordinate, basic_move: &BasicMove) {
+        // We can safely unwrap here since no move is generated without a piece at the start of it.
+        let piece = self.get_at(start).unwrap();
+
+        let target_square = basic_move.get_target_square();
+
+        // Update the piece coordinate to the new coordinates.
+        piece.borrow_mut().set_coordinate(&target_square);
+
+        // First we remove the piece from the original square on the board.
+        self.remove_piece(start);
+
+        if basic_move.capture {
+            self.capture_piece(&piece, &target_square);
+        }
+
+        // Then we add the piece to the target square.
+        self.add_piece(piece.borrow().deref().clone());
+    }
+
+    /// Removes a piece from a given target square
+    fn remove_piece(&mut self, target: &Coordinate) {
+        // First we get the right column of the piece
+        let column = self.board.get_mut(target.get_x() as usize).unwrap();
+        // Then we get the row as a range since splice() requires a range, which is totally necessary for changing one variable.
+        let column_index_range = target.get_y() as usize..target.get_y() as usize;
+
+        column.splice(column_index_range, None);
+    }
+
+    fn capture_piece(&mut self, target: &SquareInner, target_square: &Coordinate) {
+        target.borrow_mut().set_out_of_game();
+        self.remove_piece(target_square);
+    }
     /// Returns if the next move should be done by the light color.
     pub fn get_light_to_move(&self) -> bool {
         self.light_to_move
     }
 
     /// Returns the piece at the supplied coordinate on the board.
-    pub fn get_at(&self, coordinate: Coordinate) -> Option<SquareInner> {
+    pub fn get_at(&self, coordinate: &Coordinate) -> Option<SquareInner> {
         // ? -> column not found
         let column = self.board.get(coordinate.get_x() as usize)?;
         // ? -> square not found
@@ -138,11 +173,12 @@ impl Board {
 
         // Get the column (x coordinate) as mutable reference
         let column = self.board.get_mut(x_coordinate).unwrap();
+
         // Since .splice wants a range but we only want to replace one specific part, we just create
         // a range that consists of the x coordinate
         let column_index_range = y_coordinate..=y_coordinate;
 
-        let square_inner = new_rc_refcell(piece);
+        let square_inner: SquareInner = new_rc_refcell(piece);
 
         // Replaces the square with the supplied piece
         column.splice(column_index_range, vec![Some(Rc::clone(&square_inner))]);
@@ -186,6 +222,7 @@ impl Board {
         state
     }
 
+    /// Sets the target square to the given ThreatenedState
     pub fn set_threatened(&mut self, square: Coordinate, state: &ThreatenedState) {
         // First we need to get the column
         let column = self
@@ -206,22 +243,18 @@ impl Board {
     ///
     /// We could also only get one move and bet on it being the best one which would certainly be
     /// interesting...
-    pub fn get_all_pseudo_legal_moves(&self) -> Vec<BasicMove> {
-        let mut result: Vec<BasicMove> = vec![];
+    pub fn get_all_pseudo_legal_moves(&self) -> Vec<Moves> {
+        let mut result: Vec<Moves> = vec![];
         for piece in &self.pieces {
-            result.append(
-                &mut piece
-                    .as_ref()
-                    .borrow()
-                    .deref()
-                    .get_piece()
-                    .get_pseudo_legal_moves(
-                        &self,
-                        &piece.as_ref().borrow().deref().get_coordinate(),
-                        &piece.as_ref().borrow().deref().get_color(),
-                        piece.as_ref().borrow().deref().get_has_moved(),
-                    ),
-            );
+            result.push(Moves {
+                from: piece.borrow().deref().get_coordinate(),
+                basic_move: piece.borrow().deref().get_piece().get_pseudo_legal_moves(
+                    &self,
+                    &piece.as_ref().borrow().deref().get_coordinate(),
+                    &piece.as_ref().borrow().deref().get_color(),
+                    piece.as_ref().borrow().deref().get_has_moved(),
+                ),
+            });
         }
         result
     }
@@ -466,8 +499,8 @@ mod tests {
             let column = b.board.get_mut(2).unwrap();
             column.insert(1, Some(Rc::new(RefCell::new(p.clone()))));
 
-            assert_eq!(None, b.get_at((0, 0).into()));
-            let square_from_board = b.get_at((2, 1).into()).unwrap();
+            assert_eq!(None, b.get_at(&(0 as u8, 0 as u8).into()));
+            let square_from_board = b.get_at(&(2 as u8, 1 as u8).into()).unwrap();
             let piece_from_board = square_from_board.borrow_mut();
             assert_eq!(p, *piece_from_board);
         }
@@ -580,15 +613,27 @@ mod tests {
             assert_eq!(3, board.pieces.len());
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::King, (2, 0).into(), PieceColor::Light),
-                board.get_at((2, 0).into()).unwrap().borrow().deref(),
+                board
+                    .get_at(&(2 as u8, 0 as u8).into())
+                    .unwrap()
+                    .borrow()
+                    .deref(),
             );
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::Rook, (4, 2).into(), PieceColor::Light),
-                board.get_at((4, 2).into()).unwrap().borrow().deref(),
+                board
+                    .get_at(&(4 as u8, 2 as u8).into())
+                    .unwrap()
+                    .borrow()
+                    .deref(),
             );
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::King, (2, 7).into(), PieceColor::Dark),
-                board.get_at((2, 7).into()).unwrap().borrow().deref(),
+                board
+                    .get_at(&(2 as u8, 7 as u8).into())
+                    .unwrap()
+                    .borrow()
+                    .deref(),
             );
 
             assert_eq!(false, board.light_to_move);

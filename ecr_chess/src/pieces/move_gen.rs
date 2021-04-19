@@ -273,10 +273,8 @@ pub fn knight_moves(
 ) -> Vec<BasicMove> {
     // This queue is used to add the directions which can be scanned without resulting in invalid coordinates.
     let mut queue: Vec<KnightDirections> = vec![];
-    // TODO: Return whether the moves contain a fork
     let mut result: Vec<BasicMove> = Vec::new();
     let border_distances = distance_to_border(start);
-    // TODO: Make this another function and the directions as macros
     // This covers the positions from the right against the clock to the left and then down
     if border_distances.right > 1 {
         if border_distances.down > 0 {
