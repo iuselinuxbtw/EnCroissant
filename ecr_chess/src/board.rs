@@ -119,7 +119,6 @@ impl Board {
 
         let target_square = basic_move.get_target_square();
 
-        // TODO: This should also change the piece in the pieces Vector.
         // Update the piece coordinate to the new coordinates.
         piece.borrow_mut().set_coordinate(&target_square);
 

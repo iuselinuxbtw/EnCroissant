@@ -24,15 +24,6 @@ impl BasicMove {
     }
 }
 
-/*enum MoveType {
-    Check,
-    Capture,
-    Evasion,
-    Book,
-    Sacrifice,
-    Promotion,
-    Castle,
-}*/
 
 /// Utility enum for the function explore_diagonal_moves. Assigns each diagonal direction a on the
 /// chess board a cardinal direction. You can look up the cardinal directions
