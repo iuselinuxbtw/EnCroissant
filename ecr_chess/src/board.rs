@@ -115,7 +115,7 @@ impl Board {
     /// BasicMove.
     pub fn r#move(&mut self, start: &Coordinate, basic_move: &BasicMove) {
         // We can safely unwrap here since no move is generated without a piece at the start of it.
-        let mut piece = self.get_at(start).unwrap();
+        let piece = self.get_at(start).unwrap();
 
         let target_square = basic_move.get_target_square();
 
