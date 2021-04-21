@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 use std::rc::Rc;
 
 use crate::board;
-use crate::board::SquareInner;
+use crate::board::{Board, BoardCastleState, SquareInner};
 use crate::coordinate::Coordinate;
 use crate::pieces::PieceColor;
 use std::ops::Deref;
@@ -24,6 +24,10 @@ impl BasicMove {
     }
 }
 
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct CastleMove {
+    pub to: Coordinate,
+}
 
 /// Utility enum for the function explore_diagonal_moves. Assigns each diagonal direction a on the
 /// chess board a cardinal direction. You can look up the cardinal directions
@@ -449,6 +453,50 @@ fn explore_king_moves(
         }
         Directions::SW => {
             check_move!(&(from_x - 1), &(from_y - 1), team_color, result, board);
+        }
+    }
+    result
+}
+
+/// Gives back the possible castle moves from a BoardCastleState. This does check neither the kings
+/// position nor the rooks position, so giving a wrong BoardCastleState will probably result in an
+/// error.
+pub fn get_castle_moves(
+    castle_state: &BoardCastleState,
+    team: &PieceColor,
+    board: &Board,
+) -> Vec<CastleMove> {
+    let mut result: Vec<CastleMove> = vec![];
+    // This is probably not optimal but it works.
+    match team {
+        PieceColor::Light => {
+            if castle_state.light_queen_side
+                //&& board.is_threatened((4, 0).into()) == 0 This check is redundant since the check_move_gen will never call this function.
+                && board.is_threatened((3, 0).into()).threatened_dark == 0
+                && board.is_threatened((2, 0).into()).threatened_dark == 0
+            {
+                result.push(CastleMove { to: (2, 0).into() })
+            }
+            if castle_state.light_king_side
+                && board.is_threatened((5, 0).into()).threatened_dark == 0
+                && board.is_threatened((6, 0).into()).threatened_dark == 0
+            {
+                result.push(CastleMove { to: (6, 0).into() })
+            }
+        }
+        PieceColor::Dark => {
+            if castle_state.dark_queen_side
+                && board.is_threatened((3, 7).into()).threatened_light == 0
+                && board.is_threatened((4, 7).into()).threatened_light == 0
+            {
+                result.push(CastleMove { to: (2, 7).into() })
+            }
+            if castle_state.dark_king_side
+                && board.is_threatened((5, 7).into()).threatened_light == 0
+                && board.is_threatened((6, 7).into()).threatened_light == 0
+            {
+                result.push(CastleMove { to: (6, 7).into() })
+            }
         }
     }
     result

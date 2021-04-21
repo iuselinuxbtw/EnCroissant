@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
 use crate::formats::fen::Fen;
-use crate::pieces::move_gen::BasicMove;
+use crate::pieces::move_gen::{BasicMove, CastleMove};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::{Move, Moves};
 use crate::utils::new_rc_refcell;
@@ -82,8 +82,8 @@ pub struct Board {
 /// castling.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ThreatenedState {
-    threatened_light: usize,
-    threatened_dark: usize,
+    pub threatened_light: usize,
+    pub threatened_dark: usize,
 }
 
 impl Board {
@@ -131,6 +131,11 @@ impl Board {
 
         // Then we add the piece to the target square.
         self.add_piece(piece.borrow().deref().clone());
+
+        // And we of course have to increase the move number
+        move_number+=1;
+
+        // TODO: Half moves
     }
 
     /// Removes a piece from a given target square
@@ -186,6 +191,11 @@ impl Board {
         // Since we are using a hybrid approach for saving the board and its pieces, we have to add
         // the square to the list of all pieces, too
         self.pieces.push(square_inner);
+    }
+
+    /// Executes a given CastleMove by moving the king first and then the rook
+    pub fn castle(&mut self, castle_move: CastleMove) {
+        todo!()
     }
 
     /// Returns the current move number.
