@@ -133,12 +133,21 @@ impl Board {
         self.add_piece(piece.borrow().deref().clone());
 
         // And we of course have to increase the move number
-        move_number+=1;
+        self.move_number+=1;
 
-        // TODO: Half moves
+        // We have to get the half moves
+        let piece_type = piece.borrow().deref().get_piece().get_type();
+        self.half_move_counter(&piece_type, basic_move.capture);
     }
 
-    /// Removes a piece from a given target square
+    fn half_move_counter(&mut self, piece_type: &PieceType, capture: bool){
+        match piece_type{
+            PieceType::Pawn => self.half_move_amount =0,
+            _ => self.half_move_amount +=1,
+        }
+        if capture {self.half_move_amount =0}
+    }
+    /// Removes a piece from a given target square. DOES NOT SET IT OUT OF GAME!
     fn remove_piece(&mut self, target: &Coordinate) {
         // First we get the right column of the piece
         let column = self.board.get_mut(target.get_x() as usize).unwrap();
@@ -148,6 +157,7 @@ impl Board {
         column.splice(column_index_range, None);
     }
 
+    /// This function removes the piece on the given coordinate and sets it out of game.
     fn capture_piece(&mut self, target: &SquareInner, target_square: &Coordinate) {
         target.borrow_mut().set_out_of_game();
         self.remove_piece(target_square);
