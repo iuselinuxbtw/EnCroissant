@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
 use crate::formats::fen::Fen;
-use crate::pieces::move_gen::{BasicMove, CastleMove};
+use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::{Move, Moves};
 use crate::utils::new_rc_refcell;
@@ -205,7 +205,8 @@ impl Board {
 
     /// Executes a given CastleMove by moving the king first and then the rook
     pub fn castle(&mut self, castle_move: CastleMove) {
-        todo!()
+        // First we move the king to the target square.
+
     }
 
     /// Returns the current move number.
