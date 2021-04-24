@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
 use crate::formats::fen::Fen;
-use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
+use crate::pieces::move_gen::{BasicMove, CastleMove};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::{Move, Moves};
 use crate::utils::new_rc_refcell;
@@ -134,6 +134,7 @@ impl Board {
 
         // And we of course have to increase the move number
         self.move_number+=1;
+        // TODO: Implement Promotion, basically if a pawn moves to the last row the PieceType can be changed.
 
         // We have to get the half moves
         let piece_type = piece.borrow().deref().get_piece().get_type();
@@ -206,7 +207,7 @@ impl Board {
     /// Executes a given CastleMove by moving the king first and then the rook
     pub fn castle(&mut self, castle_move: CastleMove) {
         // First we move the king to the target square.
-
+        todo!()
     }
 
     /// Returns the current move number.
@@ -291,6 +292,7 @@ impl Board {
     pub fn eval_board(&self) -> f32 {
         // This function will probably be moved to another file as it gets more complex.
         // This currently only considers the value of the pieces on the board and not the positions.
+        // TODO: Make this also evaluate the position
         let mut value_light: usize = 0;
         let mut value_dark: usize = 0;
         let light_pieces = self.get_team_pieces(PieceColor::Light);

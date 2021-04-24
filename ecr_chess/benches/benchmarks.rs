@@ -90,9 +90,23 @@ fn bench_move(b: &mut Criterion) {
         })
     });
 }
+
+fn bench_get_castle_moves(b: &mut Criterion) {
+    let mut default_board = Board::default();
+    b.bench_function("Get Castle Moves", |c| {
+        c.iter(|| {
+            get_castle_moves(
+                default_board.get_castle_state(),
+                &PieceColor::Light,
+                &default_board,
+            )
+        })
+    });
+}
+
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = bench_pawn_moves, bench_linear_moves, bench_diagonal_moves, bench_king_moves, bench_knight_moves, bench_evaluation, bench_move
+    targets = bench_pawn_moves, bench_linear_moves, bench_diagonal_moves, bench_king_moves, bench_knight_moves, bench_evaluation, bench_move, bench_get_castle_moves
 }
 criterion_main!(benches);

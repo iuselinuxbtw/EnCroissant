@@ -477,6 +477,8 @@ pub fn get_castle_moves(
 ) -> Vec<CastleMove> {
     let mut result: Vec<CastleMove> = vec![];
     // This is probably not optimal but it works.
+
+    // First we match the team so we can give back only the castle moves of a specific team.
     match team {
         PieceColor::Light => {
             if castle_state.light_queen_side
@@ -1238,5 +1240,13 @@ mod tests {
             },
         ];
         assert_eq!(expected3, result3);
+    }
+
+    #[test]
+    fn test_get_castle_moves(){
+        let default_board = board::Board::default();
+        let result = get_castle_moves(default_board.get_castle_state(), &PieceColor::Dark, &default_board);
+        let expected: Vec<CastleMove> = vec![];
+        assert_eq!(expected, result);
     }
 }
