@@ -261,9 +261,13 @@ pub fn pawn_moves(
     } else {
         capture_diagonal = vec![(from_x - 1, next_r).into(), (from_x + 1, next_r).into()];
     }
+
+    // Iterate through both possible captures
     for possible_capture in capture_diagonal {
         let square_inner = piece_on_square(&possible_capture, board);
+        // If there is a piece on the square
         if let Some(e) = square_inner {
+            // If it is the opponent's piece, we add the capture move.
             if &e.as_ref().borrow().deref().get_color() != team_color {
                 &result.push(BasicMove {
                     to: e.as_ref().borrow().deref().get_coordinate(),
@@ -1114,6 +1118,8 @@ mod tests {
             capture: false,
         }];
         assert_eq!(expected3, result3);
+
+        let result4 = pawn_moves(&(0,6).into(), &default_board, &PieceColor::Light, true);
     }
 
     #[test]

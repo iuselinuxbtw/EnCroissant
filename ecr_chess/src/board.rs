@@ -128,26 +128,42 @@ impl Board {
         if basic_move.capture {
             self.capture_piece(&piece, &target_square);
         }
-
+        let mut piece_to_add = piece.borrow().deref().clone();
+        piece_to_add.set_coordinate(&target_square);
+        let piece_type = piece.borrow().deref().get_piece().get_type();
+        if self.is_pawn_promotion(piece_type, &target_square) {
+            todo!();
+        }
         // Then we add the piece to the target square.
-        self.add_piece(piece.borrow().deref().clone());
+        self.add_piece(piece_to_add);
 
         // And we of course have to increase the move number
         self.move_number+=1;
-        // TODO: Implement Promotion, basically if a pawn moves to the last row the PieceType can be changed.
+
 
         // We have to get the half moves
-        let piece_type = piece.borrow().deref().get_piece().get_type();
-        self.half_move_counter(&piece_type, basic_move.capture);
+        self.count_half_moves(&piece_type, basic_move.capture);
     }
 
-    fn half_move_counter(&mut self, piece_type: &PieceType, capture: bool){
+    fn is_pawn_promotion(&self, piece_type: PieceType, target: &Coordinate) -> bool{
+        if piece_type == PieceType::Pawn {
+            // Pawns can't move backwards so checking the color is redundant
+            if target.get_y() == 7 || target.get_y() == 0 {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// This function is called every move and is responsible for increasing/resetting the half move counter.
+    fn count_half_moves(&mut self, piece_type: &PieceType, capture: bool){
         match piece_type{
             PieceType::Pawn => self.half_move_amount =0,
             _ => self.half_move_amount +=1,
         }
         if capture {self.half_move_amount =0}
     }
+
     /// Removes a piece from a given target square. DOES NOT SET IT OUT OF GAME!
     fn remove_piece(&mut self, target: &Coordinate) {
         // First we get the right column of the piece
