@@ -561,7 +561,6 @@ fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
 /// This function returns the next row of the corresponding team. (If the team_color is white it's
 /// higher, otherwise it's lower). So far there is no check whether the returning row is valid but in
 /// most variants it is impossible since the pawn promotes when reaching the last row.
-/// TODO: Promotion(Needs to either be checked here or in the pawn.rs)
 fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8 {
     let mut result: usize = y.clone() as usize;
     // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
@@ -1120,6 +1119,10 @@ mod tests {
         assert_eq!(expected3, result3);
 
         let result4 = pawn_moves(&(0,6).into(), &default_board, &PieceColor::Light, true);
+        let expected4 = vec![
+            BasicMove { to: (1,7).into(), capture: true }
+        ];
+        assert_eq!(expected4, result4);
     }
 
     #[test]
