@@ -92,7 +92,7 @@ fn bench_move(b: &mut Criterion) {
 }
 
 fn bench_get_castle_moves(b: &mut Criterion) {
-    let mut default_board = Board::default();
+    let default_board = Board::default();
     b.bench_function("Get Castle Moves", |c| {
         c.iter(|| {
             get_castle_moves(
@@ -104,9 +104,11 @@ fn bench_get_castle_moves(b: &mut Criterion) {
     });
 }
 
+// This should probably be split into multiple groups
 criterion_group! {
     name = benches;
     config = Criterion::default();
     targets = bench_pawn_moves, bench_linear_moves, bench_diagonal_moves, bench_king_moves, bench_knight_moves, bench_evaluation, bench_move, bench_get_castle_moves
 }
+
 criterion_main!(benches);

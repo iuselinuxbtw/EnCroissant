@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
 use crate::formats::fen::Fen;
-use crate::pieces::move_gen::{BasicMove, CastleMove};
+use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::{Move, Moves};
 use crate::utils::new_rc_refcell;
@@ -220,10 +220,32 @@ impl Board {
         self.pieces.push(square_inner);
     }
 
+    // TODO: We need a test for this which should be some mid-game board.
     /// Executes a given CastleMove by moving the king first and then the rook
     pub fn castle(&mut self, castle_move: CastleMove) {
         // First we move the king to the target square.
-        todo!()
+        // TODO: We don't actually need the to: Coordinate in the CastleMove
+        match castle_move.move_type{
+            CastleMoveType::LightKingSide => {
+                // Move the king
+                // TODO: These increase the move counter two times and add two half_moves, which should not happen.
+                self.r#move(&(4, 0).into(), &BasicMove {capture: false, to: castle_move.to});
+                // Move the rook
+                self.r#move(&(7,0).into(), &BasicMove {capture: false, to: (4,0).into()});
+            }
+            CastleMoveType::LightQueenSide => {
+                self.r#move(&(4,0).into(), &BasicMove {capture: false, to: castle_move.to});
+                self.r#move(&(0,0).into(), &BasicMove {capture: false, to: (0,3).into()});
+            }
+            CastleMoveType::DarkKingSide => {
+                self.r#move(&(4,7).into(), &BasicMove {capture: false, to:castle_move.to});
+                self.r#move(&(7,7).into(), &BasicMove {capture: false, to: (5,7).into()});
+            }
+            CastleMoveType::DarkQueenSide => {
+                self.r#move(&(4,7).into(), &BasicMove {capture: false, to: castle_move.to});
+                self.r#move(&(0,7).into(), &BasicMove {capture: false, to: (3,0).into()});
+            }
+        }
     }
 
     /// Returns the current move number.
