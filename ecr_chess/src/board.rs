@@ -1,13 +1,13 @@
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::rc::Rc;
 
 use crate::coordinate::Coordinate;
 use crate::formats::fen::Fen;
-use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
+use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::r#move::{Move, Moves};
 use crate::utils::new_rc_refcell;
-use std::ops::Deref;
 
 /// The inner content of a square. Holds a reference-counted pointer to a [`RefCell`] that holds a
 /// [`BoardPiece`].
@@ -114,6 +114,7 @@ impl Board {
     /// This function moves a piece from a given start square to another square, contained in a
     /// BasicMove.
     pub fn r#move(&mut self, start: &Coordinate, basic_move: &BasicMove) {
+        // TODO: Tests need to be written for this!
         // We can safely unwrap here since no move is generated without a piece at the start of it.
         let piece = self.get_at(start).unwrap();
 
@@ -128,11 +129,12 @@ impl Board {
         if basic_move.capture {
             self.capture_piece(&piece, &target_square);
         }
-        let mut piece_to_add = piece.borrow().deref().clone();
+        let mut piece_to_add: BoardPiece = piece.borrow().deref().clone();
         piece_to_add.set_coordinate(&target_square);
-        let piece_type = piece.borrow().deref().get_piece().get_type();
+        let piece_type: PieceType = piece.borrow().deref().get_piece().get_type();
         if self.is_pawn_promotion(piece_type, &target_square) {
-            todo!();
+            // TODO: We need some way to choose a different piece if we can do a promotion. For now every promotion we do is just to the queen.
+            piece_to_add = BoardPiece::new_from_type(PieceType::Queen, target_square, piece_to_add.get_color());
         }
         // Then we add the piece to the target square.
         self.add_piece(piece_to_add);
