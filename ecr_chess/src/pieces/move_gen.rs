@@ -1,13 +1,13 @@
 //! Pseudo-legal moves are generated here. For moves during check we'll use another generator.
 
 use std::convert::TryFrom;
+use std::ops::Deref;
 use std::rc::Rc;
 
 use crate::board;
 use crate::board::{Board, BoardCastleState, SquareInner};
 use crate::coordinate::Coordinate;
 use crate::pieces::PieceColor;
-use std::ops::Deref;
 
 /// Defines a move in the most basic form.
 ///
@@ -31,7 +31,7 @@ pub struct CastleMove {
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-pub enum CastleMoveType{
+pub enum CastleMoveType {
     LightKingSide,
     LightQueenSide,
     DarkKingSide,
@@ -495,34 +495,46 @@ pub fn get_castle_moves(
                 && board.is_threatened((3, 0).into()).threatened_dark == 0
                 && board.is_threatened((2, 0).into()).threatened_dark == 0
             {
-                result.push(CastleMove { to: (2, 0).into(), move_type: CastleMoveType::LightQueenSide })
+                result.push(CastleMove {
+                    to: (2, 0).into(),
+                    move_type: CastleMoveType::LightQueenSide,
+                })
             }
             if castle_state.light_king_side
-                && board.get_at(&(5,0).into()).is_none()
-                && board.get_at(&(6,0).into()).is_none()
+                && board.get_at(&(5, 0).into()).is_none()
+                && board.get_at(&(6, 0).into()).is_none()
                 && board.is_threatened((5, 0).into()).threatened_dark == 0
                 && board.is_threatened((6, 0).into()).threatened_dark == 0
             {
-                result.push(CastleMove { to: (6, 0).into(), move_type: CastleMoveType::LightKingSide })
+                result.push(CastleMove {
+                    to: (6, 0).into(),
+                    move_type: CastleMoveType::LightKingSide,
+                })
             }
         }
         PieceColor::Dark => {
             if castle_state.dark_queen_side
-                && board.get_at(&(2,7).into()).is_none()
-                && board.get_at(&(3,7).into()).is_none()
-                && board.get_at(&(4,7).into()).is_none()
+                && board.get_at(&(2, 7).into()).is_none()
+                && board.get_at(&(3, 7).into()).is_none()
+                && board.get_at(&(4, 7).into()).is_none()
                 && board.is_threatened((3, 7).into()).threatened_light == 0
                 && board.is_threatened((4, 7).into()).threatened_light == 0
             {
-                result.push(CastleMove { to: (2, 7).into(), move_type: CastleMoveType::DarkQueenSide })
+                result.push(CastleMove {
+                    to: (2, 7).into(),
+                    move_type: CastleMoveType::DarkQueenSide,
+                })
             }
             if castle_state.dark_king_side
-                && board.get_at(&(5,7).into()).is_none()
-                && board.get_at(&(6,7).into()).is_none()
+                && board.get_at(&(5, 7).into()).is_none()
+                && board.get_at(&(6, 7).into()).is_none()
                 && board.is_threatened((5, 7).into()).threatened_light == 0
                 && board.is_threatened((6, 7).into()).threatened_light == 0
             {
-                result.push(CastleMove { to: (6, 7).into(), move_type: CastleMoveType::DarkKingSide })
+                result.push(CastleMove {
+                    to: (6, 7).into(),
+                    move_type: CastleMoveType::DarkKingSide,
+                })
             }
         }
     }
@@ -765,9 +777,9 @@ mod tests {
 
     use crate::board::Board;
     use crate::formats::fen::*;
+    use crate::pieces::{BoardPiece, PieceType};
 
     use super::*;
-    use crate::pieces::{BoardPiece, PieceType};
 
     #[test]
     fn test_linear_moves() {
@@ -1118,10 +1130,11 @@ mod tests {
         }];
         assert_eq!(expected3, result3);
 
-        let result4 = pawn_moves(&(0,6).into(), &default_board, &PieceColor::Light, true);
-        let expected4 = vec![
-            BasicMove { to: (1,7).into(), capture: true }
-        ];
+        let result4 = pawn_moves(&(0, 6).into(), &default_board, &PieceColor::Light, true);
+        let expected4 = vec![BasicMove {
+            to: (1, 7).into(),
+            capture: true,
+        }];
         assert_eq!(expected4, result4);
     }
 
@@ -1252,9 +1265,13 @@ mod tests {
     }
 
     #[test]
-    fn test_get_castle_moves(){
+    fn test_get_castle_moves() {
         let default_board = board::Board::default();
-        let result = get_castle_moves(default_board.get_castle_state(), &PieceColor::Dark, &default_board);
+        let result = get_castle_moves(
+            default_board.get_castle_state(),
+            &PieceColor::Dark,
+            &default_board,
+        );
         let expected: Vec<CastleMove> = vec![];
         assert_eq!(expected, result);
     }

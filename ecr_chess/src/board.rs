@@ -129,25 +129,30 @@ impl Board {
         if basic_move.capture {
             self.capture_piece(&piece, &target_square);
         }
+
         let mut piece_to_add: BoardPiece = piece.borrow().deref().clone();
         piece_to_add.set_coordinate(&target_square);
         let piece_type: PieceType = piece.borrow().deref().get_piece().get_type();
+
         if self.is_pawn_promotion(piece_type, &target_square) {
             // TODO: We need some way to choose a different piece if we can do a promotion. For now every promotion we do is just to the queen.
-            piece_to_add = BoardPiece::new_from_type(PieceType::Queen, target_square, piece_to_add.get_color());
+            piece_to_add = BoardPiece::new_from_type(
+                PieceType::Queen,
+                target_square,
+                piece_to_add.get_color(),
+            );
         }
         // Then we add the piece to the target square.
         self.add_piece(piece_to_add);
 
         // And we of course have to increase the move number
-        self.move_number+=1;
-
+        self.move_number += 1;
 
         // We have to get the half moves
         self.count_half_moves(&piece_type, basic_move.capture);
     }
 
-    fn is_pawn_promotion(&self, piece_type: PieceType, target: &Coordinate) -> bool{
+    fn is_pawn_promotion(&self, piece_type: PieceType, target: &Coordinate) -> bool {
         if piece_type == PieceType::Pawn {
             // Pawns can't move backwards so checking the color is redundant
             if target.get_y() == 7 || target.get_y() == 0 {
@@ -158,12 +163,14 @@ impl Board {
     }
 
     /// This function is called every move and is responsible for increasing/resetting the half move counter.
-    fn count_half_moves(&mut self, piece_type: &PieceType, capture: bool){
-        match piece_type{
-            PieceType::Pawn => self.half_move_amount =0,
-            _ => self.half_move_amount +=1,
+    fn count_half_moves(&mut self, piece_type: &PieceType, capture: bool) {
+        match piece_type {
+            PieceType::Pawn => self.half_move_amount = 0,
+            _ => self.half_move_amount += 1,
         }
-        if capture {self.half_move_amount =0}
+        if capture {
+            self.half_move_amount = 0
+        }
     }
 
     /// Removes a piece from a given target square. DOES NOT SET IT OUT OF GAME!
@@ -227,25 +234,73 @@ impl Board {
     pub fn castle(&mut self, castle_move: CastleMove) {
         // First we move the king to the target square.
         // TODO: We don't actually need the to: Coordinate in the CastleMove
-        match castle_move.move_type{
+        match castle_move.move_type {
             CastleMoveType::LightKingSide => {
                 // Move the king
                 // TODO: These increase the move counter two times and add two half_moves, which should not happen.
-                self.r#move(&(4, 0).into(), &BasicMove {capture: false, to: castle_move.to});
+                self.r#move(
+                    &(4, 0).into(),
+                    &BasicMove {
+                        capture: false,
+                        to: castle_move.to,
+                    },
+                );
                 // Move the rook
-                self.r#move(&(7,0).into(), &BasicMove {capture: false, to: (4,0).into()});
+                self.r#move(
+                    &(7, 0).into(),
+                    &BasicMove {
+                        capture: false,
+                        to: (4, 0).into(),
+                    },
+                );
             }
             CastleMoveType::LightQueenSide => {
-                self.r#move(&(4,0).into(), &BasicMove {capture: false, to: castle_move.to});
-                self.r#move(&(0,0).into(), &BasicMove {capture: false, to: (0,3).into()});
+                self.r#move(
+                    &(4, 0).into(),
+                    &BasicMove {
+                        capture: false,
+                        to: castle_move.to,
+                    },
+                );
+                self.r#move(
+                    &(0, 0).into(),
+                    &BasicMove {
+                        capture: false,
+                        to: (0, 3).into(),
+                    },
+                );
             }
             CastleMoveType::DarkKingSide => {
-                self.r#move(&(4,7).into(), &BasicMove {capture: false, to:castle_move.to});
-                self.r#move(&(7,7).into(), &BasicMove {capture: false, to: (5,7).into()});
+                self.r#move(
+                    &(4, 7).into(),
+                    &BasicMove {
+                        capture: false,
+                        to: castle_move.to,
+                    },
+                );
+                self.r#move(
+                    &(7, 7).into(),
+                    &BasicMove {
+                        capture: false,
+                        to: (5, 7).into(),
+                    },
+                );
             }
             CastleMoveType::DarkQueenSide => {
-                self.r#move(&(4,7).into(), &BasicMove {capture: false, to: castle_move.to});
-                self.r#move(&(0,7).into(), &BasicMove {capture: false, to: (3,0).into()});
+                self.r#move(
+                    &(4, 7).into(),
+                    &BasicMove {
+                        capture: false,
+                        to: castle_move.to,
+                    },
+                );
+                self.r#move(
+                    &(0, 7).into(),
+                    &BasicMove {
+                        capture: false,
+                        to: (3, 0).into(),
+                    },
+                );
             }
         }
     }
