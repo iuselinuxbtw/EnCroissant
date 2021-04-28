@@ -703,8 +703,8 @@ mod tests {
 
         #[test]
         fn test_get_all_pseudo_legal_moves() {
-            let default_board: Board = board::Board::default();
-            println!("{:?}", default_board.get_all_pseudo_legal_moves());
+            let default_board = Board::default();
+            let result = default_board.get_all_pseudo_legal_moves().len();
         }
 
         #[test]
@@ -723,12 +723,6 @@ mod tests {
             assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
         }
 
-        #[test]
-        fn test_get_all_pseudo_legal_moves() {
-            let default_board = Board::default();
-            let result = default_board.get_all_pseudo_legal_moves().len();
-            assert_eq!()
-        }
         /*
                 #[test]
                 fn test_move(){
