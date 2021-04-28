@@ -6,8 +6,8 @@ use std::rc::Rc;
 
 use crate::board;
 use crate::board::{Board, BoardCastleState, SquareInner};
-use ecr_shared::coordinate::Coordinate;
 use crate::pieces::PieceColor;
+use ecr_shared::coordinate::Coordinate;
 
 /// Defines a move in the most basic form.
 ///
@@ -38,7 +38,7 @@ pub enum CastleMoveType {
     DarkQueenSide,
 }
 
-/// Utility enum for the function explore_diagonal_moves. Assigns each diagonal direction a on the
+/// Utility enum for the function [`explore_diagonal_moves`]. Assigns each diagonal direction a on the
 /// chess board a cardinal direction. You can look up the cardinal directions
 /// [here](https://en.wikipedia.org/wiki/Cardinal_direction).
 enum DiagonalDirections {
@@ -52,7 +52,7 @@ enum DiagonalDirections {
     SW,
 }
 
-/// Utility enum for the function explore_linear_moves. Assigns each linear direction a on the chess
+/// Utility enum for the function [`explore_linear_moves`]. Assigns each linear direction a on the chess
 /// board a cardinal direction. You can look up the cardinal directions
 /// [here](https://en.wikipedia.org/wiki/Cardinal_direction).
 enum LinearDirections {
@@ -66,7 +66,7 @@ enum LinearDirections {
     W,
 }
 
-/// This enum combines LinearDirections and DiagonalDirections. Useful for the explore_knight_moves.
+/// This enum combines [`LinearDirections`] and [`DiagonalDirections`]. Useful for the [`explore_knight_moves`].
 /// The first direction always refers to the direction where the knight jumps further. These are
 /// cardinal directions, which you can look up [here](https://en.wikipedia.org/wiki/Cardinal_direction).
 enum KnightDirections {
@@ -89,7 +89,7 @@ enum KnightDirections {
     // down-then-left
     SW,
 }
-/// This enum holds the combined directions of LinearDirections and DiagonalDirections. Used for
+/// This enum holds the combined directions of [`LinearDirections`] and [`DiagonalDirections`]. Used for
 /// e.g. KingDirections
 enum Directions {
     // Linear Directions
@@ -114,7 +114,7 @@ enum Directions {
 
 /// This macro is used to break the loop of calculating positions when the current square is
 /// occupied. Breaks instantly when the square is occupied by a piece of the own color, but not
-/// when the piece is the  opponents color in which case it adds the position and then breaks.
+/// when the piece is the opponents color in which case it adds the position and then breaks.
 /// If it is neither of those it just adds it to the result.
 macro_rules! check_square {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
@@ -777,8 +777,8 @@ mod tests {
     use std::str::FromStr;
 
     use crate::board::Board;
-    use ecr_formats::fen::*;
     use crate::pieces::{BoardPiece, PieceType};
+    use ecr_formats::fen::*;
 
     use super::*;
 

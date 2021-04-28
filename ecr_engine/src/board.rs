@@ -4,12 +4,12 @@ use std::rc::Rc;
 
 pub use ecr_shared::board::BoardCastleState; // Just exists so we can safely
 
-use ecr_shared::coordinate::Coordinate;
-use ecr_formats::fen::{Fen, FenPiecePlacements};
-use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
+use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::{Move, Moves};
 use crate::utils::new_rc_refcell;
+use ecr_formats::fen::{Fen, FenPiecePlacements};
+use ecr_shared::coordinate::Coordinate;
 
 /// The inner content of a square. Holds a reference-counted pointer to a [`RefCell`] that holds a
 /// [`BoardPiece`].
@@ -716,10 +716,10 @@ mod tests {
         }
 
         /*
-                #[test]
-                fn test_move(){
-                    todo!()
-                }*/
+        #[test]
+        fn test_move(){
+            todo!()
+        }*/
 
         #[test]
         fn test_from_fen() {

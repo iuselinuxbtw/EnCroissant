@@ -9,8 +9,8 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use thiserror::Error;
 
-use ecr_shared::coordinate::{char_to_x_coordinate, Coordinate};
 use ecr_shared::board::BoardCastleState;
+use ecr_shared::coordinate::{char_to_x_coordinate, Coordinate};
 use ecr_shared::pieces::{PieceColor, PieceType};
 
 lazy_static! {

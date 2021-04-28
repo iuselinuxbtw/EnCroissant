@@ -45,49 +45,49 @@ mod tests {
                 dark_king_side: false,
                 dark_queen_side: false,
             }
-                .is_any_possible());
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: true,
                 light_queen_side: false,
                 dark_king_side: false,
                 dark_queen_side: false,
             }
-                .is_any_possible());
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: false,
                 light_queen_side: true,
                 dark_king_side: false,
                 dark_queen_side: false,
             }
-                .is_any_possible());
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: false,
                 light_queen_side: false,
                 dark_king_side: true,
                 dark_queen_side: false,
             }
-                .is_any_possible());
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: false,
                 light_queen_side: false,
                 dark_king_side: false,
                 dark_queen_side: true,
             }
-                .is_any_possible());
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: true,
                 light_queen_side: false,
                 dark_king_side: true,
                 dark_queen_side: false,
             }
-                .is_any_possible());
+            .is_any_possible());
             assert!(BoardCastleState {
                 light_king_side: true,
                 light_queen_side: true,
                 dark_king_side: true,
                 dark_queen_side: true,
             }
-                .is_any_possible());
+            .is_any_possible());
         }
 
         #[test]

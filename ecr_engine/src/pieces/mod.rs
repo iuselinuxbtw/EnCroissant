@@ -5,13 +5,13 @@ use std::ops::Deref;
 
 use dyn_clonable::clonable;
 
-pub use ecr_shared::pieces::PieceType;
 pub use ecr_shared::pieces::PieceColor;
+pub use ecr_shared::pieces::PieceType;
 
 use crate::board::Board;
-use ecr_shared::coordinate::Coordinate;
-use ecr_formats::fen::FenPiece;
 use crate::pieces::move_gen::BasicMove;
+use ecr_formats::fen::FenPiece;
+use ecr_shared::coordinate::Coordinate;
 
 pub mod bishop;
 pub mod king;
