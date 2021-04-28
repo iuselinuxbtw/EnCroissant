@@ -66,7 +66,7 @@ pub struct Board {
     move_number: usize,
     /// The amount of half moves done. A half move is any move where nothing gets captured and no
     /// pawn is moved. Resets to `0` if a non-half move occurs.
-    half_move_amount: usize,
+    half_move_amount: u8,
     /// Which castle actions are allowed? Only contains if it would be theoretically allowed, not
     /// representing if the castle would be blocked by another piece or similar.
     castle_state: BoardCastleState,
@@ -78,12 +78,12 @@ pub struct Board {
     threatened_state: Vec<Vec<ThreatenedState>>,
 }
 
-/// Consists of two usizes that tell how many times each team threatens a square. Useful for
+/// Consists of two u8s that tell how many times each team threatens a square. Useful for
 /// castling.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ThreatenedState {
-    pub threatened_light: usize,
-    pub threatened_dark: usize,
+    pub threatened_light: u8,
+    pub threatened_dark: u8,
 }
 
 impl Board {
@@ -209,15 +209,15 @@ impl Board {
     /// Adds a piece to the board. Since a hybrid solution for saving the board is used, the piece
     /// gets added into the board array as well as the piece list.
     pub fn add_piece(&mut self, piece: BoardPiece) {
-        let x_coordinate = piece.get_coordinate().get_x() as usize;
-        let y_coordinate = piece.get_coordinate().get_y() as usize;
+        let x_coordinate = piece.get_coordinate().get_x();
+        let y_coordinate = piece.get_coordinate().get_y();
 
         // Get the column (x coordinate) as mutable reference
-        let column = self.board.get_mut(x_coordinate).unwrap();
+        let column = self.board.get_mut(x_coordinate as usize).unwrap();
 
         // Since .splice wants a range but we only want to replace one specific part, we just create
         // a range that consists of the x coordinate
-        let column_index_range = y_coordinate..=y_coordinate;
+        let column_index_range = y_coordinate as usize..=y_coordinate as usize;
 
         let square_inner: SquareInner = new_rc_refcell(piece);
 
@@ -311,7 +311,7 @@ impl Board {
     }
 
     /// Returns the amount of half moves done.
-    pub fn get_half_move_amount(&self) -> usize {
+    pub fn get_half_move_amount(&self) -> u8 {
         self.half_move_amount
     }
 
@@ -393,10 +393,10 @@ impl Board {
         let light_pieces = self.get_team_pieces(PieceColor::Light);
         let dark_pieces = self.get_team_pieces(PieceColor::Dark);
         for piece in light_pieces {
-            value_light += piece.borrow().deref().get_piece().get_value();
+            value_light += piece.borrow().deref().get_piece().get_value() as usize;
         }
         for piece in dark_pieces {
-            value_dark += piece.borrow().deref().get_piece().get_value();
+            value_dark += piece.borrow().deref().get_piece().get_value() as usize;
         }
         (value_light - value_dark) as f32
     }
@@ -671,8 +671,8 @@ mod tests {
             let mut b = Board::empty();
             assert_eq!(0, b.get_half_move_amount());
 
-            b.half_move_amount = 420;
-            assert_eq!(420, b.get_half_move_amount());
+            b.half_move_amount = 42;
+            assert_eq!(42, b.get_half_move_amount());
         }
 
         #[test]
@@ -722,6 +722,18 @@ mod tests {
             b.en_passant_target = Some((3, 4).into());
             assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
         }
+
+        #[test]
+        fn test_get_all_pseudo_legal_moves() {
+            let default_board = Board::default();
+            let result = default_board.get_all_pseudo_legal_moves().len();
+            assert_eq!()
+        }
+        /*
+                #[test]
+                fn test_move(){
+                    todo!()
+                }*/
 
         #[test]
         fn test_from_fen() {

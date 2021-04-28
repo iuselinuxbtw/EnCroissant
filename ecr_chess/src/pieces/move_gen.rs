@@ -118,7 +118,7 @@ enum Directions {
 /// If it is neither of those it just adds it to the result.
 macro_rules! check_square {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
-        let possible_square =  coordinate_check($x as &usize, $y as &usize, $team_color, $board);
+        let possible_square =  coordinate_check($x, $y, $team_color, $board);
         // If the square is occupied by a piece
         if possible_square.1{
             // Check if it is our own piece.
@@ -147,8 +147,8 @@ pub fn linear_moves(
     let mut result: Vec<BasicMove> = Vec::new();
 
     // Bind the given coordinates to variables because we obviously can
-    let from_x = start.get_x() as usize;
-    let from_y = start.get_y() as usize;
+    let from_x = start.get_x();
+    let from_y = start.get_y();
 
     // explore all directions
     result.append(&mut explore_linear_direction(
@@ -187,8 +187,8 @@ pub fn linear_moves(
 /// rook and Queen move generation.
 fn explore_linear_direction(
     direction: LinearDirections,
-    from_x: usize,
-    from_y: usize,
+    from_x: u8,
+    from_y: u8,
     team_color: &PieceColor,
     board: &board::Board,
 ) -> Vec<BasicMove> {
@@ -333,7 +333,7 @@ pub fn knight_moves(
 /// be used outside of a loop.
 macro_rules! check_move {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
-        let possible_square =  coordinate_check($x as &usize, $y as &usize, $team_color, $board);
+        let possible_square =  coordinate_check($x as &u8, $y as &u8, $team_color, $board);
         // If the square is occupied by a piece
         if possible_square.1{
             // Check if it is our own piece.
@@ -359,8 +359,8 @@ fn explore_knight_moves(
     board: &board::Board,
     direction: KnightDirections,
 ) -> Vec<BasicMove> {
-    let from_x: usize = start.get_x() as usize;
-    let from_y: usize = start.get_y() as usize;
+    let from_x = start.get_x();
+    let from_y = start.get_y();
     let mut result: Vec<BasicMove> = vec![];
     match direction {
         KnightDirections::WN => {
@@ -441,8 +441,8 @@ fn explore_king_moves(
     direction: Directions,
 ) -> Vec<BasicMove> {
     let mut result: Vec<BasicMove> = vec![];
-    let from_x = start.get_x() as usize;
-    let from_y = start.get_y() as usize;
+    let from_x = start.get_x();
+    let from_y = start.get_y();
     match direction {
         Directions::N => {
             check_move!(&(from_x), &(from_y + 1), team_color, result, board);
@@ -546,19 +546,19 @@ pub fn get_castle_moves(
 /// in which directions the knight can go.
 struct DistanceToBorder {
     // Distance to the upper border
-    up: usize,
+    up: u8,
     // Distance to the right border
-    right: usize,
+    right: u8,
     // Distance to the lower border
-    down: usize,
+    down: u8,
     // Distance to the left border
-    left: usize,
+    left: u8,
 }
 
 /// Returns the distance of a coordinate to every border.
 fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
-    let x = coords.get_x() as usize;
-    let y = coords.get_y() as usize;
+    let x = coords.get_x();
+    let y = coords.get_y();
     let up = 7 - y;
     let right = 7 - x;
     let down = y;
@@ -574,8 +574,8 @@ fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
 /// This function returns the next row of the corresponding team. (If the team_color is white it's
 /// higher, otherwise it's lower). So far there is no check whether the returning row is valid but in
 /// most variants it is impossible since the pawn promotes when reaching the last row.
-fn next_row(y: u8, team_color: &PieceColor, step: usize) -> u8 {
-    let mut result: usize = y.clone() as usize;
+fn next_row(y: u8, team_color: &PieceColor, step: u8) -> u8 {
+    let mut result: u8 = y.clone();
     // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
     if team_color == &PieceColor::Light {
         result += step;
@@ -591,7 +591,7 @@ fn piece_in_front(
     from: &Coordinate,
     team_color: &PieceColor,
     board: &board::Board,
-    step: usize,
+    step: u8,
 ) -> bool {
     let mut next_coordinate: Coordinate = from.clone();
 
@@ -616,8 +616,8 @@ pub fn diagonal_moves(
     let mut result: Vec<BasicMove> = Vec::new();
 
     // Bind the starting coordinates to variables
-    let from_x = start.get_x() as usize;
-    let from_y = start.get_y() as usize;
+    let from_x = start.get_x();
+    let from_y = start.get_y();
 
     // Explore the moves in all directions.
     result.append(&mut explore_diagonal_direction(
@@ -654,8 +654,8 @@ pub fn diagonal_moves(
 /// This function returns all moves into a particular diagonal direction
 fn explore_diagonal_direction(
     direction: DiagonalDirections,
-    from_x: &usize,
-    from_y: &usize,
+    from_x: &u8,
+    from_y: &u8,
     team_color: &PieceColor,
     board: &board::Board,
 ) -> Vec<BasicMove> {
@@ -671,8 +671,8 @@ fn explore_diagonal_direction(
                 y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square!(
-                    &usize::try_from(x).unwrap(),
-                    &usize::try_from(y).unwrap(),
+                    &u8::try_from(x).unwrap(),
+                    &u8::try_from(y).unwrap(),
                     &team_color,
                     result,
                     board
@@ -686,8 +686,8 @@ fn explore_diagonal_direction(
                 y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square!(
-                    &usize::try_from(x).unwrap(),
-                    &usize::try_from(y).unwrap(),
+                    &u8::try_from(x).unwrap(),
+                    &u8::try_from(y).unwrap(),
                     &team_color,
                     result,
                     board
@@ -701,8 +701,8 @@ fn explore_diagonal_direction(
                 y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square!(
-                    &usize::try_from(x).unwrap(),
-                    &usize::try_from(y).unwrap(),
+                    &u8::try_from(x).unwrap(),
+                    &u8::try_from(y).unwrap(),
                     &team_color,
                     result,
                     board
@@ -716,8 +716,8 @@ fn explore_diagonal_direction(
                 y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square!(
-                    &usize::try_from(x).unwrap(),
-                    &usize::try_from(y).unwrap(),
+                    &u8::try_from(x).unwrap(),
+                    &u8::try_from(y).unwrap(),
                     &team_color,
                     result,
                     board
@@ -730,8 +730,8 @@ fn explore_diagonal_direction(
 
 /// Calculates a square and then just calls square_check()
 fn coordinate_check(
-    x: &usize,
-    y: &usize,
+    x: &u8,
+    y: &u8,
     team_color: &PieceColor,
     board: &board::Board,
 ) -> (Option<Coordinate>, bool) {

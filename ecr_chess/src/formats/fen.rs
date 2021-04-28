@@ -51,7 +51,7 @@ pub struct Fen {
     pub light_to_move: bool,
     pub castles: BoardCastleState,
     pub en_passant: Option<Coordinate>,
-    pub half_moves: usize,
+    pub half_moves: u8,
     pub move_number: usize,
 }
 
@@ -241,7 +241,7 @@ impl Display for FenPiecePlacements {
             // Holds the last x coordinate on which a piece was parsed
             let mut last_x: i8 = -1;
             // Loop over all columns
-            for x in 0_usize..=7 {
+            for x in 0..=7 {
                 // Only do something if there actually is a piece on the square
                 if let Some(v) = pieces_array[y][x] {
                     if x as i8 - last_x > 1 {

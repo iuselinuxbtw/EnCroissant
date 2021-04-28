@@ -1,9 +1,9 @@
-use crate::pieces::{PieceColor, PieceType};
-
-use super::Piece;
 use crate::board::Board;
 use crate::coordinate::Coordinate;
-use crate::pieces::move_gen::{diagonal_moves, BasicMove};
+use crate::pieces::{PieceColor, PieceType};
+use crate::pieces::move_gen::{BasicMove, diagonal_moves};
+
+use super::Piece;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bishop {}
@@ -22,7 +22,7 @@ impl Piece for Bishop {
         diagonal_moves(piece_coordinate, board, piece_color)
     }
 
-    fn get_value(&self) -> usize {
+    fn get_value(&self) -> u8 {
         35
     }
 }

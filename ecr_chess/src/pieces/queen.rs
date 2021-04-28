@@ -1,9 +1,9 @@
-use crate::pieces::{PieceColor, PieceType};
-
-use super::Piece;
 use crate::board::Board;
 use crate::coordinate::Coordinate;
-use crate::pieces::move_gen::{diagonal_moves, linear_moves, BasicMove};
+use crate::pieces::{PieceColor, PieceType};
+use crate::pieces::move_gen::{BasicMove, diagonal_moves, linear_moves};
+
+use super::Piece;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Queen {}
@@ -25,15 +25,16 @@ impl Piece for Queen {
         result
     }
 
-    fn get_value(&self) -> usize {
+    fn get_value(&self) -> u8 {
         90
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::board;
+
+    use super::*;
 
     fn get_piece() -> Queen {
         Queen {}
