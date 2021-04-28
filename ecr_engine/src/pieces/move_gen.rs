@@ -9,6 +9,8 @@ use crate::board::{Board, BoardCastleState, SquareInner};
 use crate::pieces::PieceColor;
 use ecr_shared::coordinate::Coordinate;
 
+// TODO: Move to scr_engine/src/move_gen package
+
 /// Defines a move in the most basic form.
 ///
 /// Only defines where the move goes and whether or not the move is a capture.
