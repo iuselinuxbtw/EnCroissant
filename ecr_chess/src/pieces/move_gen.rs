@@ -232,6 +232,7 @@ pub fn pawn_moves(
     team_color: &PieceColor,
     has_moved: bool,
 ) -> Vec<BasicMove> {
+    //TODO: En Passant is currently not considered
     let mut result: Vec<BasicMove> = Vec::new();
     let from_x = start.get_x() as u8;
     let from_y = start.get_y() as u8;
