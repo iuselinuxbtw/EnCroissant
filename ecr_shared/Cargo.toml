@@ -1,5 +1,5 @@
 [package]
-name = "ecr_formats"
+name = "ecr_shared"
 version = "0.0.1"
 authors = ["ravi0li <moritz@howtoflex.club>", "Benedikt <benediktb11@tuta.io>"]
 edition = "2018"
@@ -9,8 +9,3 @@ repository = "https://github.com/iuselinuxbtw/EnCroissant"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-regex = "1.4.5"
-thiserror = "1.0.24"
-itertools = "0.10.0"
-lazy_static = "1.4.0"
-ecr_shared = { path = "../ecr_shared" }

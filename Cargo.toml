@@ -1,5 +1,6 @@
 [workspace]
 members = [
     'ecr_engine',
-    'ecr_formats'
+    'ecr_formats',
+    'ecr_shared',
 ]

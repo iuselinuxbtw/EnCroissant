@@ -1,5 +1,5 @@
 use crate::board::Board;
-use crate::coordinate::Coordinate;
+use ecr_shared::coordinate::Coordinate;
 use crate::pieces::{PieceColor, PieceType};
 use crate::pieces::move_gen::{BasicMove, knight_moves};
 

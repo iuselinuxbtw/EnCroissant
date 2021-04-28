@@ -2,8 +2,10 @@ use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::Rc;
 
-use crate::coordinate::Coordinate;
-use crate::formats::fen::Fen;
+pub use ecr_shared::board::BoardCastleState; // Just exists so we can safely
+
+use ecr_shared::coordinate::Coordinate;
+use ecr_formats::fen::{Fen, FenPiecePlacements};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::r#move::{Move, Moves};
@@ -12,38 +14,6 @@ use crate::utils::new_rc_refcell;
 /// The inner content of a square. Holds a reference-counted pointer to a [`RefCell`] that holds a
 /// [`BoardPiece`].
 pub type SquareInner = Rc<RefCell<BoardPiece>>;
-
-/// Holds information whether castling is allowed on the specific sides.
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct BoardCastleState {
-    /// Can light castle on king side?
-    pub light_king_side: bool,
-    /// Can light castle on queen side?
-    pub light_queen_side: bool,
-    /// Can dark castle on king side?
-    pub dark_king_side: bool,
-    /// Can dark castle on queen side?
-    pub dark_queen_side: bool,
-}
-
-impl Default for BoardCastleState {
-    /// By default, every castle action is possible.
-    fn default() -> Self {
-        BoardCastleState {
-            light_king_side: true,
-            light_queen_side: true,
-            dark_king_side: true,
-            dark_queen_side: true,
-        }
-    }
-}
-
-impl BoardCastleState {
-    /// Returns if any castle action is still allowed.
-    pub fn is_any_possible(&self) -> bool {
-        self.light_king_side || self.light_queen_side || self.dark_king_side || self.dark_queen_side
-    }
-}
 
 /// A [`Board`] contains the current game of chess.
 #[derive(Debug, Clone)]
@@ -554,6 +524,28 @@ impl From<Fen> for Board {
     }
 }
 
+impl From<Board> for Fen {
+    fn from(board: Board) -> Self {
+        let mut fen = Fen {
+            piece_placements: FenPiecePlacements { pieces: Vec::new() },
+            light_to_move: board.get_light_to_move(),
+            castles: *board.get_castle_state(), // Copy is implemented for BoardCastleState
+            en_passant: board.get_en_passant_target(),
+            half_moves: board.get_half_move_amount(),
+            move_number: board.get_move_number(),
+        };
+
+        // Add all pieces
+        for p in board.get_pieces() {
+            fen.piece_placements
+                .pieces
+                .push((p.borrow().deref()).clone().into());
+        }
+
+        fen
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -776,6 +768,49 @@ mod tests {
         }
 
         #[test]
+        fn test_fen_from_board() {
+            let mut b = Board::empty();
+            b.add_piece(BoardPiece::new_from_type(
+                PieceType::Pawn,
+                (5, 3).into(),
+                PieceColor::Light,
+            ));
+            b.add_piece(BoardPiece::new_from_type(
+                PieceType::King,
+                (4, 0).into(),
+                PieceColor::Light,
+            ));
+            b.add_piece(BoardPiece::new_from_type(
+                PieceType::King,
+                (4, 7).into(),
+                PieceColor::Dark,
+            ));
+
+            assert_eq!(
+                Fen {
+                    piece_placements: FenPiecePlacements {
+                        pieces: vec![
+                            ((5, 3).into(), PieceColor::Light, PieceType::Pawn).into(),
+                            ((4, 0).into(), PieceColor::Light, PieceType::King).into(),
+                            ((4, 7).into(), PieceColor::Dark, PieceType::King).into(),
+                        ],
+                    },
+                    light_to_move: true,
+                    castles: BoardCastleState {
+                        light_king_side: true,
+                        light_queen_side: true,
+                        dark_king_side: true,
+                        dark_queen_side: true,
+                    },
+                    en_passant: None,
+                    half_moves: 0,
+                    move_number: 1,
+                },
+                b.into()
+            );
+        }
+
+        #[test]
         fn test_get_pieces() {
             let b = Board::default();
             assert_eq!(32, b.pieces.len());
@@ -825,76 +860,6 @@ mod tests {
                 threatened_dark: 0,
             };
             assert_eq!(state, expected2);
-        }
-    }
-
-    mod board_castle_state {
-        use super::*;
-
-        #[test]
-        fn test_is_any_possible() {
-            assert!(!BoardCastleState {
-                light_king_side: false,
-                light_queen_side: false,
-                dark_king_side: false,
-                dark_queen_side: false,
-            }
-            .is_any_possible());
-            assert!(BoardCastleState {
-                light_king_side: true,
-                light_queen_side: false,
-                dark_king_side: false,
-                dark_queen_side: false,
-            }
-            .is_any_possible());
-            assert!(BoardCastleState {
-                light_king_side: false,
-                light_queen_side: true,
-                dark_king_side: false,
-                dark_queen_side: false,
-            }
-            .is_any_possible());
-            assert!(BoardCastleState {
-                light_king_side: false,
-                light_queen_side: false,
-                dark_king_side: true,
-                dark_queen_side: false,
-            }
-            .is_any_possible());
-            assert!(BoardCastleState {
-                light_king_side: false,
-                light_queen_side: false,
-                dark_king_side: false,
-                dark_queen_side: true,
-            }
-            .is_any_possible());
-            assert!(BoardCastleState {
-                light_king_side: true,
-                light_queen_side: false,
-                dark_king_side: true,
-                dark_queen_side: false,
-            }
-            .is_any_possible());
-            assert!(BoardCastleState {
-                light_king_side: true,
-                light_queen_side: true,
-                dark_king_side: true,
-                dark_queen_side: true,
-            }
-            .is_any_possible());
-        }
-
-        #[test]
-        fn test_default() {
-            assert_eq!(
-                BoardCastleState {
-                    light_king_side: true,
-                    light_queen_side: true,
-                    dark_king_side: true,
-                    dark_queen_side: true,
-                },
-                BoardCastleState::default()
-            );
         }
     }
 }

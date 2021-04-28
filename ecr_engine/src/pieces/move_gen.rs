@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 use crate::board;
 use crate::board::{Board, BoardCastleState, SquareInner};
-use crate::coordinate::Coordinate;
+use ecr_shared::coordinate::Coordinate;
 use crate::pieces::PieceColor;
 
 /// Defines a move in the most basic form.
@@ -777,7 +777,7 @@ mod tests {
     use std::str::FromStr;
 
     use crate::board::Board;
-    use crate::formats::fen::*;
+    use ecr_formats::fen::*;
     use crate::pieces::{BoardPiece, PieceType};
 
     use super::*;

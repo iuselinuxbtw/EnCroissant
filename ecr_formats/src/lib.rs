@@ -1,7 +1,3 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+//! Parsers for various chess-related formats like FEN or the algebraic notation.
+
+pub mod fen;

@@ -5,9 +5,12 @@ use std::ops::Deref;
 
 use dyn_clonable::clonable;
 
+pub use ecr_shared::pieces::PieceType;
+pub use ecr_shared::pieces::PieceColor;
+
 use crate::board::Board;
-use crate::coordinate::Coordinate;
-use crate::formats::fen::FenPiece;
+use ecr_shared::coordinate::Coordinate;
+use ecr_formats::fen::FenPiece;
 use crate::pieces::move_gen::BasicMove;
 
 pub mod bishop;
@@ -44,31 +47,6 @@ pub trait Piece: Debug + Clone {
     fn get_value(&self) -> u8;
 }
 
-/// All available pieces.
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum PieceType {
-    Pawn,
-    Knight,
-    Bishop,
-    Rook,
-    Queen,
-    King,
-}
-
-impl PieceType {
-    /// Returns the short code of the piece type according to the algebraic standard.
-    fn get_shortcode_algebraic(&self) -> &'static str {
-        match self {
-            PieceType::Pawn => "",
-            PieceType::Knight => "N",
-            PieceType::Bishop => "B",
-            PieceType::Rook => "R",
-            PieceType::Queen => "Q",
-            PieceType::King => "K",
-        }
-    }
-}
-
 impl From<PieceType> for Box<dyn Piece> {
     /// Converts the [`PieceType`] into a [`Box<dyn Piece>`] that holds a piece of the supplied
     /// type.
@@ -82,13 +60,6 @@ impl From<PieceType> for Box<dyn Piece> {
             PieceType::King => Box::new(king::King {}),
         }
     }
-}
-
-/// The color of a piece.
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum PieceColor {
-    Light,
-    Dark,
 }
 
 /// A [`Piece`] that has additional properties so it can sit on a [`Board`](struct@crate::board::Board).
@@ -167,6 +138,16 @@ impl PartialEq for BoardPiece {
 impl From<FenPiece> for BoardPiece {
     fn from(fp: FenPiece) -> Self {
         BoardPiece::new_from_type(fp.2, fp.0, fp.1)
+    }
+}
+
+impl From<BoardPiece> for FenPiece {
+    fn from(piece: BoardPiece) -> Self {
+        (
+            piece.get_coordinate(),
+            piece.get_color(),
+            piece.get_piece().get_type(),
+        )
     }
 }
 
@@ -322,6 +303,21 @@ mod tests {
         }
 
         #[test]
+        fn test_fen_piece_from_board_piece() {
+            let p = BoardPiece::new_from_type(PieceType::Queen, (2, 1).into(), PieceColor::Dark);
+            assert_eq!(
+                (Coordinate::new(2, 1), PieceColor::Dark, PieceType::Queen),
+                p.into()
+            );
+
+            let p = BoardPiece::new_from_type(PieceType::Rook, (7, 7).into(), PieceColor::Light);
+            assert_eq!(
+                (Coordinate::new(7, 7), PieceColor::Light, PieceType::Rook),
+                p.into()
+            );
+        }
+
+        #[test]
         fn test_get_has_moved() {
             let mut p =
                 BoardPiece::new_from_type(PieceType::Pawn, (1, 2).into(), PieceColor::Light);
@@ -333,16 +329,6 @@ mod tests {
 
     mod piece_type {
         use super::*;
-
-        #[test]
-        fn test_get_shortcode_algebraic() {
-            assert_eq!("", PieceType::Pawn.get_shortcode_algebraic());
-            assert_eq!("N", PieceType::Knight.get_shortcode_algebraic());
-            assert_eq!("B", PieceType::Bishop.get_shortcode_algebraic());
-            assert_eq!("R", PieceType::Rook.get_shortcode_algebraic());
-            assert_eq!("Q", PieceType::Queen.get_shortcode_algebraic());
-            assert_eq!("K", PieceType::King.get_shortcode_algebraic());
-        }
 
         #[test]
         fn test_into_box_dyn_piece() {

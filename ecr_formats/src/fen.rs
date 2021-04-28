@@ -3,16 +3,15 @@
 
 use std::fmt::{self, Display};
 use std::num::ParseIntError;
-use std::ops::Deref;
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
 use regex::Regex;
 use thiserror::Error;
 
-use crate::board::{Board, BoardCastleState};
-use crate::coordinate::{char_to_x_coordinate, Coordinate};
-use crate::pieces::{BoardPiece, PieceColor, PieceType};
+use ecr_shared::coordinate::{char_to_x_coordinate, Coordinate};
+use ecr_shared::board::BoardCastleState;
+use ecr_shared::pieces::{PieceColor, PieceType};
 
 lazy_static! {
     /// This is the regex pattern that we use to split the string. What may be a bit confusing is
@@ -131,41 +130,9 @@ impl FromStr for Fen {
     }
 }
 
-impl From<Board> for Fen {
-    fn from(board: Board) -> Self {
-        let mut fen = Fen {
-            piece_placements: FenPiecePlacements { pieces: Vec::new() },
-            light_to_move: board.get_light_to_move(),
-            castles: *board.get_castle_state(), // Copy is implemented for BoardCastleState
-            en_passant: board.get_en_passant_target(),
-            half_moves: board.get_half_move_amount(),
-            move_number: board.get_move_number(),
-        };
-
-        // Add all pieces
-        for p in board.get_pieces() {
-            fen.piece_placements
-                .pieces
-                .push((p.borrow().deref()).clone().into());
-        }
-
-        fen
-    }
-}
-
 /// Contains information about a piece that is stored inside Fen. This is their [`Coordinate`],
 /// their [`PieceColor`] and their [`PieceType`].
 pub type FenPiece = (Coordinate, PieceColor, PieceType);
-
-impl From<BoardPiece> for FenPiece {
-    fn from(piece: BoardPiece) -> Self {
-        (
-            piece.get_coordinate(),
-            piece.get_color(),
-            piece.get_piece().get_type(),
-        )
-    }
-}
 
 /// Stores all pieces notated in the FEN.
 #[derive(Debug, PartialEq, Clone)]
@@ -316,19 +283,6 @@ fn resolve_piece_code(x: u8, y: u8, code: char) -> FenPiece {
 }
 
 /// Resolves a Fen Castling ability string and returns a [`BoardCastleState`].
-/// # Example
-/// Parsing the string `Qkq`:
-/// ```
-/// # use ecr_engine::board::BoardCastleState;
-/// # use ecr_engine::formats::fen;
-/// #
-/// assert_eq!(BoardCastleState {
-///     light_king_side: false,
-///     light_queen_side: true,
-///     dark_king_side: true,
-///     dark_queen_side: true,
-/// }, fen::resolve_board_castle_state(String::from("Qkq")));
-/// ```
 pub fn resolve_board_castle_state(state: String) -> BoardCastleState {
     let mut bcs = BoardCastleState {
         light_king_side: false,
@@ -516,49 +470,6 @@ mod tests {
                     .to_string()
             );
         }
-
-        #[test]
-        fn test_from_board() {
-            let mut b = Board::empty();
-            b.add_piece(BoardPiece::new_from_type(
-                PieceType::Pawn,
-                (5, 3).into(),
-                PieceColor::Light,
-            ));
-            b.add_piece(BoardPiece::new_from_type(
-                PieceType::King,
-                (4, 0).into(),
-                PieceColor::Light,
-            ));
-            b.add_piece(BoardPiece::new_from_type(
-                PieceType::King,
-                (4, 7).into(),
-                PieceColor::Dark,
-            ));
-
-            assert_eq!(
-                Fen {
-                    piece_placements: FenPiecePlacements {
-                        pieces: vec![
-                            ((5, 3).into(), PieceColor::Light, PieceType::Pawn).into(),
-                            ((4, 0).into(), PieceColor::Light, PieceType::King).into(),
-                            ((4, 7).into(), PieceColor::Dark, PieceType::King).into(),
-                        ],
-                    },
-                    light_to_move: true,
-                    castles: BoardCastleState {
-                        light_king_side: true,
-                        light_queen_side: true,
-                        dark_king_side: true,
-                        dark_queen_side: true,
-                    },
-                    en_passant: None,
-                    half_moves: 0,
-                    move_number: 1,
-                },
-                b.into()
-            );
-        }
     }
 
     mod fen_piece_placements {
@@ -744,25 +655,6 @@ mod tests {
             assert_eq!(
                 String::from("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R"),
                 get_fen_piece_placements_gotc().to_string()
-            );
-        }
-    }
-
-    mod fen_piece {
-        use super::*;
-
-        #[test]
-        fn test_from_board_piece() {
-            let p = BoardPiece::new_from_type(PieceType::Queen, (2, 1).into(), PieceColor::Dark);
-            assert_eq!(
-                (Coordinate::new(2, 1), PieceColor::Dark, PieceType::Queen),
-                p.into()
-            );
-
-            let p = BoardPiece::new_from_type(PieceType::Rook, (7, 7).into(), PieceColor::Light);
-            assert_eq!(
-                (Coordinate::new(7, 7), PieceColor::Light, PieceType::Rook),
-                p.into()
             );
         }
     }
