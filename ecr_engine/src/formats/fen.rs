@@ -319,8 +319,8 @@ fn resolve_piece_code(x: u8, y: u8, code: char) -> FenPiece {
 /// # Example
 /// Parsing the string `Qkq`:
 /// ```
-/// # use ecr_chess::board::BoardCastleState;
-/// # use ecr_chess::formats::fen;
+/// # use ecr_engine::board::BoardCastleState;
+/// # use ecr_engine::formats::fen;
 /// #
 /// assert_eq!(BoardCastleState {
 ///     light_king_side: false,

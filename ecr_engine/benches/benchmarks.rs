@@ -1,8 +1,8 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use ecr_chess::board::Board;
-use ecr_chess::pieces::move_gen::*;
-use ecr_chess::pieces::PieceColor;
+use ecr_engine::board::Board;
+use ecr_engine::pieces::move_gen::*;
+use ecr_engine::pieces::PieceColor;
 
 // TODO: Do these with other values. Maybe iterate through all values.
 fn bench_pawn_moves(b: &mut Criterion) {

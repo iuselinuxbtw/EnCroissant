@@ -1,0 +1,11 @@
+[package]
+name = "ecr_formats"
+version = "0.0.1"
+authors = ["ravi0li <moritz@howtoflex.club>", "Benedikt <benediktb11@tuta.io>"]
+edition = "2018"
+license = "AGPL-3.0-only"
+repository = "https://github.com/iuselinuxbtw/EnCroissant"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

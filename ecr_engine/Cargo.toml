@@ -1,5 +1,5 @@
 [package]
-name = "ecr_chess"
+name = "ecr_engine"
 version = "0.0.1"
 authors = ["ravi0li <moritz@howtoflex.club>", "Benedikt <benediktb11@tuta.io>"]
 edition = "2018"
