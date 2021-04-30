@@ -115,13 +115,16 @@ impl Board {
             );
         }
         // Then we add the piece to the target square.
-        self.add_piece(piece_to_add);
+        self.add_piece(piece_to_add.clone());
 
-        // And we of course have to increase the move number
-        self.move_number += 1;
-
+        // And we of course have to increase the move number, but only if the piece is dark.
+        if piece_to_add.get_color() == PieceColor::Dark {
+            self.move_number += 1;
+        }
         // We have to get the half moves
         self.count_half_moves(&piece_type, basic_move.capture);
+
+        // TODO: Add to move Vector
     }
 
     fn is_pawn_promotion(&self, piece_type: PieceType, target: &Coordinate) -> bool {
@@ -774,10 +777,12 @@ mod tests {
 
         /*
         #[test]
-        fn test_move(){
+        fn test_move() {
             let mut default_board = Board::default();
             default_board.r#move((7, 1).into(), &BasicMove { to: (7, 3).into(), capture: false });
-            // TODO: Test the move number, the half moves and the Position of all pieces.
+            assert_eq!(1, default_board.get_move_number());
+            assert_eq!(0, default_board.get_half_move_amount());
+            // TODO: Test the Position of all pieces.
         }
 
         #[test]
