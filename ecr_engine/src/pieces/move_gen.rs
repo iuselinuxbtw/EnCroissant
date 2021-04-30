@@ -4,9 +4,10 @@ use std::convert::TryFrom;
 use std::ops::Deref;
 use std::rc::Rc;
 
+use ecr_shared::coordinate::Coordinate;
+
 use crate::board;
 use crate::board::{Board, BoardCastleState, SquareInner};
-use ecr_shared::coordinate::Coordinate;
 use crate::pieces::PieceColor;
 
 /// Defines a move in the most basic form.
@@ -776,8 +777,9 @@ fn piece_on_square(square: &Coordinate, board: &board::Board) -> Option<SquareIn
 mod tests {
     use std::str::FromStr;
 
-    use crate::board::Board;
     use ecr_formats::fen::*;
+
+    use crate::board::Board;
     use crate::pieces::{BoardPiece, PieceType};
 
     use super::*;

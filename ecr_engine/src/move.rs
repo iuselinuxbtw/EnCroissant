@@ -1,4 +1,5 @@
 use ecr_shared::coordinate::Coordinate;
+
 use crate::pieces::move_gen::BasicMove;
 use crate::pieces::PieceType;
 

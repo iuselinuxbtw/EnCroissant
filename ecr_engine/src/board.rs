@@ -1,15 +1,18 @@
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::Rc;
 
-pub use ecr_shared::board::BoardCastleState; // Just exists so we can safely
-
-use ecr_shared::coordinate::Coordinate;
 use ecr_formats::fen::{Fen, FenPiecePlacements};
+pub use ecr_shared::board::BoardCastleState;
+use ecr_shared::coordinate::Coordinate;
+
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::r#move::{Move, Moves};
 use crate::utils::new_rc_refcell;
+
+// Just exists so we can safely
 
 /// The inner content of a square. Holds a reference-counted pointer to a [`RefCell`] that holds a
 /// [`BoardPiece`].
@@ -86,23 +89,23 @@ impl Board {
     pub fn r#move(&mut self, start: &Coordinate, basic_move: &BasicMove) {
         // TODO: Tests need to be written for this!
         // We can safely unwrap here since no move is generated without a piece at the start of it.
-        let piece = self.get_at(start).unwrap();
+        let square_inner = self.get_at(start).unwrap();
 
         let target_square = basic_move.get_target_square();
 
         // Update the piece coordinate to the new coordinates.
-        piece.borrow_mut().set_coordinate(&target_square);
+        square_inner.borrow_mut().set_coordinate(&target_square);
 
         // First we remove the piece from the original square on the board.
         self.remove_piece(start);
 
         if basic_move.capture {
-            self.capture_piece(&piece, &target_square);
+            self.capture_piece(&square_inner, &target_square);
         }
 
-        let mut piece_to_add: BoardPiece = piece.borrow().deref().clone();
+        let mut piece_to_add: BoardPiece = square_inner.deref().borrow().borrow().deref().clone();
         piece_to_add.set_coordinate(&target_square);
-        let piece_type: PieceType = piece.borrow().deref().get_piece().get_type();
+        let piece_type: PieceType = square_inner.deref().borrow().get_piece().get_type();
 
         if self.is_pawn_promotion(piece_type, &target_square) {
             // TODO: We need some way to choose a different piece if we can do a promotion. For now every promotion we do is just to the queen.
@@ -332,16 +335,52 @@ impl Board {
     /// interesting...
     pub fn get_all_pseudo_legal_moves(&self) -> Vec<Moves> {
         let mut result: Vec<Moves> = vec![];
-        for piece in &self.pieces {
-            result.push(Moves {
-                from: piece.borrow().deref().get_coordinate(),
-                basic_move: piece.borrow().deref().get_piece().get_pseudo_legal_moves(
+        result.append(&mut self.get_pseudo_legal_moves(PieceColor::Light));
+        result.append(&mut self.get_pseudo_legal_moves(PieceColor::Dark));
+        result
+    }
+
+    /// Returns the pseudo-legal moves of a specific team.
+    pub fn get_pseudo_legal_moves(&self, team_color: PieceColor) -> Vec<Moves> {
+        let mut result: Vec<Moves> = vec![];
+        let mut own_pieces = self.get_all_pieces(team_color);
+        result.append(&mut self.get_moves(own_pieces));
+        result
+    }
+
+    /// Returns pseudo legal moves of Vector of Pieces.
+    pub fn get_moves(&self, pieces: Vec<SquareInner>) -> Vec<Moves> {
+        let mut result: Vec<Moves> = vec![];
+        for square_inner in pieces {
+            let possible_moves: Vec<BasicMove> = square_inner
+                .deref()
+                .borrow()
+                .get_piece()
+                .get_pseudo_legal_moves(
                     &self,
-                    &piece.as_ref().borrow().deref().get_coordinate(),
-                    &piece.as_ref().borrow().deref().get_color(),
-                    piece.as_ref().borrow().deref().get_has_moved(),
-                ),
-            });
+                    // These calls seem kinda dumb and i don't know why we need the first deref now but it works fine. If Anyone wants to improve them please do so.
+                    &square_inner.deref().borrow().borrow().get_coordinate(),
+                    &square_inner.deref().borrow().borrow().get_color(),
+                    square_inner.deref().borrow().borrow().get_has_moved(),
+                );
+            // We don't want to have Pieces which cannot move in the final array.
+            if !possible_moves.is_empty() {
+                result.push(Moves {
+                    from: square_inner.deref().borrow().borrow().get_coordinate(),
+                    basic_move: possible_moves,
+                })
+            }
+        }
+        result
+    }
+
+    /// Gets all pieces of a given Team color
+    fn get_all_pieces(&self, target_color: PieceColor) -> Vec<SquareInner> {
+        let mut result: Vec<SquareInner> = vec![];
+        for e in self.pieces.clone() {
+            if e.deref().borrow().get_color() == target_color {
+                result.push(e);
+            }
         }
         result
     }
@@ -539,7 +578,7 @@ impl From<Board> for Fen {
         for p in board.get_pieces() {
             fen.piece_placements
                 .pieces
-                .push((p.borrow().deref()).clone().into());
+                .push((p.deref().borrow().deref()).clone().into());
         }
 
         fen
@@ -629,7 +668,7 @@ mod tests {
             {
                 let pieces_piece = b.pieces.get(0).unwrap();
                 let board_piece = b.board.get(2).unwrap().get(1).unwrap().as_ref().unwrap();
-                assert_eq!(&pawn1, pieces_piece.borrow().deref());
+                assert_eq!(&pawn1, pieces_piece.deref().borrow().deref());
                 assert_eq!(pieces_piece, board_piece);
             }
 
@@ -637,7 +676,7 @@ mod tests {
             {
                 let pieces_piece = b.pieces.get(1).unwrap();
                 let board_piece = b.board.get(5).unwrap().get(6).unwrap().as_ref().unwrap();
-                assert_eq!(&pawn2, pieces_piece.borrow().deref());
+                assert_eq!(&pawn2, pieces_piece.deref().borrow().deref());
                 assert_eq!(pieces_piece, board_piece);
             }
 
@@ -696,7 +735,26 @@ mod tests {
         #[test]
         fn test_get_all_pseudo_legal_moves() {
             let default_board = Board::default();
-            let result = default_board.get_all_pseudo_legal_moves().len();
+            let moves = default_board.get_all_pseudo_legal_moves();
+            let result = moves.len();
+            // All possible moves in the default situation are 40, but since the possible moves of a single piece are inside the same Moves structure it is (8+2)*2=20
+            assert_eq!(((8 + 2) * 2), result);
+        }
+
+        #[test]
+        fn test_get_all_pieces_() {
+            let default_board = Board::default();
+            // TODO: Check if all pieces are there. For now i will only check the number of pieces and their color
+            let result = default_board.get_all_pieces(PieceColor::Light);
+            for piece in &result {
+                assert_eq!(
+                    PieceColor::Light,
+                    piece.deref().borrow().deref().get_color()
+                );
+            }
+
+            let result_len = result.len();
+            assert_eq!(16, result_len);
         }
 
         #[test]
@@ -716,10 +774,10 @@ mod tests {
         }
 
         /*
-                #[test]
-                fn test_move(){
-                    todo!()
-                }*/
+        #[test]
+        fn test_move(){
+            todo!()
+        }*/
 
         #[test]
         fn test_from_fen() {
@@ -732,6 +790,7 @@ mod tests {
                 board
                     .get_at(&(2 as u8, 0 as u8).into())
                     .unwrap()
+                    .deref()
                     .borrow()
                     .deref(),
             );
@@ -740,6 +799,7 @@ mod tests {
                 board
                     .get_at(&(4 as u8, 2 as u8).into())
                     .unwrap()
+                    .deref()
                     .borrow()
                     .deref(),
             );
@@ -748,6 +808,7 @@ mod tests {
                 board
                     .get_at(&(2 as u8, 7 as u8).into())
                     .unwrap()
+                    .deref()
                     .borrow()
                     .deref(),
             );
