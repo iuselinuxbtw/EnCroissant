@@ -776,8 +776,10 @@ mod tests {
         /*
         #[test]
         fn test_move(){
-            todo!()
-        }*/
+            let mut default_board = Board::empty();
+            default_board.r#move((7, 1).into(), &BasicMove { to: (7, 3).into(), capture: false });
+            // TODO: Test the move number, the half moves and the Position of all pieces.
+        }
 
         #[test]
         fn test_from_fen() {
