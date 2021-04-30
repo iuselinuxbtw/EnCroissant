@@ -36,7 +36,6 @@ pub struct Moves {
 pub struct Move {
     pub move_type: MoveType,
     pub promotion: Option<PieceType>,
-    pub draw_offer: bool,
     pub check: bool,
     pub check_mate: bool,
 }
