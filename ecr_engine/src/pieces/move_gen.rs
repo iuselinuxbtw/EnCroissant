@@ -10,6 +10,8 @@ use crate::board;
 use crate::board::{Board, BoardCastleState, SquareInner};
 use crate::pieces::PieceColor;
 
+// TODO: Move to src_engine/src/move_gen package.
+
 /// Defines a move in the most basic form.
 ///
 /// Only defines where the move goes and whether or not the move is a capture.
