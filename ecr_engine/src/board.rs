@@ -342,7 +342,7 @@ impl Board {
     /// Returns the pseudo-legal moves of a specific team.
     pub fn get_pseudo_legal_moves(&self, team_color: PieceColor) -> Vec<Moves> {
         let mut result: Vec<Moves> = vec![];
-        let mut own_pieces = self.get_all_pieces(team_color);
+        let own_pieces = self.get_all_pieces(team_color);
         result.append(&mut self.get_moves(own_pieces));
         result
     }
@@ -775,7 +775,7 @@ mod tests {
         /*
         #[test]
         fn test_move(){
-            let mut default_board = Board::empty();
+            let mut default_board = Board::default();
             default_board.r#move((7, 1).into(), &BasicMove { to: (7, 3).into(), capture: false });
             // TODO: Test the move number, the half moves and the Position of all pieces.
         }
