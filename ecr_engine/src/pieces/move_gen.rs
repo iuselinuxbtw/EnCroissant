@@ -492,9 +492,9 @@ pub fn get_castle_moves(
             if castle_state.light_queen_side
                 //&& board.is_threatened((4, 0).into()) == 0 This check is redundant since the check_move_gen will never call this function.
                 // And if a piece is in the way
-                && board.get_at(&(3,0).into()).is_none()
-                && board.get_at(&(2,0).into()).is_none()
-                && board.get_at(&(1,0).into()).is_none()
+                && board.get_at((3, 0).into()).is_none()
+                && board.get_at((2, 0).into()).is_none()
+                && board.get_at((1, 0).into()).is_none()
                 // We have to check if one of the squares is threatened
                 && board.is_threatened((3, 0).into()).threatened_dark == 0
                 && board.is_threatened((2, 0).into()).threatened_dark == 0
@@ -505,8 +505,8 @@ pub fn get_castle_moves(
                 })
             }
             if castle_state.light_king_side
-                && board.get_at(&(5, 0).into()).is_none()
-                && board.get_at(&(6, 0).into()).is_none()
+                && board.get_at((5, 0).into()).is_none()
+                && board.get_at((6, 0).into()).is_none()
                 && board.is_threatened((5, 0).into()).threatened_dark == 0
                 && board.is_threatened((6, 0).into()).threatened_dark == 0
             {
@@ -518,9 +518,9 @@ pub fn get_castle_moves(
         }
         PieceColor::Dark => {
             if castle_state.dark_queen_side
-                && board.get_at(&(2, 7).into()).is_none()
-                && board.get_at(&(3, 7).into()).is_none()
-                && board.get_at(&(4, 7).into()).is_none()
+                && board.get_at((2, 7).into()).is_none()
+                && board.get_at((3, 7).into()).is_none()
+                && board.get_at((4, 7).into()).is_none()
                 && board.is_threatened((3, 7).into()).threatened_light == 0
                 && board.is_threatened((4, 7).into()).threatened_light == 0
             {
@@ -530,8 +530,8 @@ pub fn get_castle_moves(
                 })
             }
             if castle_state.dark_king_side
-                && board.get_at(&(5, 7).into()).is_none()
-                && board.get_at(&(6, 7).into()).is_none()
+                && board.get_at((5, 7).into()).is_none()
+                && board.get_at((6, 7).into()).is_none()
                 && board.is_threatened((5, 7).into()).threatened_light == 0
                 && board.is_threatened((6, 7).into()).threatened_light == 0
             {
@@ -768,7 +768,7 @@ fn square_check(
 // Returns the Piece a square is occupied by. If the square is not occupied it returns None
 fn piece_on_square(square: &Coordinate, board: &board::Board) -> Option<SquareInner> {
     // Get the SquareInner
-    match board.get_at(square) {
+    match board.get_at(*square) {
         // Match it
         None => None,
         Some(i) => Some(Rc::clone(&i)),

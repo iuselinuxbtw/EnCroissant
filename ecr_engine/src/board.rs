@@ -86,7 +86,7 @@ impl Board {
 
     /// This function moves a piece from a given start square to another square, contained in a
     /// BasicMove.
-    pub fn r#move(&mut self, start: &Coordinate, basic_move: &BasicMove) {
+    pub fn r#move(&mut self, start: Coordinate, basic_move: &BasicMove) {
         // TODO: Tests need to be written for this!
         // We can safely unwrap here since no move is generated without a piece at the start of it.
         let square_inner = self.get_at(start).unwrap();
@@ -100,7 +100,7 @@ impl Board {
         self.remove_piece(start);
 
         if basic_move.capture {
-            self.capture_piece(&square_inner, &target_square);
+            self.capture_piece(&square_inner, target_square);
         }
 
         let mut piece_to_add: BoardPiece = square_inner.deref().borrow().borrow().deref().clone();
@@ -147,7 +147,7 @@ impl Board {
     }
 
     /// Removes a piece from a given target square. DOES NOT SET IT OUT OF GAME!
-    fn remove_piece(&mut self, target: &Coordinate) {
+    fn remove_piece(&mut self, target: Coordinate) {
         // First we get the right column of the piece
         let column = self.board.get_mut(target.get_x() as usize).unwrap();
         // Then we get the row as a range since splice() requires a range, which is totally necessary for changing one variable.
@@ -157,7 +157,7 @@ impl Board {
     }
 
     /// This function removes the piece on the given coordinate and sets it out of game.
-    fn capture_piece(&mut self, target: &SquareInner, target_square: &Coordinate) {
+    fn capture_piece(&mut self, target: &SquareInner, target_square: Coordinate) {
         target.borrow_mut().set_out_of_game();
         self.remove_piece(target_square);
     }
@@ -167,7 +167,7 @@ impl Board {
     }
 
     /// Returns the piece at the supplied coordinate on the board.
-    pub fn get_at(&self, coordinate: &Coordinate) -> Option<SquareInner> {
+    pub fn get_at(&self, coordinate: Coordinate) -> Option<SquareInner> {
         // ? -> column not found
         let column = self.board.get(coordinate.get_x() as usize)?;
         // ? -> square not found
@@ -212,7 +212,7 @@ impl Board {
                 // Move the king
                 // TODO: These increase the move counter two times and add two half_moves, which should not happen.
                 self.r#move(
-                    &(4, 0).into(),
+                    (4, 0).into(),
                     &BasicMove {
                         capture: false,
                         to: castle_move.to,
@@ -220,7 +220,7 @@ impl Board {
                 );
                 // Move the rook
                 self.r#move(
-                    &(7, 0).into(),
+                    (7, 0).into(),
                     &BasicMove {
                         capture: false,
                         to: (4, 0).into(),
@@ -229,14 +229,14 @@ impl Board {
             }
             CastleMoveType::LightQueenSide => {
                 self.r#move(
-                    &(4, 0).into(),
+                    (4, 0).into(),
                     &BasicMove {
                         capture: false,
                         to: castle_move.to,
                     },
                 );
                 self.r#move(
-                    &(0, 0).into(),
+                    (0, 0).into(),
                     &BasicMove {
                         capture: false,
                         to: (0, 3).into(),
@@ -245,14 +245,14 @@ impl Board {
             }
             CastleMoveType::DarkKingSide => {
                 self.r#move(
-                    &(4, 7).into(),
+                    (4, 7).into(),
                     &BasicMove {
                         capture: false,
                         to: castle_move.to,
                     },
                 );
                 self.r#move(
-                    &(7, 7).into(),
+                    (7, 7).into(),
                     &BasicMove {
                         capture: false,
                         to: (5, 7).into(),
@@ -261,14 +261,14 @@ impl Board {
             }
             CastleMoveType::DarkQueenSide => {
                 self.r#move(
-                    &(4, 7).into(),
+                    (4, 7).into(),
                     &BasicMove {
                         capture: false,
                         to: castle_move.to,
                     },
                 );
                 self.r#move(
-                    &(0, 7).into(),
+                    (0, 7).into(),
                     &BasicMove {
                         capture: false,
                         to: (3, 0).into(),
@@ -648,8 +648,8 @@ mod tests {
             let column = b.board.get_mut(2).unwrap();
             column.insert(1, Some(Rc::new(RefCell::new(p.clone()))));
 
-            assert_eq!(None, b.get_at(&(0 as u8, 0 as u8).into()));
-            let square_from_board = b.get_at(&(2 as u8, 1 as u8).into()).unwrap();
+            assert_eq!(None, b.get_at((0 as u8, 0 as u8).into()));
+            let square_from_board = b.get_at((2 as u8, 1 as u8).into()).unwrap();
             let piece_from_board = square_from_board.borrow_mut();
             assert_eq!(p, *piece_from_board);
         }
@@ -790,7 +790,7 @@ mod tests {
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::King, (2, 0).into(), PieceColor::Light),
                 board
-                    .get_at(&(2 as u8, 0 as u8).into())
+                    .get_at((2 as u8, 0 as u8).into())
                     .unwrap()
                     .deref()
                     .borrow()
@@ -799,7 +799,7 @@ mod tests {
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::Rook, (4, 2).into(), PieceColor::Light),
                 board
-                    .get_at(&(4 as u8, 2 as u8).into())
+                    .get_at((4 as u8, 2 as u8).into())
                     .unwrap()
                     .deref()
                     .borrow()
@@ -808,7 +808,7 @@ mod tests {
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::King, (2, 7).into(), PieceColor::Dark),
                 board
-                    .get_at(&(2 as u8, 7 as u8).into())
+                    .get_at((2 as u8, 7 as u8).into())
                     .unwrap()
                     .deref()
                     .borrow()
