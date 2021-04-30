@@ -87,7 +87,6 @@ impl Board {
     /// This function moves a piece from a given start square to another square, contained in a
     /// BasicMove.
     pub fn r#move(&mut self, start: Coordinate, basic_move: &BasicMove) {
-        // TODO: Tests need to be written for this!
         // We can safely unwrap here since no move is generated without a piece at the start of it.
         let square_inner = self.get_at(start).unwrap();
 
