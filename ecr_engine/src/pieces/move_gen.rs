@@ -125,7 +125,7 @@ enum Directions {
 /// If it is neither of those it just adds it to the result.
 macro_rules! check_square {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
-        let possible_square =  coordinate_check($x, $y, $team_color, $board);
+        let possible_square =  coordinate_check(&$x, &$y, $team_color, $board);
         // If the square is occupied by a piece
         if possible_square.0.is_some() {
             // Check if it is our own piece.
@@ -135,11 +135,10 @@ macro_rules! check_square {
             }
             // It's safe to use unwrap here since we already know that it's not None.
             // If it is the enemies piece we can capture it.
-            // TODO: x and y should not be a reference
-            $result.push(BasicMove{to: (*$x, *$y).into(), capture: possible_square.0});
+            $result.push(BasicMove{to: ($x, $y).into(), capture: possible_square.0});
             break;
         }
-        $result.push(BasicMove{to: (*$x, *$y).into(), capture: None});
+        $result.push(BasicMove{to: ($x, $y).into(), capture: None});
     }
 }
 
@@ -208,25 +207,25 @@ fn explore_linear_direction(
         LinearDirections::N => {
             while y < 7 {
                 y += 1;
-                check_square!(&x, &y, &team_color, result, board);
+                check_square!(x, y, &team_color, result, board);
             }
         }
         LinearDirections::E => {
             while x < 7 {
                 x += 1;
-                check_square!(&x, &y, &team_color, result, board);
+                check_square!(x, y, &team_color, result, board);
             }
         }
         LinearDirections::S => {
             while y > 0 {
                 y -= 1;
-                check_square!(&x, &y, &team_color, result, board);
+                check_square!(x, y, &team_color, result, board);
             }
         }
         LinearDirections::W => {
             while x > 0 {
                 x -= 1;
-                check_square!(&x, &y, &team_color, result, board);
+                check_square!(x, y, &team_color, result, board);
             }
         }
     };
@@ -339,10 +338,11 @@ pub fn knight_moves(
 
 /// This macro is essentially the same as check_square without the 'break' statements so that it can
 /// be used outside of a loop.
+// TODO: Dumb macro  name, change this
 macro_rules! check_move {
     // TODO: x and y should not be a reference
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
-        let possible_square =  coordinate_check($x as &u8, $y as &u8, $team_color, $board);
+        let possible_square =  coordinate_check(&$x, &$y , $team_color, $board);
         // If the square is occupied by a piece
         if possible_square.0.is_some(){
             // Check if it is our own piece.
@@ -352,10 +352,10 @@ macro_rules! check_move {
             }
             // It's safe to use unwrap here since we already know that it's not None.
             // If it is the enemies piece we can capture it.
-            $result.push(BasicMove{to: (*$x, *$y).into(), capture: possible_square.0});
+            $result.push(BasicMove{to: ($x, $y).into(), capture: possible_square.0});
             return $result
         }
-        $result.push(BasicMove{to: (*$x, *$y).into(), capture: None});
+        $result.push(BasicMove{to: ($x, $y).into(), capture: None});
     }
 }
 
@@ -373,28 +373,28 @@ fn explore_knight_moves(
     let mut result: Vec<BasicMove> = vec![];
     match direction {
         KnightDirections::WN => {
-            check_move!(&(from_x - 2), &(from_y + 1), team_color, result, board);
+            check_move!(from_x - 2, from_y + 1, team_color, result, board);
         }
         KnightDirections::EN => {
-            check_move!(&(from_x + 2), &(from_y + 1), team_color, result, board);
+            check_move!(from_x + 2, from_y + 1, team_color, result, board);
         }
         KnightDirections::ES => {
-            check_move!(&(from_x + 2), &(from_y - 1), team_color, result, board);
+            check_move!(from_x + 2, from_y - 1, team_color, result, board);
         }
         KnightDirections::WS => {
-            check_move!(&(from_x - 2), &(from_y - 1), team_color, result, board);
+            check_move!(from_x - 2, from_y - 1, team_color, result, board);
         }
         KnightDirections::NW => {
-            check_move!(&(from_x - 1), &(from_y + 2), team_color, result, board);
+            check_move!(from_x - 1, from_y + 2, team_color, result, board);
         }
         KnightDirections::NE => {
-            check_move!(&(from_x + 1), &(from_y + 2), team_color, result, board);
+            check_move!(from_x + 1, from_y + 2, team_color, result, board);
         }
         KnightDirections::SE => {
-            check_move!(&(from_x + 1), &(from_y - 2), team_color, result, board);
+            check_move!(from_x + 1, from_y - 2, team_color, result, board);
         }
         KnightDirections::SW => {
-            check_move!(&(from_x - 1), &(from_y - 2), team_color, result, board);
+            check_move!(from_x - 1, from_y - 2, team_color, result, board);
         }
     }
     result
@@ -455,28 +455,28 @@ fn explore_king_moves(
     let from_y = start.get_y();
     match direction {
         Directions::N => {
-            check_move!(&(from_x), &(from_y + 1), team_color, result, board);
+            check_move!((from_x), (from_y + 1), team_color, result, board);
         }
         Directions::E => {
-            check_move!(&(from_x + 1), &(from_y), team_color, result, board);
+            check_move!((from_x + 1), (from_y), team_color, result, board);
         }
         Directions::S => {
-            check_move!(&(from_x), &(from_y - 1), team_color, result, board);
+            check_move!((from_x), (from_y - 1), team_color, result, board);
         }
         Directions::W => {
-            check_move!(&(from_x - 1), &(from_y), team_color, result, board);
+            check_move!((from_x - 1), (from_y), team_color, result, board);
         }
         Directions::NW => {
-            check_move!(&(from_x - 1), &(from_y + 1), team_color, result, board);
+            check_move!((from_x - 1), (from_y + 1), team_color, result, board);
         }
         Directions::NE => {
-            check_move!(&(from_x + 1), &(from_y + 1), team_color, result, board);
+            check_move!((from_x + 1), (from_y + 1), team_color, result, board);
         }
         Directions::SE => {
-            check_move!(&(from_x + 1), &(from_y - 1), team_color, result, board);
+            check_move!((from_x + 1), (from_y - 1), team_color, result, board);
         }
         Directions::SW => {
-            check_move!(&(from_x - 1), &(from_y - 1), team_color, result, board);
+            check_move!((from_x - 1), (from_y - 1), team_color, result, board);
         }
     }
     result
@@ -681,8 +681,8 @@ fn explore_diagonal_direction(
                 y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square!(
-                    &u8::try_from(x).unwrap(),
-                    &u8::try_from(y).unwrap(),
+                    u8::try_from(x).unwrap(),
+                    u8::try_from(y).unwrap(),
                     &team_color,
                     result,
                     board
@@ -696,8 +696,8 @@ fn explore_diagonal_direction(
                 y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square!(
-                    &u8::try_from(x).unwrap(),
-                    &u8::try_from(y).unwrap(),
+                    u8::try_from(x).unwrap(),
+                    u8::try_from(y).unwrap(),
                     &team_color,
                     result,
                     board
@@ -711,8 +711,8 @@ fn explore_diagonal_direction(
                 y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square!(
-                    &u8::try_from(x).unwrap(),
-                    &u8::try_from(y).unwrap(),
+                    u8::try_from(x).unwrap(),
+                    u8::try_from(y).unwrap(),
                     &team_color,
                     result,
                     board
@@ -726,8 +726,8 @@ fn explore_diagonal_direction(
                 y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square!(
-                    &u8::try_from(x).unwrap(),
-                    &u8::try_from(y).unwrap(),
+                    u8::try_from(x).unwrap(),
+                    u8::try_from(y).unwrap(),
                     &team_color,
                     result,
                     board
