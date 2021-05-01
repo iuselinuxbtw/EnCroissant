@@ -13,6 +13,7 @@ pub fn eval(board: &Board) -> f32 {
     piece_value as f32 + position_value
 }
 
+/// MiniMax Evaluation
 fn evaluate_pieces(board: &Board) -> u8 {
     let light_pieces = board.get_team_pieces(PieceColor::Light);
     let dark_pieces = board.get_team_pieces(PieceColor::Dark);

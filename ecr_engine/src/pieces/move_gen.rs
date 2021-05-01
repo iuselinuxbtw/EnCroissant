@@ -1,10 +1,12 @@
 //! Pseudo-legal moves are generated here. For moves during check we'll use another generator.
 
+use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::ops::Deref;
 use std::rc::Rc;
 
 use ecr_shared::coordinate::Coordinate;
+use ecr_shared::pieces::PieceType;
 
 use crate::board;
 use crate::board::{Board, BoardCastleState, SquareInner};
@@ -18,7 +20,7 @@ use crate::pieces::PieceColor;
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct BasicMove {
     pub to: Coordinate,
-    pub capture: bool,
+    pub capture: Option<PieceType>,
 }
 
 impl BasicMove {
@@ -115,6 +117,8 @@ enum Directions {
     SW,
 }
 
+// TODO: Store the macros in another file
+
 /// This macro is used to break the loop of calculating positions when the current square is
 /// occupied. Breaks instantly when the square is occupied by a piece of the own color, but not
 /// when the piece is the  opponents color in which case it adds the position and then breaks.
@@ -123,18 +127,19 @@ macro_rules! check_square {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
         let possible_square =  coordinate_check($x, $y, $team_color, $board);
         // If the square is occupied by a piece
-        if possible_square.1{
+        if possible_square.0.is_some() {
             // Check if it is our own piece.
-            if possible_square.0.is_none() {
+            if !possible_square.1 {
                 // If it is, we shouldn't add that square to the array since we can't capture our own pieces.
                 break;
             }
             // It's safe to use unwrap here since we already know that it's not None.
             // If it is the enemies piece we can capture it.
-            $result.push(BasicMove{to: possible_square.0.unwrap(), capture: true});
+            // TODO: x and y should not be a reference
+            $result.push(BasicMove{to: (*$x, *$y).into(), capture: possible_square.0});
             break;
         }
-        $result.push(BasicMove{to: possible_square.0.unwrap(), capture: false});
+        $result.push(BasicMove{to: (*$x, *$y).into(), capture: None});
     }
 }
 
@@ -246,13 +251,13 @@ pub fn pawn_moves(
     if !piece_in_front(start, team_color, board, 1) {
         &result.push(BasicMove {
             to: (from_x, next_r).into(),
-            capture: false,
+            capture: None,
         });
         // If this is the first move of the pawn and there is not a Piece in the way we can move two squares.
         if !piece_in_front(start, team_color, board, 2) && !has_moved {
             &result.push(BasicMove {
                 to: (from_x, next_row(from_y, team_color, 2)).into(),
-                capture: false,
+                capture: None,
             });
         }
     }
@@ -274,8 +279,8 @@ pub fn pawn_moves(
             // If it is the opponent's piece, we add the capture move.
             if &e.as_ref().borrow().deref().get_color() != team_color {
                 &result.push(BasicMove {
-                    to: e.as_ref().borrow().deref().get_coordinate(),
-                    capture: true,
+                    to: possible_capture,
+                    capture: Some(e.deref().borrow().get_piece().get_type()),
                 });
             }
         }
@@ -335,21 +340,22 @@ pub fn knight_moves(
 /// This macro is essentially the same as check_square without the 'break' statements so that it can
 /// be used outside of a loop.
 macro_rules! check_move {
+    // TODO: x and y should not be a reference
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
         let possible_square =  coordinate_check($x as &u8, $y as &u8, $team_color, $board);
         // If the square is occupied by a piece
-        if possible_square.1{
+        if possible_square.0.is_some(){
             // Check if it is our own piece.
-            if possible_square.0.is_none() {
+            if !possible_square.1 {
                 // If it is, we shouldn't add that square to the array since we can't capture our own pieces.
                 return $result
             }
             // It's safe to use unwrap here since we already know that it's not None.
             // If it is the enemies piece we can capture it.
-            $result.push(BasicMove{to: possible_square.0.unwrap(), capture: true});
+            $result.push(BasicMove{to: (*$x, *$y).into(), capture: possible_square.0});
             return $result
         }
-        $result.push(BasicMove{to: possible_square.0.unwrap(), capture: false});
+        $result.push(BasicMove{to: (*$x, *$y).into(), capture: None});
     }
 }
 
@@ -400,6 +406,7 @@ pub fn king_moves(
     board: &board::Board,
     team_color: &PieceColor,
 ) -> Vec<BasicMove> {
+    // TODO: Currently the kings can move next to each other which cannot happen in a real game.
     let mut result: Vec<BasicMove> = vec![];
     let border_distances = distance_to_border(start);
     let mut queue: Vec<Directions> = vec![];
@@ -737,31 +744,33 @@ fn coordinate_check(
     y: &u8,
     team_color: &PieceColor,
     board: &board::Board,
-) -> (Option<Coordinate>, bool) {
+) -> (Option<PieceType>, bool) {
     let square = (*x as u8, *y as u8).into();
     square_check(&square, team_color, board)
 }
 
-/// Checks if a square is occupied and if it is checks whether it can be captured
-/// or if it is the teams own piece, in which case it returns None. The bool returns true if the
-/// square is occupied.
+// TODO: Is it actually beneficial to not just give back the piece and let the other function decide whether is is their own piece?
+/// Checks if a square is occupied. If it is it returns Some(PieceType), if it is not, the first element of the tuple is none.
+/// The second element returns true if it is an enemy piece, false otherwise.
 fn square_check(
     square: &Coordinate,
+    // TODO: This should not be a reference(Probably optimized by the compiler, but isn't nice)
     team_color: &PieceColor,
     board: &board::Board,
-) -> (Option<Coordinate>, bool) {
+) -> (Option<PieceType>, bool) {
     // We need to check if the square is occupied to avoid calculating non-reachable coordinates
     let square_occupied = piece_on_square(square, board);
     match square_occupied {
         // Check whether it is our own piece.
         Some(i) => {
+            let piece_type = i.deref().borrow().get_piece().get_type();
             if i.as_ref().borrow().deref().get_color() == *team_color {
-                (None, true)
+                (Some(piece_type), false)
             } else {
-                (Some(*square), true)
+                (Some(piece_type), true)
             }
         }
-        None => (Some(*square), false),
+        None => (None, false),
     }
 }
 
@@ -795,50 +804,50 @@ mod tests {
             // North
             BasicMove {
                 to: (4, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (4, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (4, 6).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             // East
             BasicMove {
                 to: (5, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (6, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (7, 3).into(),
-                capture: false,
+                capture: None,
             },
             // South
             BasicMove {
                 to: (4, 2).into(),
-                capture: false,
+                capture: None,
             },
             // West
             BasicMove {
                 to: (3, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (2, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (0, 3).into(),
-                capture: false,
+                capture: None,
             },
         ];
 
@@ -852,15 +861,15 @@ mod tests {
         let expected_moves_a1: Vec<BasicMove> = vec![
             BasicMove {
                 to: (1, 7).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (2, 7).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (3, 7).into(),
-                capture: false,
+                capture: None,
             },
         ];
         assert_eq!(expected_moves_a1, moves_a1);
@@ -880,19 +889,19 @@ mod tests {
         let expected: Vec<BasicMove> = vec![
             BasicMove {
                 to: (4, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (5, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (6, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (7, 6).into(),
-                capture: false,
+                capture: None,
             },
         ];
         assert_eq!(expected, result);
@@ -908,31 +917,31 @@ mod tests {
         let expected2: Vec<BasicMove> = vec![
             BasicMove {
                 to: (6, 1).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (5, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (4, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (3, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (2, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 6).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (0, 7).into(),
-                capture: false,
+                capture: None,
             },
         ];
         assert_eq!(expected2, result2);
@@ -950,19 +959,19 @@ mod tests {
         let expected3: Vec<BasicMove> = vec![
             BasicMove {
                 to: (3, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (2, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (0, 6).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
         ];
         assert_eq!(expected3, result3);
@@ -987,58 +996,58 @@ mod tests {
             // North-west (upper left)
             BasicMove {
                 to: (3, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (2, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 6).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (0, 7).into(),
-                capture: false,
+                capture: None,
             },
             // North-east (upper right)
             BasicMove {
                 to: (5, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (6, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (7, 6).into(),
-                capture: false,
+                capture: None,
             },
             // South-east (lower right)
             BasicMove {
                 to: (5, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (6, 1).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (7, 0).into(),
-                capture: false,
+                capture: None,
             },
             // South-west (lower left)
             BasicMove {
                 to: (3, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (2, 1).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 0).into(),
-                capture: false,
+                capture: None,
             },
         ];
         assert_eq!(expected, result);
@@ -1047,38 +1056,38 @@ mod tests {
             // upper-left
             BasicMove {
                 to: (2, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 6).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             // upper-right
             BasicMove {
                 to: (4, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (5, 6).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             // lower-right
             BasicMove {
                 to: (4, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (5, 2).into(),
-                capture: false,
+                capture: None,
             },
             // lower-left
             BasicMove {
                 to: (2, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 2).into(),
-                capture: false,
+                capture: None,
             },
         ];
         assert_eq!(expected2, result2);
@@ -1106,11 +1115,11 @@ mod tests {
         let expected = vec![
             BasicMove {
                 to: (0, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (0, 3).into(),
-                capture: false,
+                capture: None,
             },
         ];
         assert_eq!(expected, result);
@@ -1119,11 +1128,11 @@ mod tests {
         let expected2 = vec![
             BasicMove {
                 to: (1, 6).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             BasicMove {
                 to: (3, 6).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
         ];
         assert_eq!(expected2, result2);
@@ -1131,14 +1140,14 @@ mod tests {
         let result3 = pawn_moves(&(7, 1).into(), &default_board, &PieceColor::Light, true);
         let expected3 = vec![BasicMove {
             to: (7, 2).into(),
-            capture: false,
+            capture: None,
         }];
         assert_eq!(expected3, result3);
 
         let result4 = pawn_moves(&(0, 6).into(), &default_board, &PieceColor::Light, true);
         let expected4 = vec![BasicMove {
             to: (1, 7).into(),
-            capture: true,
+            capture: Some(PieceType::Knight),
         }];
         assert_eq!(expected4, result4);
     }
@@ -1150,27 +1159,27 @@ mod tests {
         let expected: Vec<BasicMove> = vec![
             BasicMove {
                 to: (5, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (5, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (4, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (2, 5).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 2).into(),
-                capture: false,
+                capture: None,
             },
         ];
         assert_eq!(expected, result);
@@ -1178,35 +1187,35 @@ mod tests {
         let expected2: Vec<BasicMove> = vec![
             BasicMove {
                 to: (5, 1).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             BasicMove {
                 to: (5, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (4, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (2, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 1).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             BasicMove {
                 to: (2, 0).into(),
-                capture: true,
+                capture: Some(PieceType::Bishop),
             },
             BasicMove {
                 to: (4, 0).into(),
-                capture: true,
+                capture: Some(PieceType::King),
             },
         ];
         assert_eq!(expected2, result2);
@@ -1221,49 +1230,48 @@ mod tests {
         let expected2: Vec<BasicMove> = vec![
             BasicMove {
                 to: (5, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (5, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (4, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (3, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (3, 2).into(),
-                capture: false,
+                capture: None,
             },
         ];
         assert_eq!(expected2, result2);
 
-        // This test will be adjusted once we actually
         let result3 = king_moves(&(4, 0).into(), &Default::default(), &PieceColor::Dark);
         let expected3: Vec<BasicMove> = vec![
             BasicMove {
                 to: (5, 0).into(),
-                capture: true,
+                capture: Some(PieceType::Bishop),
             },
             BasicMove {
                 to: (5, 1).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             BasicMove {
                 to: (4, 1).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             BasicMove {
                 to: (3, 1).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             BasicMove {
                 to: (3, 0).into(),
-                capture: true,
+                capture: Some(PieceType::Queen),
             },
         ];
         assert_eq!(expected3, result3);

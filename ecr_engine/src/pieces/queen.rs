@@ -61,86 +61,86 @@ mod tests {
             // North
             BasicMove {
                 to: (3, 5).into(),
-                capture: false,
+                capture: None,
             },
             // East
             BasicMove {
                 to: (4, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (5, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (6, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (7, 4).into(),
-                capture: false,
+                capture: None,
             },
             // South
             BasicMove {
                 to: (3, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (3, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (3, 1).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             // West
             BasicMove {
                 to: (2, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 4).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (0, 4).into(),
-                capture: false,
+                capture: None,
             },
             // North-west
             BasicMove {
                 to: (2, 5).into(),
-                capture: false,
+                capture: None,
             },
             // North-east
             BasicMove {
                 to: (4, 5).into(),
-                capture: false,
+                capture: None,
             },
             // South-east
             BasicMove {
                 to: (4, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (5, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (6, 1).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
             // South-west
             BasicMove {
                 to: (2, 3).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (1, 2).into(),
-                capture: false,
+                capture: None,
             },
             BasicMove {
                 to: (0, 1).into(),
-                capture: true,
+                capture: Some(PieceType::Pawn),
             },
         ];
         assert_eq!(expected, result);

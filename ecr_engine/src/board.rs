@@ -99,7 +99,7 @@ impl Board {
         // First we remove the piece from the original square on the board.
         self.remove_piece(start);
 
-        if basic_move.capture {
+        if basic_move.capture.is_some() {
             self.capture_piece(&square_inner, target_square);
         }
 
@@ -123,7 +123,7 @@ impl Board {
             self.move_number += 1;
         }
         // We have to get the half moves
-        self.count_half_moves(&piece_type, basic_move.capture);
+        self.count_half_moves(&piece_type, basic_move.capture.is_some());
 
         // TODO: Add to move Vector
     }
@@ -217,7 +217,7 @@ impl Board {
                 self.r#move(
                     (4, 0).into(),
                     &BasicMove {
-                        capture: false,
+                        capture: None,
                         to: castle_move.to,
                     },
                 );
@@ -225,7 +225,7 @@ impl Board {
                 self.r#move(
                     (7, 0).into(),
                     &BasicMove {
-                        capture: false,
+                        capture: None,
                         to: (4, 0).into(),
                     },
                 );
@@ -234,14 +234,14 @@ impl Board {
                 self.r#move(
                     (4, 0).into(),
                     &BasicMove {
-                        capture: false,
+                        capture: None,
                         to: castle_move.to,
                     },
                 );
                 self.r#move(
                     (0, 0).into(),
                     &BasicMove {
-                        capture: false,
+                        capture: None,
                         to: (0, 3).into(),
                     },
                 );
@@ -250,14 +250,14 @@ impl Board {
                 self.r#move(
                     (4, 7).into(),
                     &BasicMove {
-                        capture: false,
+                        capture: None,
                         to: castle_move.to,
                     },
                 );
                 self.r#move(
                     (7, 7).into(),
                     &BasicMove {
-                        capture: false,
+                        capture: None,
                         to: (5, 7).into(),
                     },
                 );
@@ -266,14 +266,14 @@ impl Board {
                 self.r#move(
                     (4, 7).into(),
                     &BasicMove {
-                        capture: false,
+                        capture: None,
                         to: castle_move.to,
                     },
                 );
                 self.r#move(
                     (0, 7).into(),
                     &BasicMove {
-                        capture: false,
+                        capture: None,
                         to: (3, 0).into(),
                     },
                 );
@@ -770,7 +770,7 @@ mod tests {
                 (7, 1).into(),
                 &BasicMove {
                     to: (7, 3).into(),
-                    capture: false,
+                    capture: None,
                 },
             );
             assert_eq!(1, default_board.get_move_number());
