@@ -7,6 +7,7 @@ use ecr_formats::fen::{Fen, FenPiecePlacements};
 pub use ecr_shared::board::BoardCastleState;
 use ecr_shared::coordinate::Coordinate;
 
+use crate::eval::eval;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::r#move::{Move, Moves};
@@ -396,20 +397,7 @@ impl Board {
     /// This function returns a float, which returns a positive value if light is ahead and a
     /// negative value if  dark is ahead(MiniMax Implementation).
     pub fn eval_board(&self) -> f32 {
-        // This function will probably be moved to another file as it gets more complex.
-        // This currently only considers the value of the pieces on the board and not the positions.
-        // TODO: Make this also evaluate the position
-        let mut value_light: usize = 0;
-        let mut value_dark: usize = 0;
-        let light_pieces = self.get_team_pieces(PieceColor::Light);
-        let dark_pieces = self.get_team_pieces(PieceColor::Dark);
-        for piece in light_pieces {
-            value_light += piece.borrow().deref().get_piece().get_value() as usize;
-        }
-        for piece in dark_pieces {
-            value_dark += piece.borrow().deref().get_piece().get_value() as usize;
-        }
-        (value_light - value_dark) as f32
+        eval(self)
     }
 
     /// This function returns the pieces of a team. Useful for the eval function as well as the move_gen function.
@@ -775,11 +763,16 @@ mod tests {
             assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
         }
 
-        /*
         #[test]
         fn test_move() {
             let mut default_board = Board::default();
-            default_board.r#move((7, 1).into(), &BasicMove { to: (7, 3).into(), capture: false });
+            default_board.r#move(
+                (7, 1).into(),
+                &BasicMove {
+                    to: (7, 3).into(),
+                    capture: false,
+                },
+            );
             assert_eq!(1, default_board.get_move_number());
             assert_eq!(0, default_board.get_half_move_amount());
             // TODO: Test the Position of all pieces.
