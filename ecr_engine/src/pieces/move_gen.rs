@@ -1,15 +1,15 @@
 //! Pseudo-legal moves are generated here. For moves during check we'll use another generator.
 
-use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::ops::Deref;
-use std::rc::Rc;
 
 use ecr_shared::coordinate::Coordinate;
 use ecr_shared::pieces::PieceType;
 
+use crate::{check_move, check_square};
 use crate::board;
-use crate::board::{Board, BoardCastleState, SquareInner};
+use crate::board::{Board, BoardCastleState};
+use crate::pieces::move_utils::{coordinate_check, distance_to_border, next_row, piece_on_square};
 use crate::pieces::PieceColor;
 
 // TODO: Move to src_engine/src/move_gen package.
@@ -115,31 +115,6 @@ enum Directions {
     SE,
     // down-left
     SW,
-}
-
-// TODO: Store the macros in another file
-
-/// This macro is used to break the loop of calculating positions when the current square is
-/// occupied. Breaks instantly when the square is occupied by a piece of the own color, but not
-/// when the piece is the  opponents color in which case it adds the position and then breaks.
-/// If it is neither of those it just adds it to the result.
-macro_rules! check_square {
-    ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
-        let possible_square =  coordinate_check(&$x, &$y, $team_color, $board);
-        // If the square is occupied by a piece
-        if possible_square.0.is_some() {
-            // Check if it is our own piece.
-            if !possible_square.1 {
-                // If it is, we shouldn't add that square to the array since we can't capture our own pieces.
-                break;
-            }
-            // It's safe to use unwrap here since we already know that it's not None.
-            // If it is the enemies piece we can capture it.
-            $result.push(BasicMove{to: ($x, $y).into(), capture: possible_square.0});
-            break;
-        }
-        $result.push(BasicMove{to: ($x, $y).into(), capture: None});
-    }
 }
 
 /// Returns the possible linear moves of a piece with the given coordinates as a vector of
@@ -336,29 +311,6 @@ pub fn knight_moves(
     result
 }
 
-/// This macro is essentially the same as check_square without the 'break' statements so that it can
-/// be used outside of a loop.
-// TODO: Dumb macro  name, change this
-macro_rules! check_move {
-    // TODO: x and y should not be a reference
-    ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
-        let possible_square =  coordinate_check(&$x, &$y , $team_color, $board);
-        // If the square is occupied by a piece
-        if possible_square.0.is_some(){
-            // Check if it is our own piece.
-            if !possible_square.1 {
-                // If it is, we shouldn't add that square to the array since we can't capture our own pieces.
-                return $result
-            }
-            // It's safe to use unwrap here since we already know that it's not None.
-            // If it is the enemies piece we can capture it.
-            $result.push(BasicMove{to: ($x, $y).into(), capture: possible_square.0});
-            return $result
-        }
-        $result.push(BasicMove{to: ($x, $y).into(), capture: None});
-    }
-}
-
 /// This function returns the knight moves in a particular direction. This function does not check
 /// whether or the square is valid so to avoid overflows check the corner distance and call the
 /// directions accordingly.
@@ -492,7 +444,7 @@ pub fn get_castle_moves(
 ) -> Vec<CastleMove> {
     let mut result: Vec<CastleMove> = vec![];
     // This is probably not optimal but it works.
-
+    // TODO: Simplify this
     // First we match the team so we can give back only the castle moves of a specific team.
     match team {
         PieceColor::Light => {
@@ -550,49 +502,6 @@ pub fn get_castle_moves(
         }
     }
     result
-}
-
-/// This struct holds the distance to the different borders of a coordinate. Useful for calculating
-/// in which directions the knight can go.
-struct DistanceToBorder {
-    // Distance to the upper border
-    up: u8,
-    // Distance to the right border
-    right: u8,
-    // Distance to the lower border
-    down: u8,
-    // Distance to the left border
-    left: u8,
-}
-
-/// Returns the distance of a coordinate to every border.
-fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
-    let x = coords.get_x();
-    let y = coords.get_y();
-    let up = 7 - y;
-    let right = 7 - x;
-    let down = y;
-    let left = x;
-    DistanceToBorder {
-        up,
-        right,
-        down,
-        left,
-    }
-}
-
-/// This function returns the next row of the corresponding team. (If the team_color is white it's
-/// higher, otherwise it's lower). So far there is no check whether the returning row is valid but in
-/// most variants it is impossible since the pawn promotes when reaching the last row.
-fn next_row(y: u8, team_color: &PieceColor, step: u8) -> u8 {
-    let mut result: u8 = y.clone();
-    // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
-    if team_color == &PieceColor::Light {
-        result += step;
-    } else {
-        result -= step;
-    }
-    result as u8
 }
 
 /// This functions is useful for finding out whether or not a pawn can move forwards by returning
@@ -736,52 +645,6 @@ fn explore_diagonal_direction(
         }
     }
     result
-}
-
-/// Calculates a square and then just calls square_check()
-fn coordinate_check(
-    x: &u8,
-    y: &u8,
-    team_color: &PieceColor,
-    board: &board::Board,
-) -> (Option<PieceType>, bool) {
-    let square = (*x as u8, *y as u8).into();
-    square_check(&square, team_color, board)
-}
-
-// TODO: Is it actually beneficial to not just give back the piece and let the other function decide whether is is their own piece?
-/// Checks if a square is occupied. If it is it returns Some(PieceType), if it is not, the first element of the tuple is none.
-/// The second element returns true if it is an enemy piece, false otherwise.
-fn square_check(
-    square: &Coordinate,
-    // TODO: This should not be a reference(Probably optimized by the compiler, but isn't nice)
-    team_color: &PieceColor,
-    board: &board::Board,
-) -> (Option<PieceType>, bool) {
-    // We need to check if the square is occupied to avoid calculating non-reachable coordinates
-    let square_occupied = piece_on_square(square, board);
-    match square_occupied {
-        // Check whether it is our own piece.
-        Some(i) => {
-            let piece_type = i.deref().borrow().get_piece().get_type();
-            if i.as_ref().borrow().deref().get_color() == *team_color {
-                (Some(piece_type), false)
-            } else {
-                (Some(piece_type), true)
-            }
-        }
-        None => (None, false),
-    }
-}
-
-// Returns the Piece a square is occupied by. If the square is not occupied it returns None
-fn piece_on_square(square: &Coordinate, board: &board::Board) -> Option<SquareInner> {
-    // Get the SquareInner
-    match board.get_at(*square) {
-        // Match it
-        None => None,
-        Some(i) => Some(Rc::clone(&i)),
-    }
 }
 
 #[cfg(test)]
