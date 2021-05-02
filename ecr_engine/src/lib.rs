@@ -3,3 +3,4 @@ pub mod eval;
 pub mod r#move;
 pub mod pieces;
 mod utils;
+pub mod movement;

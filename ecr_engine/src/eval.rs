@@ -4,13 +4,16 @@ use std::ops::Deref;
 
 use ecr_shared::pieces::PieceColor;
 
+use crate::board;
 use crate::board::Board;
 
-pub fn eval(board: &Board) -> f32 {
-    let piece_value = evaluate_pieces(board);
-    let position_value = position_value(board);
+impl board::Board {
+    pub fn eval(&self) -> f32 {
+        let piece_value = evaluate_pieces(self);
+        let position_value = position_value(self);
 
-    piece_value as f32 + position_value
+        piece_value as f32 + position_value
+    }
 }
 
 /// MiniMax Evaluation
@@ -33,3 +36,6 @@ fn position_value(board: &Board) -> f32 {
     //TODO
     0.0
 }
+
+// TODO: Move function tests here.
+
