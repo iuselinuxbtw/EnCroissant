@@ -7,7 +7,6 @@ pub use ecr_shared::board::BoardCastleState;
 use ecr_shared::coordinate::Coordinate;
 
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
-use crate::pieces::move_gen::BasicMove;
 use crate::r#move::Move;
 use crate::utils::new_rc_refcell;
 
@@ -32,7 +31,7 @@ pub struct Board {
     moves: Vec<Move>,
 
     /// If the next move should be done by the light color.
-    light_to_move: bool,
+    pub(crate) light_to_move: bool,
     /// The number of moves already done. Will be increased when a move occurs and light_to_move is
     /// `false`.
     pub(crate) move_number: usize,
@@ -185,13 +184,6 @@ impl Board {
         // We need to create a vector since the replace_with needs to be an iterator.
         // This can probably be solved more elegantly than with a range and iterator but it works...
         column.splice(column_index_range, vec![state.clone()]);
-    }
-
-
-    /// We should not filter our normal move_gen for legal moves if we are checked, since that would
-    /// be inefficient. We can make a special move generator for legal moves during being checked.
-    pub fn check_move_gen(&self) -> Vec<BasicMove> {
-        todo!()
     }
 
     /// This function returns a float, which returns a positive value if light is ahead and a

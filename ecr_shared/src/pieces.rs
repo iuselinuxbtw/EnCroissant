@@ -30,6 +30,16 @@ pub enum PieceColor {
     Dark,
 }
 
+impl PieceColor {
+    /// Returns the opposite team. Useful for checking for legal moves.
+    pub fn get_opponent(&self) -> PieceColor {
+        match self {
+            PieceColor::Light => { PieceColor::Dark }
+            PieceColor::Dark => { PieceColor::Light }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -30,6 +30,21 @@ pub struct Moves {
     pub basic_move: Vec<BasicMove>,
 }
 
+impl Moves {
+    /// Returns whether the moves of a piece contain a check(If the piece could capture the king if nothing is done)
+    pub fn contains_check(&self) -> bool {
+        // This could be made with a iterator
+        for basic_move in self.basic_move.clone() {
+            if let Some(capture) = basic_move.capture {
+                if capture == PieceType::King {
+                    return true
+                }
+            }
+        }
+        false
+    }
+}
+
 /// Represents a move. Can be used to modify the positions of pieces on the board. Does not do any
 /// validity detection and just holds the move that should be done.
 #[derive(Debug, PartialEq, Clone)]

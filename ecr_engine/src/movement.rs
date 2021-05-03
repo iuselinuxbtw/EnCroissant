@@ -11,7 +11,7 @@ use crate::r#move::Moves;
 
 impl board::Board {
     /// This function moves a piece from a given start square to another square, contained in a
-   /// BasicMove.
+    /// BasicMove. Note: This function doesn't complain if a piece by the wrong team is moved.
     pub fn r#move(&mut self, start: Coordinate, basic_move: &BasicMove) {
         // We can safely unwrap here since no move is generated without a piece at the start of it.
         let square_inner = self.get_at(start).unwrap();
@@ -50,6 +50,10 @@ impl board::Board {
         // We have to get the half moves
         self.count_half_moves(&piece_type, basic_move.capture.is_some());
 
+        // Change the to move team
+        self.light_to_move = !self.light_to_move;
+
+        // Check if the move is legal
         // TODO: Add to move Vector
     }
     // TODO: We need a test for this which should be some mid-game board.
@@ -139,7 +143,6 @@ impl board::Board {
         false
     }
 
-
     /// This function is called every move and is responsible for increasing/resetting the half move counter.
     fn count_half_moves(&mut self, piece_type: &PieceType, capture: bool) {
         // TODO: Testing
@@ -213,6 +216,23 @@ impl board::Board {
         }
         result
     }
+
+    /// Returns true if the given team has a check
+    fn check_checker(&self, team: PieceColor) -> bool {
+        let all_moves: Vec<Moves> = self.get_pseudo_legal_moves(team);
+        for moves in all_moves {
+            if moves.contains_check() {
+                return true
+            }
+        }
+        false
+    }
+
+    /// We should not filter our normal move_gen for legal moves if we are checked, since that would
+    /// be inefficient. We can make a special move generator for legal moves during being checked.
+    pub fn check_move_gen(&self) -> Vec<BasicMove> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
@@ -240,6 +260,7 @@ mod tests {
             );
             assert_eq!(1, default_board.get_move_number());
             assert_eq!(0, default_board.get_half_move_amount());
+            assert_eq!(false, default_board.get_light_to_move())
             // TODO: Test the Position of all pieces.
         }
 
