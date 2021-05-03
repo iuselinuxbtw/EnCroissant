@@ -81,10 +81,10 @@ fn bench_move(b: &mut Criterion) {
         c.iter(|| {
             // The best opening move known to mankind
             default_board.r#move(
-                &(5, 1).into(),
+                (5, 1).into(),
                 &BasicMove {
                     to: (5, 2).into(),
-                    capture: false,
+                    capture: None,
                 },
             )
         })
