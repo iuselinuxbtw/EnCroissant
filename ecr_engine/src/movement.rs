@@ -4,47 +4,95 @@ use std::ops::Deref;
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board;
-use crate::board::SquareInner;
+use crate::board::{Board, SquareInner};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::r#move::Moves;
+
+struct MoveProperties {
+    inner: SquareInner,
+    piece_type: PieceType,
+    target_square: Coordinate,
+    capture: Option<PieceType>,
+    promotion: bool,
+}
+
+impl MoveProperties {
+    /// Find out the properties of a move. Useful for movement.
+    fn get_properties(
+        basic_move: BasicMove,
+        board: board::Board,
+        start: Coordinate,
+    ) -> MoveProperties {
+        // We can safely unwrap here since no move is generated without a piece at the start of it.
+        let inner = board.get_at(start).unwrap();
+
+        // Get the piece type
+        let piece_type: PieceType = inner.deref().borrow().get_piece().get_type();
+
+        // Get the target square
+        let target_square = basic_move.get_target_square();
+
+        // Get if it is a capture
+        let capture = basic_move.get_capture();
+        // By default it is no promotion
+        let mut promotion = false;
+
+        match piece_type {
+            // But if it is a pawn we do kinda wanna promote our piece
+            PieceType::Pawn => promotion = board.is_pawn_promotion(target_square),
+            _ => {}
+        }
+        // And lastly we return the complete MoveProperties
+        MoveProperties {
+            inner,
+            piece_type,
+            target_square,
+            capture,
+            promotion,
+        }
+    }
+}
 
 impl board::Board {
     /// This function moves a piece from a given start square to another square, contained in a
     /// BasicMove. Note: This function doesn't complain if a piece by the wrong team is moved.
     pub fn r#move(&mut self, start: Coordinate, basic_move: &BasicMove) {
-        // TODO: Restructure this
-        // Reset all [`ThreatenedState`]
-        self.remove_all_threats();
+        let move_properties = MoveProperties::get_properties(*basic_move, self.clone(), start);
 
-        // We can safely unwrap here since no move is generated without a piece at the start of it.
-        let square_inner = self.get_at(start).unwrap();
-
-        let target_square = basic_move.get_target_square();
+        self.pre_move(start);
 
         // Update the piece coordinate to the new coordinates.
-        square_inner.borrow_mut().set_coordinate(&target_square);
+        move_properties
+            .inner
+            .borrow_mut()
+            .set_coordinate(move_properties.target_square);
 
-        // First we remove the piece from the original square on the board.
-        self.remove_piece(start);
-
-        if basic_move.capture.is_some() {
-            self.capture_piece(&square_inner, target_square);
+        if move_properties.capture.is_some() {
+            self.capture_piece(&move_properties.inner, move_properties.target_square);
         }
 
-        let mut piece_to_add: BoardPiece = square_inner.deref().borrow().borrow().deref().clone();
-        piece_to_add.set_coordinate(&target_square);
-        let piece_type: PieceType = square_inner.deref().borrow().get_piece().get_type();
+        let mut piece_to_add: BoardPiece = move_properties
+            .inner
+            .deref()
+            .borrow()
+            .borrow()
+            .deref()
+            .clone();
+        piece_to_add.set_coordinate(move_properties.target_square);
 
-        if self.is_pawn_promotion(piece_type, &target_square) {
+        if move_properties.promotion {
             // TODO: We need some way to choose a different piece if we can do a promotion. For now every promotion we do is just to the queen.
             piece_to_add = BoardPiece::new_from_type(
                 PieceType::Queen,
-                target_square,
+                move_properties.target_square,
                 piece_to_add.get_color(),
             );
         }
+
+        // The piece has now moved
         piece_to_add.set_has_moved();
+
         // Then we add the piece to the target square.
         self.add_piece(piece_to_add.clone());
 
@@ -52,8 +100,12 @@ impl board::Board {
         if piece_to_add.get_color() == PieceColor::Dark {
             self.move_number += 1;
         }
+
         // We have to get the half moves
-        self.count_half_moves(&piece_type, basic_move.capture.is_some());
+        self.count_half_moves(
+            move_properties.piece_type,
+            move_properties.capture.is_some(),
+        );
 
         // Change the to move team
         self.light_to_move = !self.light_to_move;
@@ -61,6 +113,15 @@ impl board::Board {
         self.calculate_threatened_states();
         // Check if the move is legal
         // TODO: Add to move Vector
+        // TODO: Update castle_state
+    }
+    // This function contains stuff that has to be done before every move
+    fn pre_move(&mut self, start: Coordinate) {
+        // Reset all ThreatenedState
+        self.remove_all_threats();
+
+        // First we remove the piece from the original square on the board.
+        self.remove_piece(start);
     }
 
     // TODO: We need a test for this which should be some mid-game board.
@@ -139,19 +200,17 @@ impl board::Board {
         }
     }
 
-    fn is_pawn_promotion(&self, piece_type: PieceType, target: &Coordinate) -> bool {
+    fn is_pawn_promotion(&self, target: Coordinate) -> bool {
         // TODO: Testing
-        if piece_type == PieceType::Pawn {
-            // Pawns can't move backwards so checking the color is redundant
-            if target.get_y() == 7 || target.get_y() == 0 {
-                return true;
-            }
+        // Pawns can't move backwards so checking the color is redundant
+        if target.get_y() == 7 || target.get_y() == 0 {
+            return true;
         }
         false
     }
 
     /// This function is called every move and is responsible for increasing/resetting the half move counter.
-    fn count_half_moves(&mut self, piece_type: &PieceType, capture: bool) {
+    fn count_half_moves(&mut self, piece_type: PieceType, capture: bool) {
         // TODO: Testing
         match piece_type {
             PieceType::Pawn => self.half_move_amount = 0,
@@ -231,7 +290,7 @@ impl board::Board {
         let all_moves: Vec<Moves> = self.get_pseudo_legal_moves(team);
         for moves in all_moves {
             if moves.contains_check() {
-                return true
+                return true;
             }
         }
         false
@@ -282,7 +341,9 @@ mod tests {
             );
             assert_eq!(1, default_board.get_move_number());
             assert_eq!(0, default_board.get_half_move_amount());
-            assert_eq!(false, default_board.get_light_to_move())
+            assert_eq!(false, default_board.get_light_to_move());
+            assert_eq!(None, default_board.get_at((7, 1).into()));
+            assert!(default_board.get_at((7, 3).into()).is_some())
             // TODO: Test the Position of all pieces.
         }
 

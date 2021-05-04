@@ -28,6 +28,7 @@ impl BasicMove {
     pub fn get_target_square(&self) -> Coordinate {
         self.to
     }
+    pub fn get_capture(&self) -> Option<PieceType> { self.capture }
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]

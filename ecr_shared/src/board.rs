@@ -28,6 +28,15 @@ impl BoardCastleState {
     pub fn is_any_possible(&self) -> bool {
         self.light_king_side || self.light_queen_side || self.dark_king_side || self.dark_queen_side
     }
+
+    pub fn empty() -> BoardCastleState {
+        BoardCastleState {
+            light_king_side: false,
+            light_queen_side: false,
+            dark_king_side: false,
+            dark_queen_side: false,
+        }
+    }
 }
 
 #[cfg(test)]

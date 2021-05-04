@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -141,6 +142,16 @@ impl Board {
         self.pieces.push(square_inner);
     }
 
+
+    pub fn get_pieces_by_type(&self, piece_type: PieceType) -> Vec<SquareInner> {
+        let mut result: Vec<SquareInner> = vec![];
+        for inner in self.pieces.clone() {
+            if inner.deref().borrow().get_piece().get_type() == piece_type {
+                result.push(inner);
+            }
+        }
+        result
+    }
 
     /// Returns the current move number.
     pub fn get_move_number(&self) -> usize {

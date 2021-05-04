@@ -119,8 +119,8 @@ impl BoardPiece {
         self.out_of_game = true;
     }
 
-    pub fn set_coordinate(&mut self, target: &Coordinate) {
-        self.coordinate = *target;
+    pub fn set_coordinate(&mut self, target: Coordinate) {
+        self.coordinate = target;
     }
 
     pub fn set_has_moved(&mut self) { self.has_moved = true }
