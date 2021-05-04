@@ -44,7 +44,7 @@ impl Moves {
         for basic_move in self.basic_move.clone() {
             if let Some(capture) = basic_move.capture {
                 if capture == PieceType::King {
-                    return true
+                    return true;
                 }
             }
         }

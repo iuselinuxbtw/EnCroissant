@@ -38,4 +38,3 @@ fn position_value(board: &Board) -> f32 {
 }
 
 // TODO: Move function tests here.
-

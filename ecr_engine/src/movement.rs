@@ -4,7 +4,7 @@ use std::ops::Deref;
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board;
-use crate::board::{Board, SquareInner};
+use crate::board::SquareInner;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::r#move::Moves;

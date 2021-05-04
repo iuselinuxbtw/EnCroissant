@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -90,7 +89,6 @@ impl Board {
         }
     }
 
-
     /// Removes a piece from a given target square. DOES NOT SET IT OUT OF GAME!
     pub(crate) fn remove_piece(&mut self, target: Coordinate) {
         // First we get the right column of the piece
@@ -141,7 +139,6 @@ impl Board {
         // the square to the list of all pieces, too
         self.pieces.push(square_inner);
     }
-
 
     pub fn get_pieces_by_type(&self, piece_type: PieceType) -> Vec<SquareInner> {
         let mut result: Vec<SquareInner> = vec![];
@@ -227,7 +224,13 @@ impl Board {
         let range = 0 as usize..7;
         for i in 0..=7 {
             let column = self.threatened_state.get_mut(i).unwrap();
-            column.splice(range.clone(), vec![to_replace, to_replace, to_replace, to_replace, to_replace, to_replace, to_replace, to_replace]);
+            column.splice(
+                range.clone(),
+                vec![
+                    to_replace, to_replace, to_replace, to_replace, to_replace, to_replace,
+                    to_replace, to_replace,
+                ],
+            );
         }
     }
 
@@ -466,7 +469,6 @@ mod tests {
             assert_eq!(None, default_board.get_at((0, 1).into()));
         }
 
-
         #[test]
         fn test_get_light_to_move() {
             let mut b = Board::empty();
@@ -570,7 +572,6 @@ mod tests {
             );
         }
 
-
         #[test]
         fn test_eval_board() {
             let default_board: Board = board::Board::default();
@@ -586,7 +587,6 @@ mod tests {
             b.en_passant_target = Some((3, 4).into());
             assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
         }
-
 
         #[test]
         fn test_from_fen() {

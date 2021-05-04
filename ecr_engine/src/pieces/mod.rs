@@ -123,7 +123,9 @@ impl BoardPiece {
         self.coordinate = target;
     }
 
-    pub fn set_has_moved(&mut self) { self.has_moved = true }
+    pub fn set_has_moved(&mut self) {
+        self.has_moved = true
+    }
 }
 
 impl PartialEq for BoardPiece {

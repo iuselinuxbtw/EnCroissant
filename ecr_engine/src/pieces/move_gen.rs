@@ -28,17 +28,15 @@ impl BasicMove {
     pub fn get_target_square(&self) -> Coordinate {
         self.to
     }
-    pub fn get_capture(&self) -> Option<PieceType> { self.capture }
+    pub fn get_capture(&self) -> Option<PieceType> {
+        self.capture
+    }
     /// Returns whether the target square is threatened. Useful for king movement.
     pub fn get_is_threatened(&self, board: &board::Board, team: PieceColor) -> bool {
         let state = board.is_threatened(self.get_target_square());
         match team {
-            PieceColor::Light => {
-                state.threatened_dark > 0
-            }
-            PieceColor::Dark => {
-                state.threatened_light > 0
-            }
+            PieceColor::Light => state.threatened_dark > 0,
+            PieceColor::Dark => state.threatened_light > 0,
         }
     }
 }
