@@ -13,6 +13,10 @@ impl board::Board {
     /// This function moves a piece from a given start square to another square, contained in a
     /// BasicMove. Note: This function doesn't complain if a piece by the wrong team is moved.
     pub fn r#move(&mut self, start: Coordinate, basic_move: &BasicMove) {
+        // TODO: Restructure this
+        // Reset all [`ThreatenedState`]
+        self.remove_all_threats();
+
         // We can safely unwrap here since no move is generated without a piece at the start of it.
         let square_inner = self.get_at(start).unwrap();
 
@@ -40,6 +44,7 @@ impl board::Board {
                 piece_to_add.get_color(),
             );
         }
+        piece_to_add.set_has_moved();
         // Then we add the piece to the target square.
         self.add_piece(piece_to_add.clone());
 
@@ -52,10 +57,12 @@ impl board::Board {
 
         // Change the to move team
         self.light_to_move = !self.light_to_move;
-
+        // Calculate all new threats (This could probably be simplified)
+        self.calculate_threatened_states();
         // Check if the move is legal
         // TODO: Add to move Vector
     }
+
     // TODO: We need a test for this which should be some mid-game board.
     /// Executes a given CastleMove by moving the king first and then the rook
     pub fn castle(&mut self, castle_move: CastleMove) {
@@ -226,6 +233,19 @@ impl board::Board {
             }
         }
         false
+    }
+
+    pub fn calculate_threatened_states(&mut self) {
+        self.calculate_team_threatened_state(PieceColor::Light);
+        self.calculate_team_threatened_state(PieceColor::Dark);
+    }
+
+    fn calculate_team_threatened_state(&mut self, team_color: PieceColor) {
+        for moves in self.get_pseudo_legal_moves(team_color) {
+            for r#move in moves.basic_move {
+                self.add_threat(r#move.to, team_color);
+            }
+        }
     }
 
     /// We should not filter our normal move_gen for legal moves if we are checked, since that would

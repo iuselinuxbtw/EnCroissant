@@ -51,10 +51,17 @@ pub struct Board {
 
 /// Consists of two u8s that tell how many times each team threatens a square. Useful for
 /// castling.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub struct ThreatenedState {
     pub threatened_light: u8,
     pub threatened_dark: u8,
+}
+
+impl ThreatenedState {
+    pub fn clear(&mut self) {
+        self.threatened_dark = 0;
+        self.threatened_light = 0;
+    }
 }
 
 impl Board {
@@ -170,7 +177,7 @@ impl Board {
     }
 
     /// Sets the target square to the given ThreatenedState
-    pub fn set_threatened(&mut self, square: Coordinate, state: &ThreatenedState) {
+    pub fn set_threatened(&mut self, square: Coordinate, state: ThreatenedState) {
         // First we need to get the column
         let column = self
             .threatened_state
@@ -184,6 +191,33 @@ impl Board {
         // We need to create a vector since the replace_with needs to be an iterator.
         // This can probably be solved more elegantly than with a range and iterator but it works...
         column.splice(column_index_range, vec![state.clone()]);
+    }
+
+    /// Adds a threat to the square by the given team.
+    pub fn add_threat(&mut self, square: Coordinate, team: PieceColor) {
+        let mut current_state = self.is_threatened(square).clone();
+        match team {
+            PieceColor::Light => {
+                current_state.threatened_light += 1;
+                self.set_threatened(square, current_state);
+            }
+            PieceColor::Dark => {
+                current_state.threatened_dark += 1;
+                self.set_threatened(square, current_state);
+            }
+        }
+    }
+
+    pub fn remove_all_threats(&mut self) {
+        let to_replace = ThreatenedState {
+            threatened_light: 0,
+            threatened_dark: 0,
+        };
+        let range = 0 as usize..7;
+        for i in 0..=7 {
+            let column = self.threatened_state.get_mut(i).unwrap();
+            column.splice(range.clone(), vec![to_replace, to_replace, to_replace, to_replace, to_replace, to_replace, to_replace]);
+        }
     }
 
     /// This function returns a float, which returns a positive value if light is ahead and a
@@ -657,7 +691,7 @@ mod tests {
         fn test_threatened_state() {
             let mut empty_board = Board::empty();
             let square = (5, 6).into();
-            let state = &ThreatenedState {
+            let state = ThreatenedState {
                 threatened_light: 1,
                 threatened_dark: 3,
             };
