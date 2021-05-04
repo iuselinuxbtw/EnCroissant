@@ -31,6 +31,13 @@ pub struct Moves {
 }
 
 impl Moves {
+    // Checks if the
+    pub fn check_for_promotions(&mut self, piece_type: PieceType) -> bool {
+        todo!()
+    }
+}
+
+impl Moves {
     /// Returns whether the moves of a piece contain a check(If the piece could capture the king if nothing is done)
     pub fn contains_check(&self) -> bool {
         // This could be made with a iterator

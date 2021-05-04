@@ -216,7 +216,7 @@ impl Board {
         let range = 0 as usize..7;
         for i in 0..=7 {
             let column = self.threatened_state.get_mut(i).unwrap();
-            column.splice(range.clone(), vec![to_replace, to_replace, to_replace, to_replace, to_replace, to_replace, to_replace]);
+            column.splice(range.clone(), vec![to_replace, to_replace, to_replace, to_replace, to_replace, to_replace, to_replace, to_replace]);
         }
     }
 
