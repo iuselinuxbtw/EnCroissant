@@ -29,6 +29,18 @@ impl BasicMove {
         self.to
     }
     pub fn get_capture(&self) -> Option<PieceType> { self.capture }
+    /// Returns whether the target square is threatened. Useful for king movement.
+    pub fn get_is_threatened(&self, board: &board::Board, team: PieceColor) -> bool {
+        let state = board.is_threatened(self.get_target_square());
+        match team {
+            PieceColor::Light => {
+                state.threatened_dark > 0
+            }
+            PieceColor::Dark => {
+                state.threatened_light > 0
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -360,7 +372,6 @@ pub fn king_moves(
     board: &board::Board,
     team_color: &PieceColor,
 ) -> Vec<BasicMove> {
-    // TODO: Currently the kings can move next to each other which cannot happen in a real game.
     let mut result: Vec<BasicMove> = vec![];
     let border_distances = distance_to_border(start);
     let mut queue: Vec<Directions> = vec![];
@@ -433,6 +444,8 @@ fn explore_king_moves(
             check_move!((from_x - 1), (from_y - 1), team_color, result, board);
         }
     }
+    // The king cannot move into a threatened square
+    result.retain(|x| !x.get_is_threatened(board, *team_color));
     result
 }
 
