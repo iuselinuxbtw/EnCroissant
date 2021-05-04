@@ -322,6 +322,9 @@ mod tests {
 
     mod board {
         use std::ops::Deref;
+        use std::str::FromStr;
+
+        use ecr_formats::fen::Fen;
 
         use crate::board::Board;
         use crate::pieces::move_gen::BasicMove;
@@ -353,6 +356,17 @@ mod tests {
             let pawn = default_board.get_at((0, 1).into()).unwrap();
             default_board.capture_piece(&pawn, (0, 1).into());
             assert_eq!(None, default_board.get_at((0, 1).into()));
+        }
+
+        #[test]
+        fn test_check_checker() {
+            let default_board = Board::default();
+            let mut light_check = default_board.check_checker(PieceColor::Light);
+            let dark_check = default_board.check_checker(PieceColor::Dark);
+            assert!(!(light_check || dark_check));
+            let check_board: Board = Board::from(Fen::from_str("2k5/8/8/8/8/2R5/8/2K5 b - - 3 6").unwrap());
+            light_check = check_board.check_checker(PieceColor::Light);
+            assert_eq!(true, light_check);
         }
 
         #[test]
