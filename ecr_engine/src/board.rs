@@ -387,6 +387,8 @@ impl From<Fen> for Board {
             board.add_piece(piece.into());
         }
 
+        board.calculate_threatened_states();
+
         board
     }
 }
@@ -633,6 +635,11 @@ mod tests {
                 },
                 board.castle_state
             );
+            assert_eq!(1, board.is_threatened((4, 0).into()).threatened_light);
+            assert_eq!(1, board.is_threatened((4, 1).into()).threatened_light);
+            assert_eq!(1, board.is_threatened((4, 3).into()).threatened_light);
+            assert_eq!(1, board.is_threatened((4, 4).into()).threatened_light);
+            assert_eq!(1, board.is_threatened((3, 0).into()).threatened_light);
         }
 
         #[test]
