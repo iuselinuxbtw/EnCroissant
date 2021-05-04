@@ -166,8 +166,10 @@ impl board::Board {
     fn capture_piece(&mut self, target: &SquareInner, target_square: Coordinate) {
         // TODO: Testing
         target.borrow_mut().set_out_of_game();
+        self.pieces.retain(|inner| inner != target);
         self.remove_piece(target_square);
     }
+
     /// This function returns all possible pseudo legal moves (OF BOTH TEAMS!).
     ///
     /// We could also only get one move and bet on it being the best one which would certainly be
@@ -282,6 +284,14 @@ mod tests {
             assert_eq!(0, default_board.get_half_move_amount());
             assert_eq!(false, default_board.get_light_to_move())
             // TODO: Test the Position of all pieces.
+        }
+
+        #[test]
+        fn test_capture() {
+            let mut default_board = Board::default();
+            let pawn = default_board.get_at((0, 1).into()).unwrap();
+            default_board.capture_piece(&pawn, (0, 1).into());
+            assert_eq!(None, default_board.get_at((0, 1).into()));
         }
 
         #[test]

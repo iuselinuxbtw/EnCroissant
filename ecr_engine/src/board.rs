@@ -97,7 +97,7 @@ impl Board {
         // Then we get the row as a range since splice() requires a range, which is totally necessary for changing one variable.
         let column_index_range = target.get_y() as usize..target.get_y() as usize;
 
-        column.splice(column_index_range, None);
+        column.splice(column_index_range, vec![None]);
     }
 
     /// Returns if the next move should be done by the light color.
@@ -445,6 +445,14 @@ mod tests {
                 }
             }
         }
+
+        #[test]
+        fn test_remove_piece() {
+            let mut default_board = Board::default();
+            default_board.remove_piece((0, 1).into());
+            assert_eq!(None, default_board.get_at((0, 1).into()));
+        }
+
 
         #[test]
         fn test_get_light_to_move() {
