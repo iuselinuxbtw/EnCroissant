@@ -1,4 +1,3 @@
-// TODO: Move Movement utility functions here.
 
 use std::ops::Deref;
 use std::rc::Rc;
@@ -35,7 +34,7 @@ macro_rules! check_square {
 
 /// This macro is essentially the same as check_square without the 'break' statements so that it can
 /// be used outside of a loop.
-// TODO: Dumb macro  name, change this
+// TODO: Dumb macro name, change this
 #[macro_export]
 macro_rules! check_move {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
@@ -106,14 +105,13 @@ pub fn coordinate_check(
     board: &board::Board,
 ) -> (Option<PieceType>, bool) {
     let square = (*x as u8, *y as u8).into();
-    square_check(&square, team_color, board)
+    square_check(square, team_color, board)
 }
 
-// TODO: Is it actually beneficial to not just give back the piece and let the other function decide whether is is their own piece?
 /// Checks if a square is occupied. If it is it returns Some(PieceType), if it is not, the first element of the tuple is none.
 /// The second element returns true if it is an enemy piece, false otherwise.
 fn square_check(
-    square: &Coordinate,
+    square: Coordinate,
     // TODO: This should not be a reference(Probably optimized by the compiler, but isn't nice)
     team_color: &PieceColor,
     board: &board::Board,
@@ -135,9 +133,9 @@ fn square_check(
 }
 
 // Returns the Piece a square is occupied by. If the square is not occupied it returns None
-pub(crate) fn piece_on_square(square: &Coordinate, board: &board::Board) -> Option<SquareInner> {
+pub(crate) fn piece_on_square(square: Coordinate, board: &board::Board) -> Option<SquareInner> {
     // Get the SquareInner
-    match board.get_at(*square) {
+    match board.get_at(square) {
         // Match it
         None => None,
         Some(i) => Some(Rc::clone(&i)),

@@ -12,7 +12,7 @@ use crate::pieces::move_utils::{coordinate_check, distance_to_border, next_row, 
 use crate::pieces::PieceColor;
 use crate::{check_move, check_square};
 
-// TODO: Move to src_engine/src/move_gen package.
+// TODO: Move to ecr_engine/src/move_gen package.
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Capture {
@@ -295,7 +295,7 @@ pub fn pawn_moves(
 
     // Iterate through both possible captures
     for possible_capture in capture_diagonal {
-        let square_inner = piece_on_square(&possible_capture.clone(), board);
+        let square_inner = piece_on_square(possible_capture.clone(), board);
         // If there is a piece on the square
         if let Some(e) = square_inner {
             // If it is the opponent's piece, we add the capture move.
@@ -316,7 +316,6 @@ pub fn pawn_moves(
                 if possible_capture == t {
                     &result.push(BasicMove {
                         to: possible_capture,
-                        // TODO: Find out actual en passant target square
                         capture: Some(Capture {
                             piece_type: PieceType::Pawn,
                             // TODO: We need the acutal coordinate of the pawn to capture
@@ -585,7 +584,7 @@ fn piece_in_front(
 
     next_coordinate.y = next_row(from.get_y(), team_color, step);
     // Return false if there is not a piece in front of it.
-    if piece_on_square(&next_coordinate, board).is_none() {
+    if piece_on_square(next_coordinate, board).is_none() {
         false
     } else {
         true
@@ -1044,12 +1043,12 @@ mod tests {
             // Check where the pawn is in the default position
             let pawn_coords: Coordinate = (0, 1).into();
             let pawn = BoardPiece::new_from_type(PieceType::Pawn, pawn_coords, PieceColor::Light);
-            let piece = piece_on_square(&pawn_coords, &default_board);
+            let piece = piece_on_square(pawn_coords, &default_board);
             assert_eq!(*piece.unwrap().as_ref().borrow().deref(), pawn);
 
             let king_coords: Coordinate = (4, 7).into();
             let king = BoardPiece::new_from_type(PieceType::King, king_coords, PieceColor::Dark);
-            let piece2 = piece_on_square(&king_coords, &default_board);
+            let piece2 = piece_on_square(king_coords, &default_board);
             assert_eq!(king, *piece2.unwrap().as_ref().borrow().deref());
         }
 
