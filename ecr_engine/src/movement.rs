@@ -454,8 +454,10 @@ mod tests {
             assert_eq!(true, light_check);
         }
 
+        #[test]
         fn test_check_if_legal_move() {
             let mut default_board = Board::default();
+            todo!()
         }
 
         #[test]
