@@ -30,8 +30,8 @@ pub struct Board {
     /// notation.
     moves: Vec<Move>,
 
-    /// If the next move should be done by the light color.
-    pub(crate) light_to_move: bool,
+    /// The color that does the next move.
+    pub(crate) to_move: PieceColor,
 
     /// The number of moves already done. Will be increased when a move occurs and light_to_move is
     /// `false`.
@@ -75,7 +75,7 @@ impl Board {
             board: vec![vec![None; 8]; 8],
             pieces: vec![],
             moves: vec![],
-            light_to_move: true,
+            to_move: PieceColor::Light,
             move_number: 1,
             half_move_amount: 0,
             castle_state: BoardCastleState::default(),
@@ -105,7 +105,10 @@ impl Board {
 
     /// Returns if the next move should be done by the light color.
     pub fn get_light_to_move(&self) -> bool {
-        self.light_to_move
+        match self.to_move{
+            PieceColor::Light => true,
+            PieceColor::Dark => false,
+        }
     }
 
     /// Returns the piece at the supplied coordinate on the board.
@@ -387,7 +390,10 @@ impl From<Fen> for Board {
         board.half_move_amount = f.half_moves;
         board.en_passant_target = f.en_passant;
         board.castle_state = f.castles;
-        board.light_to_move = f.light_to_move;
+        match f.light_to_move{
+            true => board.to_move=PieceColor::Light,
+            false => board.to_move=PieceColor::Dark,
+        }
 
         // Add all pieces to the board
         for piece in f.piece_placements {
@@ -438,7 +444,7 @@ mod tests {
         fn test_empty() {
             let b = Board::empty();
 
-            assert!(b.light_to_move);
+            assert!(b.get_light_to_move());
             assert_eq!(1, b.move_number);
             assert_eq!(0, b.half_move_amount);
             assert_eq!(
@@ -478,10 +484,10 @@ mod tests {
             let mut b = Board::empty();
             assert!(b.get_light_to_move());
 
-            b.light_to_move = true;
+            b.to_move = PieceColor::Light;
             assert!(b.get_light_to_move());
 
-            b.light_to_move = false;
+            b.to_move = PieceColor::Dark;
             assert!(!b.get_light_to_move());
         }
 
@@ -626,7 +632,7 @@ mod tests {
                     .deref(),
             );
 
-            assert_eq!(false, board.light_to_move);
+            assert_eq!(PieceColor::Dark, board.to_move);
             assert_eq!(None, board.en_passant_target);
             assert_eq!(3, board.half_move_amount);
             assert_eq!(6, board.move_number);
