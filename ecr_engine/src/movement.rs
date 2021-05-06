@@ -367,9 +367,42 @@ mod tests {
             assert_eq!(0, default_board.get_half_move_amount());
             assert_eq!(false, default_board.get_light_to_move());
             assert_eq!(None, default_board.get_at((7, 1).into()));
-            assert!(default_board.get_at((7, 3).into()).is_some())
+            assert_eq!("rnbqkbnr/pppppppp/8/8/7P/8/PPPPPPP1/RNBQKBNR b KQkq - 0 1".to_string(), Fen::from(default_board.clone()).to_string());
+            assert!(default_board.get_at((7, 3).into()).is_some());
             // TODO: Test the Position of all pieces.
-            // TODO: Test capturing a piece
+            let fen = Fen::from(default_board.clone()).to_string();
+            default_board.r#move(
+                (6, 6).into(),
+                &BasicMove {
+                    to: (6, 4).into(),
+                    capture: None,
+                },
+            );
+            assert_eq!("rnbqkbnr/pppppp1p/8/6p1/7P/8/PPPPPPP1/RNBQKBNR w KQkq - 0 2".to_string(), Fen::from(default_board.clone()).to_string());
+            default_board.r#move(
+                (7, 0).into(),
+                &BasicMove {
+                    to: (7, 2).into(),
+                    capture: None,
+                },
+            );
+            // TODO: The light king can't castle kingside here, but for now this has to work.
+            assert_eq!("rnbqkbnr/pppppp1p/8/6p1/7P/7R/PPPPPPP1/RNBQKBN1 b KQkq - 1 2".to_string(), Fen::from(default_board.clone()).to_string());
+            let fen1 = Fen::from(default_board.clone()).to_string();
+            default_board.r#move(
+                (6, 4).into(),
+                &BasicMove {
+                    to: (7, 3).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (7, 3).into(),
+                    }),
+                },
+            );
+            // TODO: The King can't castle Kingside here
+            assert_eq!("rnbqkbnr/pppppp1p/8/8/7p/7R/PPPPPPP1/RNBQKBN1 w KQkq - 0 3".to_string(), Fen::from(default_board.clone()).to_string());
+            assert!(!default_board.clone().get_en_passant_target().is_some());
+            assert_eq!(None, default_board.get_at((6, 4).into()));
         }
 
         #[test]
