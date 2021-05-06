@@ -67,7 +67,7 @@ impl board::Board {
     pub fn r#move(&mut self, start: Coordinate, basic_move: &BasicMove) {
         let move_properties = MoveProperties::get_properties(*basic_move, self.clone(), start);
 
-        self.pre_move(start);
+        self.pre_move(start, &move_properties.inner);
 
         // Update the piece coordinate to the new coordinates.
         move_properties
@@ -127,12 +127,14 @@ impl board::Board {
     }
 
     // This function contains stuff that has to be done before every move
-    fn pre_move(&mut self, start: Coordinate) {
+    fn pre_move(&mut self, start: Coordinate, inner: &SquareInner) {
         // Reset all ThreatenedState
         self.remove_all_threats();
 
         // First we remove the piece from the original square on the board.
         self.remove_piece(start);
+        // TODO: Directly replace the piece in the vector
+        self.pieces.retain(|piece| piece != inner);
     }
 
     /// This checks if a move done by a pawn is en_passant, this is not optimal but works...
@@ -370,7 +372,6 @@ mod tests {
             assert_eq!("rnbqkbnr/pppppppp/8/8/7P/8/PPPPPPP1/RNBQKBNR b KQkq - 0 1".to_string(), Fen::from(default_board.clone()).to_string());
             assert!(default_board.get_at((7, 3).into()).is_some());
             // TODO: Test the Position of all pieces.
-            let fen = Fen::from(default_board.clone()).to_string();
             default_board.r#move(
                 (6, 6).into(),
                 &BasicMove {
@@ -388,7 +389,6 @@ mod tests {
             );
             // TODO: The light king can't castle kingside here, but for now this has to work.
             assert_eq!("rnbqkbnr/pppppp1p/8/6p1/7P/7R/PPPPPPP1/RNBQKBN1 b KQkq - 1 2".to_string(), Fen::from(default_board.clone()).to_string());
-            let fen1 = Fen::from(default_board.clone()).to_string();
             default_board.r#move(
                 (6, 4).into(),
                 &BasicMove {
