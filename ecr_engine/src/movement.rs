@@ -6,14 +6,15 @@ use ecr_shared::coordinate::Coordinate;
 use crate::board;
 use crate::board::SquareInner;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
-use crate::pieces::move_gen::{BasicMove, CastleMove, CastleMoveType};
+use crate::pieces::move_gen::{BasicMove, Capture, CastleMove, CastleMoveType};
 use crate::r#move::Moves;
 
 struct MoveProperties {
     inner: SquareInner,
     piece_type: PieceType,
     target_square: Coordinate,
-    capture: Option<PieceType>,
+    capture: Option<Capture>,
+    en_passant: bool,
     promotion: bool,
 }
 
@@ -35,12 +36,17 @@ impl MoveProperties {
 
         // Get if it is a capture
         let capture = basic_move.get_capture();
+
         // By default it is no promotion
         let mut promotion = false;
+        let mut en_passant = false;
 
         match piece_type {
             // But if it is a pawn we do kinda wanna promote our piece
-            PieceType::Pawn => promotion = board.is_pawn_promotion(target_square),
+            PieceType::Pawn => {
+                promotion = board.is_pawn_promotion(target_square);
+                en_passant = board.check_en_passant(target_square);
+            }
             _ => {}
         }
         // And lastly we return the complete MoveProperties
@@ -49,6 +55,7 @@ impl MoveProperties {
             piece_type,
             target_square,
             capture,
+            en_passant,
             promotion,
         }
     }
@@ -69,7 +76,7 @@ impl board::Board {
             .set_coordinate(move_properties.target_square);
 
         if move_properties.capture.is_some() {
-            self.capture_piece(&move_properties.inner, move_properties.target_square);
+            self.capture_piece(&move_properties.inner, move_properties.capture.unwrap().target);
         }
 
         let mut piece_to_add: BoardPiece = move_properties
@@ -83,11 +90,14 @@ impl board::Board {
 
         if move_properties.promotion {
             // TODO: We need some way to choose a different piece if we can do a promotion. For now every promotion we do is just to the queen.
+            // TODO: Test Promotion
             piece_to_add = BoardPiece::new_from_type(
                 PieceType::Queen,
                 move_properties.target_square,
                 piece_to_add.get_color(),
             );
+        } else if move_properties.en_passant {
+            // TODO: We need to find out the en_passant target square and capture there.
         }
 
         // The piece has now moved
@@ -115,6 +125,7 @@ impl board::Board {
         // TODO: Add to move Vector
         // TODO: Update castle_state
     }
+
     // This function contains stuff that has to be done before every move
     fn pre_move(&mut self, start: Coordinate) {
         // Reset all ThreatenedState
@@ -122,6 +133,16 @@ impl board::Board {
 
         // First we remove the piece from the original square on the board.
         self.remove_piece(start);
+    }
+
+    /// This checks if a move done by a pawn is en_passant, this is not optimal but works...
+    pub fn check_en_passant(&self, target: Coordinate) -> bool {
+        if let Some(coordinate) = self.get_en_passant_target() {
+            if coordinate == target {
+                return true;
+            }
+        }
+        false
     }
 
     // TODO: We need a test for this which should be some mid-game board.
@@ -348,6 +369,7 @@ mod tests {
             assert_eq!(None, default_board.get_at((7, 1).into()));
             assert!(default_board.get_at((7, 3).into()).is_some())
             // TODO: Test the Position of all pieces.
+            // TODO: Test capturing a piece
         }
 
         #[test]
@@ -364,7 +386,8 @@ mod tests {
             let mut light_check = default_board.check_checker(PieceColor::Light);
             let dark_check = default_board.check_checker(PieceColor::Dark);
             assert!(!(light_check || dark_check));
-            let check_board: Board = Board::from(Fen::from_str("2k5/8/8/8/8/2R5/8/2K5 b - - 3 6").unwrap());
+            let check_board: Board =
+                Board::from(Fen::from_str("2k5/8/8/8/8/2R5/8/2K5 b - - 3 6").unwrap());
             light_check = check_board.check_checker(PieceColor::Light);
             assert_eq!(true, light_check);
         }

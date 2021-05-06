@@ -32,15 +32,19 @@ pub struct Board {
 
     /// If the next move should be done by the light color.
     pub(crate) light_to_move: bool,
+
     /// The number of moves already done. Will be increased when a move occurs and light_to_move is
     /// `false`.
     pub(crate) move_number: usize,
+
     /// The amount of half moves done. A half move is any move where nothing gets captured and no
     /// pawn is moved. Resets to `0` if a non-half move occurs.
     pub(crate) half_move_amount: u8,
+
     /// Which castle actions are allowed? Only contains if it would be theoretically allowed, not
     /// representing if the castle would be blocked by another piece or similar.
     castle_state: BoardCastleState,
+
     /// Specifies the en passant target square that is currently possible. Only contains if it
     /// would be allowed theoretically, not checking if it would actually be possible.
     en_passant_target: Option<Coordinate>,

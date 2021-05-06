@@ -14,6 +14,12 @@ use crate::pieces::PieceColor;
 
 // TODO: Move to src_engine/src/move_gen package.
 
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct Capture {
+    pub piece_type: PieceType,
+    pub target: Coordinate,
+}
+
 /// Defines a move in the most basic form.
 ///
 /// Only defines where the move goes and whether or not the move is a capture.
@@ -21,16 +27,17 @@ use crate::pieces::PieceColor;
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct BasicMove {
     pub to: Coordinate,
-    pub capture: Option<PieceType>,
+    pub capture: Option<Capture>,
 }
 
 impl BasicMove {
     pub fn get_target_square(&self) -> Coordinate {
         self.to
     }
-    pub fn get_capture(&self) -> Option<PieceType> {
+    pub fn get_capture(&self) -> Option<Capture> {
         self.capture
     }
+
     /// Returns whether the target square is threatened. Useful for king movement.
     pub fn get_is_threatened(&self, board: &board::Board, team: PieceColor) -> bool {
         let state = board.is_threatened(self.get_target_square());
@@ -38,6 +45,11 @@ impl BasicMove {
             PieceColor::Light => state.threatened_dark > 0,
             PieceColor::Dark => state.threatened_light > 0,
         }
+    }
+    /// If the Capture is
+    pub fn get_is_en_passant(&self) -> bool {
+        // We can safely unwrap since we've checked that is is_some
+        self.capture.is_some() && self.to != self.capture.unwrap().target
     }
 }
 
@@ -226,7 +238,6 @@ pub fn pawn_moves(
     team_color: &PieceColor,
     has_moved: bool,
 ) -> Vec<BasicMove> {
-    //TODO: En Passant is currently not considered
     let mut result: Vec<BasicMove> = Vec::new();
     let from_x = start.get_x() as u8;
     let from_y = start.get_y() as u8;
@@ -259,15 +270,35 @@ pub fn pawn_moves(
 
     // Iterate through both possible captures
     for possible_capture in capture_diagonal {
-        let square_inner = piece_on_square(&possible_capture, board);
+        let square_inner = piece_on_square(&possible_capture.clone(), board);
         // If there is a piece on the square
         if let Some(e) = square_inner {
             // If it is the opponent's piece, we add the capture move.
             if &e.as_ref().borrow().deref().get_color() != team_color {
                 &result.push(BasicMove {
-                    to: possible_capture,
-                    capture: Some(e.deref().borrow().get_piece().get_type()),
+                    to: possible_capture.clone(),
+                    capture: Some(Capture {
+                        piece_type: e.deref().borrow().get_piece().get_type(),
+                        target: possible_capture.clone(),
+                    }),
                 });
+            }
+        }
+        // TODO: Test en_passant
+        match board.get_en_passant_target() {
+            None => {}
+            Some(t) => {
+                if possible_capture == t {
+                    &result.push(BasicMove {
+                        to: possible_capture,
+                        // TODO: Find out actual en passant target square
+                        capture: Some(Capture {
+                            piece_type: PieceType::Pawn,
+                            // TODO: We need the acutal coordinate of the pawn to capture
+                            target: (6, 1).into(),
+                        }),
+                    });
+                }
             }
         }
     }
@@ -688,7 +719,10 @@ mod tests {
             },
             BasicMove {
                 to: (4, 6).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (4, 6).into(),
+                }),
             },
             // East
             BasicMove {
@@ -847,7 +881,10 @@ mod tests {
             },
             BasicMove {
                 to: (0, 6).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (0, 6).into(),
+                }),
             },
         ];
         assert_eq!(expected3, result3);
@@ -936,7 +973,10 @@ mod tests {
             },
             BasicMove {
                 to: (1, 6).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (1, 6).into(),
+                }),
             },
             // upper-right
             BasicMove {
@@ -945,7 +985,10 @@ mod tests {
             },
             BasicMove {
                 to: (5, 6).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (5, 6).into(),
+                }),
             },
             // lower-right
             BasicMove {
@@ -1004,11 +1047,17 @@ mod tests {
         let expected2 = vec![
             BasicMove {
                 to: (1, 6).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (1, 6).into(),
+                }),
             },
             BasicMove {
                 to: (3, 6).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (3, 6).into(),
+                }),
             },
         ];
         assert_eq!(expected2, result2);
@@ -1023,7 +1072,10 @@ mod tests {
         let result4 = pawn_moves(&(0, 6).into(), &default_board, &PieceColor::Light, true);
         let expected4 = vec![BasicMove {
             to: (1, 7).into(),
-            capture: Some(PieceType::Knight),
+            capture: Some(Capture {
+                piece_type: PieceType::Knight,
+                target: (1, 7).into(),
+            }),
         }];
         assert_eq!(expected4, result4);
     }
@@ -1063,7 +1115,10 @@ mod tests {
         let expected2: Vec<BasicMove> = vec![
             BasicMove {
                 to: (5, 1).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (5, 1).into(),
+                }),
             },
             BasicMove {
                 to: (5, 3).into(),
@@ -1083,15 +1138,24 @@ mod tests {
             },
             BasicMove {
                 to: (1, 1).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (1, 1).into(),
+                }),
             },
             BasicMove {
                 to: (2, 0).into(),
-                capture: Some(PieceType::Bishop),
+                capture: Some(Capture {
+                    piece_type: PieceType::Bishop,
+                    target: (2, 0).into(),
+                }),
             },
             BasicMove {
                 to: (4, 0).into(),
-                capture: Some(PieceType::King),
+                capture: Some(Capture {
+                    piece_type: PieceType::King,
+                    target: (4, 0).into(),
+                }),
             },
         ];
         assert_eq!(expected2, result2);
@@ -1131,23 +1195,38 @@ mod tests {
         let expected3: Vec<BasicMove> = vec![
             BasicMove {
                 to: (5, 0).into(),
-                capture: Some(PieceType::Bishop),
+                capture: Some(Capture {
+                    piece_type: PieceType::Bishop,
+                    target: (5, 0).into(),
+                }),
             },
             BasicMove {
                 to: (5, 1).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (5, 1).into(),
+                }),
             },
             BasicMove {
                 to: (4, 1).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (4, 1).into(),
+                }),
             },
             BasicMove {
                 to: (3, 1).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (3, 1).into(),
+                }),
             },
             BasicMove {
                 to: (3, 0).into(),
-                capture: Some(PieceType::Queen),
+                capture: Some(Capture {
+                    piece_type: PieceType::Queen,
+                    target: (3, 0).into(),
+                }),
             },
         ];
         assert_eq!(expected3, result3);

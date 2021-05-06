@@ -34,6 +34,7 @@ impl Piece for Queen {
 #[cfg(test)]
 mod tests {
     use crate::board;
+    use crate::pieces::move_gen::Capture;
 
     use super::*;
 
@@ -91,7 +92,10 @@ mod tests {
             },
             BasicMove {
                 to: (3, 1).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (3, 1).into(),
+                }),
             },
             // West
             BasicMove {
@@ -127,7 +131,10 @@ mod tests {
             },
             BasicMove {
                 to: (6, 1).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (6, 1).into(),
+                }),
             },
             // South-west
             BasicMove {
@@ -140,7 +147,10 @@ mod tests {
             },
             BasicMove {
                 to: (0, 1).into(),
-                capture: Some(PieceType::Pawn),
+                capture: Some(Capture {
+                    piece_type: PieceType::Pawn,
+                    target: (0, 1).into(),
+                }),
             },
         ];
         assert_eq!(expected, result);
