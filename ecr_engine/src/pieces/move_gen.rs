@@ -6,11 +6,11 @@ use std::ops::Deref;
 use ecr_shared::coordinate::Coordinate;
 use ecr_shared::pieces::PieceType;
 
-use crate::{check_move, check_square};
 use crate::board;
 use crate::board::{Board, BoardCastleState};
 use crate::pieces::move_utils::{coordinate_check, distance_to_border, next_row, piece_on_square};
 use crate::pieces::PieceColor;
+use crate::{check_move, check_square};
 
 // TODO: Move to src_engine/src/move_gen package.
 
@@ -50,6 +50,31 @@ impl BasicMove {
     pub fn get_is_en_passant(&self) -> bool {
         // We can safely unwrap since we've checked that is is_some
         self.capture.is_some() && self.to != self.capture.unwrap().target
+    }
+    /// Generates a new non-capture move
+    pub fn new_move(to: Coordinate) -> BasicMove {
+        BasicMove { to, capture: None }
+    }
+    /// Generates a new capture move
+    pub fn new_capture(to: Coordinate, piece_type: PieceType) -> BasicMove {
+        BasicMove {
+            to,
+            capture: Some(Capture {
+                piece_type,
+                target: to,
+            }),
+        }
+    }
+
+    /// Generates a new en_passant move
+    pub fn new_en_passant(to: Coordinate, to_capture: Coordinate) -> BasicMove {
+        BasicMove {
+            to,
+            capture: Some(Capture {
+                piece_type: PieceType::Pawn,
+                target: to_capture,
+            }),
+        }
     }
 }
 
@@ -701,546 +726,579 @@ mod tests {
     use crate::pieces::{BoardPiece, PieceType};
 
     use super::*;
+    mod movement {
+        use super::*;
+        #[test]
+        fn test_linear_moves() {
+            let board = board::Board::default();
+            let result = linear_moves(&(4, 3).into(), &board, &PieceColor::Light);
+            // Make a new Vector and fill it with all possible Coordinates
+            let expected: Vec<BasicMove> = vec![
+                // North
+                BasicMove {
+                    to: (4, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (4, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (4, 6).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (4, 6).into(),
+                    }),
+                },
+                // East
+                BasicMove {
+                    to: (5, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (6, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (7, 3).into(),
+                    capture: None,
+                },
+                // South
+                BasicMove {
+                    to: (4, 2).into(),
+                    capture: None,
+                },
+                // West
+                BasicMove {
+                    to: (3, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (2, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (0, 3).into(),
+                    capture: None,
+                },
+            ];
 
-    #[test]
-    fn test_linear_moves() {
-        let board = board::Board::default();
-        let result = linear_moves(&(4, 3).into(), &board, &PieceColor::Light);
-        // Make a new Vector and fill it with all possible Coordinates
-        let expected: Vec<BasicMove> = vec![
-            // North
-            BasicMove {
-                to: (4, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (4, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (4, 6).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (4, 6).into(),
-                }),
-            },
-            // East
-            BasicMove {
-                to: (5, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (6, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (7, 3).into(),
-                capture: None,
-            },
-            // South
-            BasicMove {
-                to: (4, 2).into(),
-                capture: None,
-            },
-            // West
-            BasicMove {
-                to: (3, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (2, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (0, 3).into(),
-                capture: None,
-            },
-        ];
+            assert_eq!(expected, result);
 
-        assert_eq!(expected, result);
+            let gotc: Board =
+                Fen::from_str("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17")
+                    .unwrap()
+                    .into();
+            let moves_a1 = linear_moves(&(0, 7).into(), &gotc, &PieceColor::Dark);
+            let expected_moves_a1: Vec<BasicMove> = vec![
+                BasicMove {
+                    to: (1, 7).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (2, 7).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (3, 7).into(),
+                    capture: None,
+                },
+            ];
+            assert_eq!(expected_moves_a1, moves_a1);
+        }
 
-        let gotc: Board =
-            Fen::from_str("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17")
-                .unwrap()
-                .into();
-        let moves_a1 = linear_moves(&(0, 7).into(), &gotc, &PieceColor::Dark);
-        let expected_moves_a1: Vec<BasicMove> = vec![
-            BasicMove {
+        #[test]
+        fn test_explore_diagonal_moves() {
+            let empty_board = board::Board::empty();
+            // Calculate the moves in the North-east (upper-right) direction from 3,2(d3)
+            let result = explore_diagonal_direction(
+                DiagonalDirections::NE,
+                &3,
+                &2,
+                &PieceColor::Light,
+                &empty_board,
+            );
+            let expected: Vec<BasicMove> = vec![
+                BasicMove {
+                    to: (4, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (5, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (6, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (7, 6).into(),
+                    capture: None,
+                },
+            ];
+            assert_eq!(expected, result);
+
+            // Do the same for the North-west (upper-left) direction from h1
+            let result2 = explore_diagonal_direction(
+                DiagonalDirections::NW,
+                &7,
+                &0,
+                &PieceColor::Dark,
+                &empty_board,
+            );
+            let expected2: Vec<BasicMove> = vec![
+                BasicMove {
+                    to: (6, 1).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (5, 2).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (4, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (3, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (2, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 6).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (0, 7).into(),
+                    capture: None,
+                },
+            ];
+            assert_eq!(expected2, result2);
+
+            // Now do the whole thing with a filled board in the direction of NW (upper left) from e3
+            // The fen string for the bishop from this position would be: 'rnbqkbnr/pppppppp/8/8/8/4B3/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+            let default_board = Board::default();
+            let result3 = explore_diagonal_direction(
+                DiagonalDirections::NW,
+                &4,
+                &2,
+                &PieceColor::Light,
+                &default_board,
+            );
+            let expected3: Vec<BasicMove> = vec![
+                BasicMove {
+                    to: (3, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (2, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (0, 6).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (0, 6).into(),
+                    }),
+                },
+            ];
+            assert_eq!(expected3, result3);
+
+            // This should be empty as there are only two of our own pieces in that direction.
+            let result4 = explore_diagonal_direction(
+                DiagonalDirections::SE,
+                &3,
+                &2,
+                &PieceColor::Light,
+                &default_board,
+            );
+            let expected4: Vec<BasicMove> = vec![];
+            assert_eq!(expected4, result4);
+        }
+
+        #[test]
+        fn test_diagonal_moves() {
+            let board = Board::empty();
+            let result = diagonal_moves(&(4, 3).into(), &board, &PieceColor::Dark);
+            let expected: Vec<BasicMove> = vec![
+                // North-west (upper left)
+                BasicMove {
+                    to: (3, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (2, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 6).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (0, 7).into(),
+                    capture: None,
+                },
+                // North-east (upper right)
+                BasicMove {
+                    to: (5, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (6, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (7, 6).into(),
+                    capture: None,
+                },
+                // South-east (lower right)
+                BasicMove {
+                    to: (5, 2).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (6, 1).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (7, 0).into(),
+                    capture: None,
+                },
+                // South-west (lower left)
+                BasicMove {
+                    to: (3, 2).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (2, 1).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 0).into(),
+                    capture: None,
+                },
+            ];
+            assert_eq!(expected, result);
+            let result2 = diagonal_moves(&(3, 4).into(), &Default::default(), &PieceColor::Light);
+            let expected2: Vec<BasicMove> = vec![
+                // upper-left
+                BasicMove {
+                    to: (2, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 6).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (1, 6).into(),
+                    }),
+                },
+                // upper-right
+                BasicMove {
+                    to: (4, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (5, 6).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (5, 6).into(),
+                    }),
+                },
+                // lower-right
+                BasicMove {
+                    to: (4, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (5, 2).into(),
+                    capture: None,
+                },
+                // lower-left
+                BasicMove {
+                    to: (2, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 2).into(),
+                    capture: None,
+                },
+            ];
+            assert_eq!(expected2, result2);
+        }
+
+        #[test]
+        fn test_piece_is_on_square() {
+            let default_board = board::Board::default();
+            // Check where the pawn is in the default position
+            let pawn_coords: Coordinate = (0, 1).into();
+            let pawn = BoardPiece::new_from_type(PieceType::Pawn, pawn_coords, PieceColor::Light);
+            let piece = piece_on_square(&pawn_coords, &default_board);
+            assert_eq!(*piece.unwrap().as_ref().borrow().deref(), pawn);
+
+            let king_coords: Coordinate = (4, 7).into();
+            let king = BoardPiece::new_from_type(PieceType::King, king_coords, PieceColor::Dark);
+            let piece2 = piece_on_square(&king_coords, &default_board);
+            assert_eq!(king, *piece2.unwrap().as_ref().borrow().deref());
+        }
+
+        #[test]
+        fn test_pawn_moves() {
+            let default_board = board::Board::default();
+            let result = pawn_moves(&(0, 1).into(), &default_board, &PieceColor::Light, false);
+            let expected = vec![
+                BasicMove {
+                    to: (0, 2).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (0, 3).into(),
+                    capture: None,
+                },
+            ];
+            assert_eq!(expected, result);
+
+            let result2 = pawn_moves(&(2, 5).into(), &default_board, &PieceColor::Light, false);
+            let expected2 = vec![
+                BasicMove {
+                    to: (1, 6).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (1, 6).into(),
+                    }),
+                },
+                BasicMove {
+                    to: (3, 6).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (3, 6).into(),
+                    }),
+                },
+            ];
+            assert_eq!(expected2, result2);
+
+            let result3 = pawn_moves(&(7, 1).into(), &default_board, &PieceColor::Light, true);
+            let expected3 = vec![BasicMove {
+                to: (7, 2).into(),
+                capture: None,
+            }];
+            assert_eq!(expected3, result3);
+
+            let result4 = pawn_moves(&(0, 6).into(), &default_board, &PieceColor::Light, true);
+            let expected4 = vec![BasicMove {
                 to: (1, 7).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (2, 7).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (3, 7).into(),
-                capture: None,
-            },
-        ];
-        assert_eq!(expected_moves_a1, moves_a1);
+                capture: Some(Capture {
+                    piece_type: PieceType::Knight,
+                    target: (1, 7).into(),
+                }),
+            }];
+            assert_eq!(expected4, result4);
+        }
+
+        #[test]
+        fn test_knight_moves() {
+            let default_board = board::Board::default();
+            let result = knight_moves(&(3, 3).into(), &default_board, &PieceColor::Light);
+            let expected: Vec<BasicMove> = vec![
+                BasicMove {
+                    to: (5, 2).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (5, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (4, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (2, 5).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 2).into(),
+                    capture: None,
+                },
+            ];
+            assert_eq!(expected, result);
+            let result2 = knight_moves(&(3, 2).into(), &default_board, &PieceColor::Dark);
+            let expected2: Vec<BasicMove> = vec![
+                BasicMove {
+                    to: (5, 1).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (5, 1).into(),
+                    }),
+                },
+                BasicMove {
+                    to: (5, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (4, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (2, 4).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (1, 1).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (1, 1).into(),
+                    }),
+                },
+                BasicMove {
+                    to: (2, 0).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Bishop,
+                        target: (2, 0).into(),
+                    }),
+                },
+                BasicMove {
+                    to: (4, 0).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::King,
+                        target: (4, 0).into(),
+                    }),
+                },
+            ];
+            assert_eq!(expected2, result2);
+        }
+
+        #[test]
+        fn test_king_moves() {
+            let result = king_moves(&(4, 0).into(), &Default::default(), &PieceColor::Light);
+            let expected: Vec<BasicMove> = vec![];
+            assert_eq!(expected, result);
+            let result2 = king_moves(&(4, 2).into(), &Default::default(), &PieceColor::Light);
+            let expected2: Vec<BasicMove> = vec![
+                BasicMove {
+                    to: (5, 2).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (5, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (4, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (3, 3).into(),
+                    capture: None,
+                },
+                BasicMove {
+                    to: (3, 2).into(),
+                    capture: None,
+                },
+            ];
+            assert_eq!(expected2, result2);
+
+            let result3 = king_moves(&(4, 0).into(), &Default::default(), &PieceColor::Dark);
+            let expected3: Vec<BasicMove> = vec![
+                BasicMove {
+                    to: (5, 0).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Bishop,
+                        target: (5, 0).into(),
+                    }),
+                },
+                BasicMove {
+                    to: (5, 1).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (5, 1).into(),
+                    }),
+                },
+                BasicMove {
+                    to: (4, 1).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (4, 1).into(),
+                    }),
+                },
+                BasicMove {
+                    to: (3, 1).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (3, 1).into(),
+                    }),
+                },
+                BasicMove {
+                    to: (3, 0).into(),
+                    capture: Some(Capture {
+                        piece_type: PieceType::Queen,
+                        target: (3, 0).into(),
+                    }),
+                },
+            ];
+            assert_eq!(expected3, result3);
+        }
+
+        #[test]
+        fn test_get_castle_moves() {
+            let default_board = board::Board::default();
+            let result = get_castle_moves(
+                default_board.get_castle_state(),
+                &PieceColor::Dark,
+                &default_board,
+            );
+            let expected: Vec<CastleMove> = vec![];
+            assert_eq!(expected, result);
+        }
     }
+    mod basic_move {
+        use super::*;
+        #[test]
+        fn test_new_move() {
+            let to: Coordinate = (1, 0).into();
+            let basic_move = BasicMove::new_move((1, 0).into());
+            assert!(basic_move.get_capture().is_none());
+            assert_eq!(to, basic_move.to);
+        }
 
-    #[test]
-    fn test_explore_diagonal_moves() {
-        let empty_board = board::Board::empty();
-        // Calculate the moves in the North-east (upper-right) direction from 3,2(d3)
-        let result = explore_diagonal_direction(
-            DiagonalDirections::NE,
-            &3,
-            &2,
-            &PieceColor::Light,
-            &empty_board,
-        );
-        let expected: Vec<BasicMove> = vec![
-            BasicMove {
-                to: (4, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (5, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (6, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (7, 6).into(),
-                capture: None,
-            },
-        ];
-        assert_eq!(expected, result);
+        #[test]
+        fn test_new_capture() {
+            let to: Coordinate = (1, 0).into();
+            let basic_move = BasicMove::new_capture(to, PieceType::Bishop);
+            assert_eq!(to, basic_move.to);
+            assert_eq!(
+                PieceType::Bishop,
+                basic_move.get_capture().unwrap().piece_type
+            );
+            assert_eq!(to, basic_move.get_capture().unwrap().target);
+        }
 
-        // Do the same for the North-west (upper-left) direction from h1
-        let result2 = explore_diagonal_direction(
-            DiagonalDirections::NW,
-            &7,
-            &0,
-            &PieceColor::Dark,
-            &empty_board,
-        );
-        let expected2: Vec<BasicMove> = vec![
-            BasicMove {
-                to: (6, 1).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (5, 2).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (4, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (3, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (2, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 6).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (0, 7).into(),
-                capture: None,
-            },
-        ];
-        assert_eq!(expected2, result2);
-
-        // Now do the whole thing with a filled board in the direction of NW (upper left) from e3
-        // The fen string for the bishop from this position would be: 'rnbqkbnr/pppppppp/8/8/8/4B3/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-        let default_board = Board::default();
-        let result3 = explore_diagonal_direction(
-            DiagonalDirections::NW,
-            &4,
-            &2,
-            &PieceColor::Light,
-            &default_board,
-        );
-        let expected3: Vec<BasicMove> = vec![
-            BasicMove {
-                to: (3, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (2, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (0, 6).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (0, 6).into(),
-                }),
-            },
-        ];
-        assert_eq!(expected3, result3);
-
-        // This should be empty as there are only two of our own pieces in that direction.
-        let result4 = explore_diagonal_direction(
-            DiagonalDirections::SE,
-            &3,
-            &2,
-            &PieceColor::Light,
-            &default_board,
-        );
-        let expected4: Vec<BasicMove> = vec![];
-        assert_eq!(expected4, result4);
-    }
-
-    #[test]
-    fn test_diagonal_moves() {
-        let board = Board::empty();
-        let result = diagonal_moves(&(4, 3).into(), &board, &PieceColor::Dark);
-        let expected: Vec<BasicMove> = vec![
-            // North-west (upper left)
-            BasicMove {
-                to: (3, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (2, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 6).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (0, 7).into(),
-                capture: None,
-            },
-            // North-east (upper right)
-            BasicMove {
-                to: (5, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (6, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (7, 6).into(),
-                capture: None,
-            },
-            // South-east (lower right)
-            BasicMove {
-                to: (5, 2).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (6, 1).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (7, 0).into(),
-                capture: None,
-            },
-            // South-west (lower left)
-            BasicMove {
-                to: (3, 2).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (2, 1).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 0).into(),
-                capture: None,
-            },
-        ];
-        assert_eq!(expected, result);
-        let result2 = diagonal_moves(&(3, 4).into(), &Default::default(), &PieceColor::Light);
-        let expected2: Vec<BasicMove> = vec![
-            // upper-left
-            BasicMove {
-                to: (2, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 6).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (1, 6).into(),
-                }),
-            },
-            // upper-right
-            BasicMove {
-                to: (4, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (5, 6).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (5, 6).into(),
-                }),
-            },
-            // lower-right
-            BasicMove {
-                to: (4, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (5, 2).into(),
-                capture: None,
-            },
-            // lower-left
-            BasicMove {
-                to: (2, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 2).into(),
-                capture: None,
-            },
-        ];
-        assert_eq!(expected2, result2);
-    }
-
-    #[test]
-    fn test_piece_is_on_square() {
-        let default_board = board::Board::default();
-        // Check where the pawn is in the default position
-        let pawn_coords: Coordinate = (0, 1).into();
-        let pawn = BoardPiece::new_from_type(PieceType::Pawn, pawn_coords, PieceColor::Light);
-        let piece = piece_on_square(&pawn_coords, &default_board);
-        assert_eq!(*piece.unwrap().as_ref().borrow().deref(), pawn);
-
-        let king_coords: Coordinate = (4, 7).into();
-        let king = BoardPiece::new_from_type(PieceType::King, king_coords, PieceColor::Dark);
-        let piece2 = piece_on_square(&king_coords, &default_board);
-        assert_eq!(king, *piece2.unwrap().as_ref().borrow().deref());
-    }
-
-    #[test]
-    fn test_pawn_moves() {
-        let default_board = board::Board::default();
-        let result = pawn_moves(&(0, 1).into(), &default_board, &PieceColor::Light, false);
-        let expected = vec![
-            BasicMove {
-                to: (0, 2).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (0, 3).into(),
-                capture: None,
-            },
-        ];
-        assert_eq!(expected, result);
-
-        let result2 = pawn_moves(&(2, 5).into(), &default_board, &PieceColor::Light, false);
-        let expected2 = vec![
-            BasicMove {
-                to: (1, 6).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (1, 6).into(),
-                }),
-            },
-            BasicMove {
-                to: (3, 6).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (3, 6).into(),
-                }),
-            },
-        ];
-        assert_eq!(expected2, result2);
-
-        let result3 = pawn_moves(&(7, 1).into(), &default_board, &PieceColor::Light, true);
-        let expected3 = vec![BasicMove {
-            to: (7, 2).into(),
-            capture: None,
-        }];
-        assert_eq!(expected3, result3);
-
-        let result4 = pawn_moves(&(0, 6).into(), &default_board, &PieceColor::Light, true);
-        let expected4 = vec![BasicMove {
-            to: (1, 7).into(),
-            capture: Some(Capture {
-                piece_type: PieceType::Knight,
-                target: (1, 7).into(),
-            }),
-        }];
-        assert_eq!(expected4, result4);
-    }
-
-    #[test]
-    fn test_knight_moves() {
-        let default_board = board::Board::default();
-        let result = knight_moves(&(3, 3).into(), &default_board, &PieceColor::Light);
-        let expected: Vec<BasicMove> = vec![
-            BasicMove {
-                to: (5, 2).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (5, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (4, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (2, 5).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 2).into(),
-                capture: None,
-            },
-        ];
-        assert_eq!(expected, result);
-        let result2 = knight_moves(&(3, 2).into(), &default_board, &PieceColor::Dark);
-        let expected2: Vec<BasicMove> = vec![
-            BasicMove {
-                to: (5, 1).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (5, 1).into(),
-                }),
-            },
-            BasicMove {
-                to: (5, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (4, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (2, 4).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (1, 1).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (1, 1).into(),
-                }),
-            },
-            BasicMove {
-                to: (2, 0).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Bishop,
-                    target: (2, 0).into(),
-                }),
-            },
-            BasicMove {
-                to: (4, 0).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::King,
-                    target: (4, 0).into(),
-                }),
-            },
-        ];
-        assert_eq!(expected2, result2);
-    }
-
-    #[test]
-    fn test_king_moves() {
-        let result = king_moves(&(4, 0).into(), &Default::default(), &PieceColor::Light);
-        let expected: Vec<BasicMove> = vec![];
-        assert_eq!(expected, result);
-        let result2 = king_moves(&(4, 2).into(), &Default::default(), &PieceColor::Light);
-        let expected2: Vec<BasicMove> = vec![
-            BasicMove {
-                to: (5, 2).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (5, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (4, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (3, 3).into(),
-                capture: None,
-            },
-            BasicMove {
-                to: (3, 2).into(),
-                capture: None,
-            },
-        ];
-        assert_eq!(expected2, result2);
-
-        let result3 = king_moves(&(4, 0).into(), &Default::default(), &PieceColor::Dark);
-        let expected3: Vec<BasicMove> = vec![
-            BasicMove {
-                to: (5, 0).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Bishop,
-                    target: (5, 0).into(),
-                }),
-            },
-            BasicMove {
-                to: (5, 1).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (5, 1).into(),
-                }),
-            },
-            BasicMove {
-                to: (4, 1).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (4, 1).into(),
-                }),
-            },
-            BasicMove {
-                to: (3, 1).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Pawn,
-                    target: (3, 1).into(),
-                }),
-            },
-            BasicMove {
-                to: (3, 0).into(),
-                capture: Some(Capture {
-                    piece_type: PieceType::Queen,
-                    target: (3, 0).into(),
-                }),
-            },
-        ];
-        assert_eq!(expected3, result3);
-    }
-
-    #[test]
-    fn test_get_castle_moves() {
-        let default_board = board::Board::default();
-        let result = get_castle_moves(
-            default_board.get_castle_state(),
-            &PieceColor::Dark,
-            &default_board,
-        );
-        let expected: Vec<CastleMove> = vec![];
-        assert_eq!(expected, result);
+        #[test]
+        fn test_new_en_passant() {
+            let to: Coordinate = (4, 4).into();
+            let target: Coordinate = (5, 5).into();
+            let basic_move = BasicMove::new_en_passant((4, 4).into(), (5, 5).into());
+            assert_eq!(to, basic_move.to);
+            assert_eq!(target, basic_move.get_capture().unwrap().target);
+        }
     }
 }

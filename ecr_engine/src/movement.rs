@@ -5,8 +5,8 @@ use ecr_shared::coordinate::Coordinate;
 
 use crate::board;
 use crate::board::SquareInner;
-use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::pieces::move_gen::{BasicMove, Capture, CastleMove, CastleMoveType};
+use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Moves;
 
 struct MoveProperties {
@@ -76,7 +76,10 @@ impl board::Board {
             .set_coordinate(move_properties.target_square);
 
         if move_properties.capture.is_some() {
-            self.capture_piece(&move_properties.inner, move_properties.capture.unwrap().target);
+            self.capture_piece(
+                &move_properties.inner,
+                move_properties.capture.unwrap().target,
+            );
         }
 
         let mut piece_to_add: BoardPiece = move_properties
@@ -90,7 +93,6 @@ impl board::Board {
 
         if move_properties.promotion {
             // TODO: We need some way to choose a different piece if we can do a promotion. For now every promotion we do is just to the queen.
-            // TODO: Test Promotion
             piece_to_add = BoardPiece::new_from_type(
                 PieceType::Queen,
                 move_properties.target_square,
@@ -337,6 +339,18 @@ impl board::Board {
     pub fn check_move_gen(&self) -> Vec<BasicMove> {
         todo!()
     }
+
+    /// Returns true if the move is legal, false if it is illegal.
+    pub fn check_if_legal_move(&self, start: Coordinate, basic_move: &BasicMove) -> bool {
+        // Clone the current board
+        let mut future_board = self.clone();
+        // Do the move in the cloned board
+        future_board.r#move(start, &basic_move);
+        match future_board.light_to_move {
+            true => !future_board.check_checker(PieceColor::Light),
+            false => !future_board.check_checker(PieceColor::Dark),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -356,7 +370,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_move() {
+        fn test_movement() {
             let mut default_board = Board::default();
             default_board.r#move(
                 (7, 1).into(),
@@ -369,7 +383,10 @@ mod tests {
             assert_eq!(0, default_board.get_half_move_amount());
             assert_eq!(false, default_board.get_light_to_move());
             assert_eq!(None, default_board.get_at((7, 1).into()));
-            assert_eq!("rnbqkbnr/pppppppp/8/8/7P/8/PPPPPPP1/RNBQKBNR b KQkq - 0 1".to_string(), Fen::from(default_board.clone()).to_string());
+            assert_eq!(
+                "rnbqkbnr/pppppppp/8/8/7P/8/PPPPPPP1/RNBQKBNR b KQkq - 0 1".to_string(),
+                Fen::from(default_board.clone()).to_string()
+            );
             assert!(default_board.get_at((7, 3).into()).is_some());
             // TODO: Test the Position of all pieces.
             default_board.r#move(
@@ -379,7 +396,10 @@ mod tests {
                     capture: None,
                 },
             );
-            assert_eq!("rnbqkbnr/pppppp1p/8/6p1/7P/8/PPPPPPP1/RNBQKBNR w KQkq - 0 2".to_string(), Fen::from(default_board.clone()).to_string());
+            assert_eq!(
+                "rnbqkbnr/pppppp1p/8/6p1/7P/8/PPPPPPP1/RNBQKBNR w KQkq - 0 2".to_string(),
+                Fen::from(default_board.clone()).to_string()
+            );
             default_board.r#move(
                 (7, 0).into(),
                 &BasicMove {
@@ -388,7 +408,10 @@ mod tests {
                 },
             );
             // TODO: The light king can't castle kingside here, but for now this has to work.
-            assert_eq!("rnbqkbnr/pppppp1p/8/6p1/7P/7R/PPPPPPP1/RNBQKBN1 b KQkq - 1 2".to_string(), Fen::from(default_board.clone()).to_string());
+            assert_eq!(
+                "rnbqkbnr/pppppp1p/8/6p1/7P/7R/PPPPPPP1/RNBQKBN1 b KQkq - 1 2".to_string(),
+                Fen::from(default_board.clone()).to_string()
+            );
             default_board.r#move(
                 (6, 4).into(),
                 &BasicMove {
@@ -400,9 +423,15 @@ mod tests {
                 },
             );
             // TODO: The King can't castle Kingside here
-            assert_eq!("rnbqkbnr/pppppp1p/8/8/7p/7R/PPPPPPP1/RNBQKBN1 w KQkq - 0 3".to_string(), Fen::from(default_board.clone()).to_string());
+            assert_eq!(
+                "rnbqkbnr/pppppp1p/8/8/7p/7R/PPPPPPP1/RNBQKBN1 w KQkq - 0 3".to_string(),
+                Fen::from(default_board.clone()).to_string()
+            );
             assert!(!default_board.clone().get_en_passant_target().is_some());
             assert_eq!(None, default_board.get_at((6, 4).into()));
+            assert!(!default_board.check_checker(PieceColor::Light));
+            assert!(!default_board.check_checker(PieceColor::Dark));
+            // TODO: Test Promotion
         }
 
         #[test]
@@ -423,6 +452,10 @@ mod tests {
                 Board::from(Fen::from_str("2k5/8/8/8/8/2R5/8/2K5 b - - 3 6").unwrap());
             light_check = check_board.check_checker(PieceColor::Light);
             assert_eq!(true, light_check);
+        }
+
+        fn test_check_if_legal_move() {
+            let mut default_board = Board::default();
         }
 
         #[test]
