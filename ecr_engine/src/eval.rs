@@ -37,4 +37,14 @@ fn position_value(board: &Board) -> f32 {
     0.0
 }
 
-// TODO: Move function tests here.
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_evaluate_pieces() {
+        let default_board = Board::default();
+        assert_eq!(0, evaluate_pieces(&default_board));
+        let empty_board = Board::empty();
+        assert_eq!(0, evaluate_pieces(&empty_board));
+    }
+}
