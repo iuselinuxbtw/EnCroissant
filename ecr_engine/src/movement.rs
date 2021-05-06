@@ -120,7 +120,7 @@ impl board::Board {
         );
 
         // Change the to move team
-        self.light_to_move = !self.light_to_move;
+        self.to_move = self.to_move.get_opponent();
         // Calculate all new threats (This could probably be simplified)
         self.calculate_threatened_states();
         // Check if the move is legal
@@ -342,14 +342,14 @@ impl board::Board {
 
     /// Returns true if the move is legal, false if it is illegal.
     pub fn check_if_legal_move(&self, start: Coordinate, basic_move: &BasicMove) -> bool {
+        // TODO: Testing
         // Clone the current board
         let mut future_board = self.clone();
         // Do the move in the cloned board
         future_board.r#move(start, &basic_move);
-        match future_board.light_to_move {
-            true => !future_board.check_checker(PieceColor::Light),
-            false => !future_board.check_checker(PieceColor::Dark),
-        }
+        // Check if the the king can be captured by the team that can currently move.
+        // We need to invert the result since moves where the opponent does not have check after are legal.
+        !future_board.check_checker(future_board.to_move)
     }
 }
 
