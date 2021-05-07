@@ -2,69 +2,114 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use ecr_engine::board::Board;
 use ecr_engine::pieces::move_gen::*;
-use ecr_engine::pieces::PieceColor;
+use ecr_engine::pieces::{PieceColor, BoardPiece};
+use ecr_shared::pieces::PieceType;
+
+/// Generates a light-colored piece of the given type for every square on the board.
+fn generate_pieces_of_type(piece_type: PieceType) -> Vec<BoardPiece>{
+    let mut result: Vec<BoardPiece> = vec![];
+    for x in 0..7{
+        for y in 0..=7{
+            result.push(BoardPiece::new_from_type(piece_type, (x,y).into(), PieceColor::Light));
+        }
+    }
+    result
+}
+
 
 // TODO: Do these with other values. Maybe iterate through all values.
 fn bench_pawn_moves(b: &mut Criterion) {
+    // TODO: En_passant(Though we should get some board for this...)
+    let pieces = generate_pieces_of_type(PieceType::Pawn);
+    let default_board = Board::default();
     b.bench_function("Pawn moves", |c| {
         c.iter(|| {
-            pawn_moves(
-                &black_box((5, 6).into()),
-                &Default::default(),
-                &PieceColor::Light,
-                false,
-            )
+            for piece in &pieces {
+                piece.get_piece().get_pseudo_legal_moves(&default_board,
+                                                        &piece.get_coordinate(),
+                                                        &PieceColor::Light,
+                                                        false,);
+            }
         })
     });
 }
 
-fn bench_linear_moves(b: &mut Criterion) {
-    b.bench_function("Linear moves", |c| {
+fn bench_rook_moves(b: &mut Criterion) {
+    let pieces = generate_pieces_of_type(PieceType::Rook);
+    let default_board = Board::default();
+    b.bench_function("Rook moves", |c| {
         c.iter(|| {
-            linear_moves(
-                &black_box((5, 6).into()),
-                &Default::default(),
-                &PieceColor::Light,
-            )
+            // TODO: This should be a macro...
+            for piece in &pieces {
+                piece.get_piece().get_pseudo_legal_moves(&default_board,
+                                                        &piece.get_coordinate(),
+                                                        &PieceColor::Light,
+                                                        false,);
+            }
         })
     });
 }
 
-fn bench_diagonal_moves(b: &mut Criterion) {
-    b.bench_function("Diagonal moves", |c| {
+fn bench_bishop_moves(b: &mut Criterion) {
+    let pieces = generate_pieces_of_type(PieceType::Bishop);
+    let default_board = Board::default();
+    b.bench_function("Bishop moves", |c| {
         c.iter(|| {
-            diagonal_moves(
-                &black_box((5, 6).into()),
-                &Default::default(),
-                &PieceColor::Light,
-            )
+            for piece in &pieces {
+                piece.get_piece().get_pseudo_legal_moves(&default_board,
+                                                        &piece.get_coordinate(),
+                                                        &PieceColor::Light,
+                                                        false,);
+            }
         })
     });
 }
 
 fn bench_king_moves(b: &mut Criterion) {
+    let pieces = generate_pieces_of_type(PieceType::King);
+    let default_board = Board::default();
     b.bench_function("King moves", |c| {
         c.iter(|| {
-            king_moves(
-                &black_box((5, 6).into()),
-                &Default::default(),
-                &PieceColor::Light,
-            )
+            for piece in &pieces {
+                piece.get_piece().get_pseudo_legal_moves(&default_board,
+                                                        &piece.get_coordinate(),
+                                                        &PieceColor::Light,
+                                                        false,);
+            }
         })
     });
 }
 
 fn bench_knight_moves(b: &mut Criterion) {
+    let pieces = generate_pieces_of_type(PieceType::Knight);
+    let default_board = Board::default();
     b.bench_function("Knight moves", |c| {
         c.iter(|| {
-            diagonal_moves(
-                &black_box((5, 6).into()),
-                &Default::default(),
-                &PieceColor::Light,
-            )
+            for piece in &pieces {
+                piece.get_piece().get_pseudo_legal_moves(&default_board,
+                                                        &piece.get_coordinate(),
+                                                        &PieceColor::Light,
+                                                        false,);
+            }
         })
     });
 }
+
+fn bench_queen_moves(b: &mut Criterion){
+    let pieces = generate_pieces_of_type(PieceType::Queen);
+    let default_board = Board::default();
+    b.bench_function("Queen moves", |c| {
+        c.iter(|| {
+            for piece in &pieces {
+                piece.get_piece().get_pseudo_legal_moves(&default_board,
+                                                        &piece.get_coordinate(),
+                                                        &PieceColor::Light,
+                                                        false,);
+            }
+        })
+    });
+}
+
 
 fn bench_evaluation(b: &mut Criterion) {
     let default_board = Board::default();
@@ -80,7 +125,7 @@ fn bench_move(b: &mut Criterion) {
     b.bench_function("Move", |c| {
         c.iter(|| {
             // The best opening move known to mankind
-            default_board.r#move(
+            default_board.clone().r#move(
                 (5, 1).into(),
                 &BasicMove {
                     to: (5, 2).into(),
@@ -108,7 +153,7 @@ fn bench_get_castle_moves(b: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = bench_pawn_moves, bench_linear_moves, bench_diagonal_moves, bench_king_moves, bench_knight_moves, bench_evaluation, bench_move, bench_get_castle_moves
+    targets = bench_pawn_moves, bench_rook_moves, bench_bishop_moves, bench_king_moves, bench_knight_moves, bench_queen_moves, bench_evaluation, bench_move, bench_get_castle_moves
 }
 
 criterion_main!(benches);

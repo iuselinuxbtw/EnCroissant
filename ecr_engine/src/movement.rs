@@ -431,6 +431,18 @@ mod tests {
             assert_eq!(None, default_board.get_at((6, 4).into()));
             assert!(!default_board.check_checker(PieceColor::Light));
             assert!(!default_board.check_checker(PieceColor::Dark));
+            default_board = Board::default();
+            // The best opening move known to mankind
+            default_board.r#move(
+                (5, 1).into(),
+                &BasicMove {
+                    to: (5, 2).into(),
+                    capture: None,
+                },
+            )
+
+
+
             // TODO: Test Promotion
         }
 
