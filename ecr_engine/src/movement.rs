@@ -466,11 +466,11 @@ mod tests {
             assert_eq!(true, light_check);
         }
 
-        #[test]
+        /*#[test]
         fn test_check_if_legal_move() {
             let mut default_board = Board::default();
             todo!()
-        }
+        }*/
 
         #[test]
         fn test_get_all_pseudo_legal_moves() {
