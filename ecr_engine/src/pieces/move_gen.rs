@@ -40,7 +40,7 @@ impl BasicMove {
 
     /// Returns whether the target square is threatened. Useful for king movement.
     pub fn get_is_threatened(&self, board: &board::Board, team: PieceColor) -> bool {
-        let state = board.is_threatened(self.get_target_square());
+        let state = board.get_threatened_state(self.get_target_square());
         match team {
             PieceColor::Light => state.threatened_dark > 0,
             PieceColor::Dark => state.threatened_light > 0,
@@ -521,8 +521,8 @@ pub fn get_castle_moves(
                 // And if a piece is in the way
                 && no_piece_in_the_way(board, (3, 0).into(), LinearDirections::W, 3)
                 // We have to check if one of the squares is threatened
-                && board.is_threatened((3, 0).into()).threatened_dark == 0
-                && board.is_threatened((2, 0).into()).threatened_dark == 0
+                && board.get_threatened_state((3, 0).into()).threatened_dark == 0
+                && board.get_threatened_state((2, 0).into()).threatened_dark == 0
             {
                 result.push(CastleMove {
                     to: (2, 0).into(),
@@ -530,9 +530,9 @@ pub fn get_castle_moves(
                 })
             }
             if castle_state.light_king_side
-                && no_piece_in_the_way(board, (5,0).into(), LinearDirections::E, 2)
-                && board.is_threatened((5, 0).into()).threatened_dark == 0
-                && board.is_threatened((6, 0).into()).threatened_dark == 0
+                && no_piece_in_the_way(board, (5, 0).into(), LinearDirections::E, 2)
+                && board.get_threatened_state((5, 0).into()).threatened_dark == 0
+                && board.get_threatened_state((6, 0).into()).threatened_dark == 0
             {
                 result.push(CastleMove {
                     to: (6, 0).into(),
@@ -543,8 +543,8 @@ pub fn get_castle_moves(
         PieceColor::Dark => {
             if castle_state.dark_queen_side
                 && no_piece_in_the_way(board, (3, 7).into(), LinearDirections::W, 3)
-                && board.is_threatened((3, 7).into()).threatened_light == 0
-                && board.is_threatened((4, 7).into()).threatened_light == 0
+                && board.get_threatened_state((3, 7).into()).threatened_light == 0
+                && board.get_threatened_state((4, 7).into()).threatened_light == 0
             {
                 result.push(CastleMove {
                     to: (2, 7).into(),
@@ -552,9 +552,9 @@ pub fn get_castle_moves(
                 })
             }
             if castle_state.dark_king_side
-                && no_piece_in_the_way(board, (5,7).into(), LinearDirections::E, 2)
-                && board.is_threatened((5, 7).into()).threatened_light == 0
-                && board.is_threatened((6, 7).into()).threatened_light == 0
+                && no_piece_in_the_way(board, (5, 7).into(), LinearDirections::E, 2)
+                && board.get_threatened_state((5, 7).into()).threatened_light == 0
+                && board.get_threatened_state((6, 7).into()).threatened_light == 0
             {
                 result.push(CastleMove {
                     to: (6, 7).into(),
@@ -567,35 +567,40 @@ pub fn get_castle_moves(
 }
 
 /// Returns true if there is no piece in the way. Useful for [`get_castle_moves`]
-fn no_piece_in_the_way(board:&board::Board, start: Coordinate, direction:LinearDirections, range: u8) -> bool{
+fn no_piece_in_the_way(
+    board: &board::Board,
+    start: Coordinate,
+    direction: LinearDirections,
+    range: u8,
+) -> bool {
     let x = start.get_x();
     let y = start.get_y();
     match direction {
         LinearDirections::N => {
-            for increment in 0..range{
-                if piece_on_square((x,y+increment).into(), board).is_some() {
-                    return false
+            for increment in 0..range {
+                if piece_on_square((x, y + increment).into(), board).is_some() {
+                    return false;
                 }
             }
         }
         LinearDirections::E => {
-            for increment in 0..range{
-                if piece_on_square((x+increment,y).into(), board).is_some() {
-                    return false
+            for increment in 0..range {
+                if piece_on_square((x + increment, y).into(), board).is_some() {
+                    return false;
                 }
             }
         }
         LinearDirections::S => {
-            for decrement in 0..range{
-                if piece_on_square((x,y-decrement).into(), board).is_some() {
-                    return false
+            for decrement in 0..range {
+                if piece_on_square((x, y - decrement).into(), board).is_some() {
+                    return false;
                 }
             }
         }
         LinearDirections::W => {
-            for decrement in 0..range{
-                if piece_on_square((x-decrement,y).into(), board).is_some() {
-                    return false
+            for decrement in 0..range {
+                if piece_on_square((x - decrement, y).into(), board).is_some() {
+                    return false;
                 }
             }
         }

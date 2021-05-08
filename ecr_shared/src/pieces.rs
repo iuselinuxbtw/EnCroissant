@@ -23,7 +23,7 @@ impl PieceType {
     }
     /// Returns the fen piece code
     pub fn get_fen_piece_code(&self) -> char {
-        match self{
+        match self {
             PieceType::Pawn => 'p',
             PieceType::Knight => 'n',
             PieceType::Bishop => 'b',

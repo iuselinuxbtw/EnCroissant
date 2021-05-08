@@ -66,6 +66,12 @@ impl ThreatenedState {
         self.threatened_dark = 0;
         self.threatened_light = 0;
     }
+    pub fn get_by_team(&self, team: PieceColor) -> u8 {
+        match team {
+            PieceColor::Light => self.threatened_light,
+            PieceColor::Dark => self.threatened_dark,
+        }
+    }
 }
 
 impl Board {
@@ -105,7 +111,7 @@ impl Board {
 
     /// Returns if the next move should be done by the light color.
     pub fn get_light_to_move(&self) -> bool {
-        match self.to_move{
+        match self.to_move {
             PieceColor::Light => true,
             PieceColor::Dark => false,
         }
@@ -183,10 +189,10 @@ impl Board {
     }
 
     /// This function is useful for castling and checking whether a trade would be beneficial.
-    pub fn is_threatened(&self, square: Coordinate) -> &ThreatenedState {
+    pub fn get_threatened_state(&self, square: Coordinate) -> ThreatenedState {
         // We assume that the given coordinate is valid.
         let column = self.threatened_state.get(square.get_x() as usize).unwrap();
-        column.get(square.get_y() as usize).unwrap()
+        *column.get(square.get_y() as usize).unwrap()
     }
 
     /// Sets the target square to the given ThreatenedState
@@ -208,7 +214,7 @@ impl Board {
 
     /// Adds a threat to the square by the given team.
     pub fn add_threat(&mut self, square: Coordinate, team: PieceColor) {
-        let mut current_state = self.is_threatened(square).clone();
+        let mut current_state = self.get_threatened_state(square).clone();
         match team {
             PieceColor::Light => {
                 current_state.threatened_light += 1;
@@ -388,9 +394,9 @@ impl From<Fen> for Board {
         board.half_move_amount = f.half_moves;
         board.en_passant_target = f.en_passant;
         board.castle_state = f.castles;
-        match f.light_to_move{
-            true => board.to_move=PieceColor::Light,
-            false => board.to_move=PieceColor::Dark,
+        match f.light_to_move {
+            true => board.to_move = PieceColor::Light,
+            false => board.to_move = PieceColor::Dark,
         }
 
         // Add all pieces to the board
@@ -643,11 +649,26 @@ mod tests {
                 },
                 board.castle_state
             );
-            assert_eq!(1, board.is_threatened((4, 0).into()).threatened_light);
-            assert_eq!(1, board.is_threatened((4, 1).into()).threatened_light);
-            assert_eq!(1, board.is_threatened((4, 3).into()).threatened_light);
-            assert_eq!(1, board.is_threatened((4, 4).into()).threatened_light);
-            assert_eq!(1, board.is_threatened((3, 0).into()).threatened_light);
+            assert_eq!(
+                1,
+                board.get_threatened_state((4, 0).into()).threatened_light
+            );
+            assert_eq!(
+                1,
+                board.get_threatened_state((4, 1).into()).threatened_light
+            );
+            assert_eq!(
+                1,
+                board.get_threatened_state((4, 3).into()).threatened_light
+            );
+            assert_eq!(
+                1,
+                board.get_threatened_state((4, 4).into()).threatened_light
+            );
+            assert_eq!(
+                1,
+                board.get_threatened_state((3, 0).into()).threatened_light
+            );
         }
 
         #[test]
@@ -730,15 +751,15 @@ mod tests {
                 threatened_dark: 3,
             };
             empty_board.set_threatened(square, state);
-            let result = empty_board.is_threatened(square);
-            let expected = &ThreatenedState {
+            let result = empty_board.get_threatened_state(square);
+            let expected = ThreatenedState {
                 threatened_light: 1,
                 threatened_dark: 3,
             };
             assert_eq!(result, expected);
 
-            let state = empty_board.is_threatened((0, 0).into());
-            let expected2 = &ThreatenedState {
+            let state = empty_board.get_threatened_state((0, 0).into());
+            let expected2 = ThreatenedState {
                 threatened_light: 0,
                 threatened_dark: 0,
             };

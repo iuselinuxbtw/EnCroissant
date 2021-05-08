@@ -5,14 +5,15 @@ use std::ops::Deref;
 use ecr_shared::pieces::PieceColor;
 
 use crate::board;
-use crate::board::Board;
+use crate::board::{Board, ThreatenedState};
+use ecr_shared::coordinate::Coordinate;
 
 impl board::Board {
     pub fn eval(&self) -> f32 {
         let piece_value = evaluate_pieces(self);
         let position_value = position_value(self);
 
-        piece_value as f32 + position_value
+        (piece_value as u64+ position_value) as f32
     }
 }
 
@@ -32,9 +33,41 @@ fn evaluate_pieces(board: &Board) -> u8 {
     value_light - value_dark
 }
 
-fn position_value(board: &Board) -> f32 {
-    //TODO
-    0.0
+
+///
+fn position_value(board: &Board) -> u64 {
+    let middle_squares = vec![
+        Coordinate { y: 3, x: 3 },
+        Coordinate { y: 4, x: 3 },
+        Coordinate { y: 3, x: 4 },
+        Coordinate { y: 4, x: 4 },
+    ];
+    // For now we calculate the ThreatenedStates
+    get_threatened_score(
+        get_threatened_states(board, middle_squares.clone()),
+        PieceColor::Light,
+    ) - get_threatened_score(
+        get_threatened_states(board, middle_squares),
+        PieceColor::Dark,
+    )
+    // TODO: Multiply this and consider the other squares.
+}
+
+fn get_threatened_states(board: &Board, coords: Vec<Coordinate>) -> Vec<ThreatenedState> {
+    let mut result = vec![];
+    for coord in coords {
+        result.push(board.get_threatened_state(coord));
+    }
+    result
+}
+
+/// Gets the threats of a particular team on given squares
+fn get_threatened_score(states: Vec<ThreatenedState>, team: PieceColor) -> u64 {
+    let mut result:u64 = 0;
+    for state in states {
+        result += state.get_by_team(team) as u64;
+    }
+    result
 }
 
 mod tests {

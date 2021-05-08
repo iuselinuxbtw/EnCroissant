@@ -30,7 +30,6 @@ pub struct Moves {
     pub basic_move: Vec<BasicMove>,
 }
 
-
 impl Moves {
     /// Returns whether the moves of a piece contain a check(If the piece could capture the king if nothing is done)
     pub fn contains_check(&self) -> bool {

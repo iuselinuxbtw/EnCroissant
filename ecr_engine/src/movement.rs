@@ -44,8 +44,8 @@ impl MoveProperties {
 
         if let PieceType::Pawn = piece_type {
             // But if it is a pawn we do kinda wanna promote our piece
-                promotion = board.is_pawn_promotion(target_square);
-                en_passant = board.check_en_passant(target_square);
+            promotion = board.is_pawn_promotion(target_square);
+            en_passant = board.check_en_passant(target_square);
         }
         // And lastly we return the complete MoveProperties
         MoveProperties {
@@ -220,8 +220,8 @@ impl board::Board {
                 );
             }
         }
-        self.half_move_amount-=1;
-        self.move_number-=1;
+        self.half_move_amount -= 1;
+        self.move_number -= 1;
         self.castle_state = BoardCastleState::empty();
     }
 
@@ -439,8 +439,6 @@ mod tests {
                     capture: None,
                 },
             )
-
-
 
             // TODO: Test Promotion
         }
