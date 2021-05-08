@@ -30,12 +30,6 @@ pub struct Moves {
     pub basic_move: Vec<BasicMove>,
 }
 
-impl Moves {
-    /// Checks if the Moves contain a promotion (Only call this with a pawn as the piece type is not checked).
-    pub fn check_for_promotions(&mut self) -> bool {
-        todo!()
-    }
-}
 
 impl Moves {
     /// Returns whether the moves of a piece contain a check(If the piece could capture the king if nothing is done)
