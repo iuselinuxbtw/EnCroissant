@@ -115,7 +115,7 @@ fn bench_evaluation(b: &mut Criterion) {
     let default_board = Board::default();
     b.bench_function("Evaluation", |c| {
         c.iter(|| {
-            default_board.eval_board();
+            black_box(default_board.eval_board());
         })
     });
 }
@@ -126,7 +126,7 @@ fn bench_move(b: &mut Criterion) {
         c.iter(|| {
             // The best opening move known to mankind
             default_board.clone().r#move(
-                (5, 1).into(),
+                black_box((5, 1).into()),
                 &BasicMove {
                     to: (5, 2).into(),
                     capture: None,
@@ -141,7 +141,7 @@ fn bench_get_castle_moves(b: &mut Criterion) {
     b.bench_function("Get Castle Moves", |c| {
         c.iter(|| {
             get_castle_moves(
-                default_board.get_castle_state(),
+                black_box(default_board.get_castle_state()),
                 &PieceColor::Light,
                 &default_board,
             )
