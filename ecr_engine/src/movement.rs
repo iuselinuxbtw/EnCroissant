@@ -8,6 +8,7 @@ use crate::board::SquareInner;
 use crate::pieces::move_gen::{BasicMove, Capture, CastleMove, CastleMoveType};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Moves;
+use ecr_shared::board::BoardCastleState;
 
 struct MoveProperties {
     inner: SquareInner,
@@ -157,7 +158,6 @@ impl board::Board {
         match castle_move.move_type {
             CastleMoveType::LightKingSide => {
                 // Move the king
-                // TODO: These increase the move counter two times and add two half_moves, which should not happen.
                 self.r#move(
                     (4, 0).into(),
                     &BasicMove {
@@ -223,6 +223,9 @@ impl board::Board {
                 );
             }
         }
+        self.half_move_amount-=1;
+        self.move_number-=1;
+        self.castle_state = BoardCastleState::empty();
     }
 
     fn is_pawn_promotion(&self, target: Coordinate) -> bool {

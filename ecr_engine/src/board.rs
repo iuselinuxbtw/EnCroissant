@@ -43,7 +43,7 @@ pub struct Board {
 
     /// Which castle actions are allowed? Only contains if it would be theoretically allowed, not
     /// representing if the castle would be blocked by another piece or similar.
-    castle_state: BoardCastleState,
+    pub(crate) castle_state: BoardCastleState,
 
     /// Specifies the en passant target square that is currently possible. Only contains if it
     /// would be allowed theoretically, not checking if it would actually be possible.
