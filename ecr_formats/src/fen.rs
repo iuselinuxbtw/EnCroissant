@@ -216,15 +216,7 @@ impl Display for FenPiecePlacements {
                     }
 
                     // Create the piece code according to the type and color of it
-                    // TODO: Make an own function for this
-                    let mut piece_code = match v.2 {
-                        PieceType::Pawn => 'p',
-                        PieceType::Knight => 'n',
-                        PieceType::Bishop => 'b',
-                        PieceType::Rook => 'r',
-                        PieceType::Queen => 'q',
-                        PieceType::King => 'k',
-                    };
+                    let mut piece_code = v.2.get_fen_piece_code();
                     if v.1 == PieceColor::Light {
                         piece_code = piece_code.to_ascii_uppercase();
                     }

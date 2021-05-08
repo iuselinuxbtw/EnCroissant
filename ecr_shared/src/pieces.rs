@@ -21,6 +21,17 @@ impl PieceType {
             PieceType::King => "K",
         }
     }
+    /// Returns the fen piece code
+    pub fn get_fen_piece_code(&self) -> char {
+        match self{
+            PieceType::Pawn => 'p',
+            PieceType::Knight => 'n',
+            PieceType::Bishop => 'b',
+            PieceType::Rook => 'r',
+            PieceType::Queen => 'q',
+            PieceType::King => 'k',
+        }
+    }
 }
 
 /// The color of a piece.
