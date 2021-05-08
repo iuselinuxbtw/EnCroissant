@@ -391,7 +391,6 @@ mod tests {
                 Fen::from(default_board.clone()).to_string()
             );
             assert!(default_board.get_at((7, 3).into()).is_some());
-            // TODO: Test the Position of all pieces.
             default_board.r#move(
                 (6, 6).into(),
                 &BasicMove {

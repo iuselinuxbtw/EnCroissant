@@ -519,9 +519,7 @@ pub fn get_castle_moves(
             if castle_state.light_queen_side
                 //&& board.is_threatened((4, 0).into()) == 0 This check is redundant since the check_move_gen will never call this function.
                 // And if a piece is in the way
-                && board.get_at((3, 0).into()).is_none()
-                && board.get_at((2, 0).into()).is_none()
-                && board.get_at((1, 0).into()).is_none()
+                && no_piece_in_the_way(board, (3, 0).into(), LinearDirections::W, 3)
                 // We have to check if one of the squares is threatened
                 && board.is_threatened((3, 0).into()).threatened_dark == 0
                 && board.is_threatened((2, 0).into()).threatened_dark == 0
@@ -532,8 +530,7 @@ pub fn get_castle_moves(
                 })
             }
             if castle_state.light_king_side
-                && board.get_at((5, 0).into()).is_none()
-                && board.get_at((6, 0).into()).is_none()
+                && no_piece_in_the_way(board, (5,0).into(), LinearDirections::E, 2)
                 && board.is_threatened((5, 0).into()).threatened_dark == 0
                 && board.is_threatened((6, 0).into()).threatened_dark == 0
             {
@@ -545,9 +542,7 @@ pub fn get_castle_moves(
         }
         PieceColor::Dark => {
             if castle_state.dark_queen_side
-                && board.get_at((2, 7).into()).is_none()
-                && board.get_at((3, 7).into()).is_none()
-                && board.get_at((4, 7).into()).is_none()
+                && no_piece_in_the_way(board, (3, 7).into(), LinearDirections::W, 3)
                 && board.is_threatened((3, 7).into()).threatened_light == 0
                 && board.is_threatened((4, 7).into()).threatened_light == 0
             {
@@ -557,8 +552,7 @@ pub fn get_castle_moves(
                 })
             }
             if castle_state.dark_king_side
-                && board.get_at((5, 7).into()).is_none()
-                && board.get_at((6, 7).into()).is_none()
+                && no_piece_in_the_way(board, (5,7).into(), LinearDirections::E, 2)
                 && board.is_threatened((5, 7).into()).threatened_light == 0
                 && board.is_threatened((6, 7).into()).threatened_light == 0
             {
@@ -570,6 +564,43 @@ pub fn get_castle_moves(
         }
     }
     result
+}
+
+/// Returns true if there is no piece in the way. Useful for [`get_castle_moves`]
+fn no_piece_in_the_way(board:&board::Board, start: Coordinate, direction:LinearDirections, range: u8) -> bool{
+    let x = start.get_x();
+    let y = start.get_y();
+    match direction {
+        LinearDirections::N => {
+            for increment in 0..range{
+                if piece_on_square((x,y+increment).into(), board).is_some() {
+                    return false
+                }
+            }
+        }
+        LinearDirections::E => {
+            for increment in 0..range{
+                if piece_on_square((x+increment,y).into(), board).is_some() {
+                    return false
+                }
+            }
+        }
+        LinearDirections::S => {
+            for decrement in 0..range{
+                if piece_on_square((x,y-decrement).into(), board).is_some() {
+                    return false
+                }
+            }
+        }
+        LinearDirections::W => {
+            for decrement in 0..range{
+                if piece_on_square((x-decrement,y).into(), board).is_some() {
+                    return false
+                }
+            }
+        }
+    }
+    true
 }
 
 /// This functions is useful for finding out whether or not a pawn can move forwards by returning
