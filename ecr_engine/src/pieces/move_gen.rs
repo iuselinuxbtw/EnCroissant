@@ -271,13 +271,13 @@ pub fn pawn_moves(
 
     // If there is no piece in front of our pawn we can move there.
     if !piece_in_front(start, team_color, board, 1) {
-        &result.push(BasicMove {
+        result.push(BasicMove {
             to: (from_x, next_r).into(),
             capture: None,
         });
         // If this is the first move of the pawn and there is not a Piece in the way we can move two squares.
         if !piece_in_front(start, team_color, board, 2) && !has_moved {
-            &result.push(BasicMove {
+            result.push(BasicMove {
                 to: (from_x, next_row(from_y, team_color, 2)).into(),
                 capture: None,
             });
@@ -295,16 +295,16 @@ pub fn pawn_moves(
 
     // Iterate through both possible captures
     for possible_capture in capture_diagonal {
-        let square_inner = piece_on_square(possible_capture.clone(), board);
+        let square_inner = piece_on_square(possible_capture, board);
         // If there is a piece on the square
         if let Some(e) = square_inner {
             // If it is the opponent's piece, we add the capture move.
             if &e.as_ref().borrow().deref().get_color() != team_color {
-                &result.push(BasicMove {
-                    to: possible_capture.clone(),
+                result.push(BasicMove {
+                    to: possible_capture,
                     capture: Some(Capture {
                         piece_type: e.deref().borrow().get_piece().get_type(),
-                        target: possible_capture.clone(),
+                        target: possible_capture,
                     }),
                 });
             }
@@ -314,7 +314,7 @@ pub fn pawn_moves(
             None => {}
             Some(t) => {
                 if possible_capture == t {
-                    &result.push(BasicMove {
+                    result.push(BasicMove {
                         to: possible_capture,
                         capture: Some(Capture {
                             piece_type: PieceType::Pawn,
@@ -342,34 +342,34 @@ pub fn knight_moves(
     // This covers the positions from the right against the clock to the left and then down
     if border_distances.right > 1 {
         if border_distances.down > 0 {
-            &queue.push(KnightDirections::ES);
+            queue.push(KnightDirections::ES);
         }
         if border_distances.up > 0 {
-            &queue.push(KnightDirections::EN);
+            queue.push(KnightDirections::EN);
         }
     }
     if border_distances.up > 1 {
         if border_distances.left > 0 {
-            &queue.push(KnightDirections::NE);
+            queue.push(KnightDirections::NE);
         }
         if border_distances.right > 0 {
-            &queue.push(KnightDirections::NW);
+            queue.push(KnightDirections::NW);
         }
     }
     if border_distances.left > 1 {
         if border_distances.up > 0 {
-            &queue.push(KnightDirections::WN);
+            queue.push(KnightDirections::WN);
         }
         if border_distances.down > 0 {
-            &queue.push(KnightDirections::WS);
+            queue.push(KnightDirections::WS);
         }
     }
     if border_distances.down > 1 {
         if border_distances.left > 0 {
-            &queue.push(KnightDirections::SW);
+            queue.push(KnightDirections::SW);
         }
         if border_distances.right > 0 {
-            &queue.push(KnightDirections::SE);
+            queue.push(KnightDirections::SE);
         }
     }
     for e in queue {
@@ -431,27 +431,27 @@ pub fn king_moves(
 
     // This can be made smarter by only adding the linear directions and filling the diagonals afterwards
     if border_distances.right > 0 {
-        &queue.push(Directions::E);
+        queue.push(Directions::E);
         if border_distances.up > 0 {
-            &queue.push(Directions::NE);
+            queue.push(Directions::NE);
         }
     }
     if border_distances.up > 0 {
-        &queue.push(Directions::N);
+        queue.push(Directions::N);
         if border_distances.left > 0 {
-            &queue.push(Directions::NW);
+            queue.push(Directions::NW);
         }
     }
     if border_distances.left > 0 {
-        &queue.push(Directions::W);
+        queue.push(Directions::W);
         if border_distances.down > 0 {
-            &queue.push(Directions::SW);
+            queue.push(Directions::SW);
         }
     }
     if border_distances.down > 0 {
-        &queue.push(Directions::S);
+        queue.push(Directions::S);
         if border_distances.right > 0 {
-            &queue.push(Directions::SE);
+            queue.push(Directions::SE);
         }
     }
     // Now we iterate through the possible directions and check if the positions are possible.
@@ -611,15 +611,11 @@ fn piece_in_front(
     board: &board::Board,
     step: u8,
 ) -> bool {
-    let mut next_coordinate: Coordinate = from.clone();
+    let mut next_coordinate: Coordinate = *from;
 
     next_coordinate.y = next_row(from.get_y(), team_color, step);
     // Return false if there is not a piece in front of it.
-    if piece_on_square(next_coordinate, board).is_none() {
-        false
-    } else {
-        true
-    }
+    piece_on_square(next_coordinate, board).is_some()
 }
 
 /// Returns the possible diagonal moves of a piece with the given coordinates as a vector of

@@ -87,7 +87,7 @@ pub fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
 /// higher, otherwise it's lower). So far there is no check whether the returning row is valid but in
 /// most variants it is impossible since the pawn promotes when reaching the last row.
 pub fn next_row(y: u8, team_color: &PieceColor, step: u8) -> u8 {
-    let mut result: u8 = y.clone();
+    let mut result: u8 = y;
     // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
     if team_color == &PieceColor::Light {
         result += step;

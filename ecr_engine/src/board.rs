@@ -186,9 +186,7 @@ impl Board {
     pub fn is_threatened(&self, square: Coordinate) -> &ThreatenedState {
         // We assume that the given coordinate is valid.
         let column = self.threatened_state.get(square.get_x() as usize).unwrap();
-        let state = column.get(square.get_y() as usize).unwrap();
-
-        state
+        column.get(square.get_y() as usize).unwrap()
     }
 
     /// Sets the target square to the given ThreatenedState
@@ -205,7 +203,7 @@ impl Board {
         // And finally replace it since this function would be pointless otherwise...
         // We need to create a vector since the replace_with needs to be an iterator.
         // This can probably be solved more elegantly than with a range and iterator but it works...
-        column.splice(column_index_range, vec![state.clone()]);
+        column.splice(column_index_range, vec![state]);
     }
 
     /// Adds a threat to the square by the given team.
@@ -251,7 +249,7 @@ impl Board {
     pub fn get_team_pieces(&self, team_color: PieceColor) -> Vec<&RefCell<BoardPiece>> {
         let mut result = vec![];
         for piece in &self.pieces {
-            if piece.as_ref().borrow().deref().get_color().clone() == team_color {
+            if piece.as_ref().borrow().deref().get_color() == team_color {
                 result.push(piece.deref());
             }
         }

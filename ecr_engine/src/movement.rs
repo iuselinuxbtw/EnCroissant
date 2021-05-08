@@ -42,13 +42,10 @@ impl MoveProperties {
         let mut promotion = false;
         let mut en_passant = false;
 
-        match piece_type {
+        if let PieceType::Pawn = piece_type {
             // But if it is a pawn we do kinda wanna promote our piece
-            PieceType::Pawn => {
                 promotion = board.is_pawn_promotion(target_square);
                 en_passant = board.check_en_passant(target_square);
-            }
-            _ => {}
         }
         // And lastly we return the complete MoveProperties
         MoveProperties {
