@@ -73,12 +73,6 @@ impl board::Board {
             .borrow_mut()
             .set_coordinate(move_properties.target_square);
 
-        if move_properties.capture.is_some() {
-            self.capture_piece(
-                &move_properties.inner,
-                move_properties.capture.unwrap().target,
-            );
-        }
 
         let mut piece_to_add: BoardPiece = move_properties
             .inner
@@ -96,8 +90,18 @@ impl board::Board {
                 move_properties.target_square,
                 piece_to_add.get_color(),
             );
-        } else if move_properties.en_passant {
-            // TODO: We need to find out the en_passant target square and capture there.
+        }
+
+        if move_properties.capture.is_some() {
+            let mut target=move_properties.capture.unwrap().target;
+            if move_properties.en_passant {
+                // We can safely unwrap here since en_passant is only true if  en_passant is possible.
+                target = self.get_en_passant_target().unwrap().actual_square;
+            }
+            self.capture_piece(
+                &move_properties.inner,
+                target,
+            );
         }
 
         // The piece has now moved
@@ -137,10 +141,11 @@ impl board::Board {
         self.pieces.retain(|piece| piece != inner);
     }
 
-    /// This checks if a move done by a pawn is en_passant, this is not optimal but works...
+    /// This checks if a move by a pawn is en_passant. We need this so we can then capture the pawn
+    /// on another square.
     pub fn check_en_passant(&self, target: Coordinate) -> bool {
         if let Some(coordinate) = self.get_en_passant_target() {
-            if coordinate == target {
+            if coordinate.target_square == target {
                 return true;
             }
         }

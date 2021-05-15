@@ -310,10 +310,8 @@ pub fn pawn_moves(
             }
         }
         // TODO: Test en_passant
-        match board.get_en_passant_target() {
-            None => {}
-            Some(t) => {
-                if possible_capture == t {
+        if let Some(t) = board.get_en_passant_target() {
+                if possible_capture == t.target_square {
                     result.push(BasicMove {
                         to: possible_capture,
                         capture: Some(Capture {
@@ -322,7 +320,6 @@ pub fn pawn_moves(
                             target: (6, 1).into(),
                         }),
                     });
-                }
             }
         }
     }

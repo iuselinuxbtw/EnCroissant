@@ -42,6 +42,16 @@ fn position_value(board: &Board) -> u64 {
         Coordinate { y: 3, x: 4 },
         Coordinate { y: 4, x: 4 },
     ];
+
+    let mut other_squares:Vec<Coordinate> = vec![];
+    for x in 0..=7{
+        for y in 0..=7{
+            other_squares.push((x,y).into());
+        }
+    }
+    for square in &middle_squares {
+        other_squares.retain(|s| s!=square);
+    }
     // For now we calculate the ThreatenedStates
     get_threatened_score(
         get_threatened_states(board, middle_squares.clone()),
@@ -50,7 +60,13 @@ fn position_value(board: &Board) -> u64 {
         get_threatened_states(board, middle_squares),
         PieceColor::Dark,
     )
-    // TODO: Multiply this and consider the other squares.
+    + get_threatened_score(
+        get_threatened_states(board, other_squares.clone()),
+        PieceColor::Light
+    )
+    - get_threatened_score(get_threatened_states(board, other_squares),
+        PieceColor::Dark
+    )
 }
 
 fn get_threatened_states(board: &Board, coords: Vec<Coordinate>) -> Vec<ThreatenedState> {

@@ -8,7 +8,7 @@ use ecr_shared::coordinate::Coordinate;
 
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
-use crate::utils::new_rc_refcell;
+use crate::utils::{new_rc_refcell, get_en_passant_actual};
 
 // Just exists so we can safely
 
@@ -47,10 +47,33 @@ pub struct Board {
 
     /// Specifies the en passant target square that is currently possible. Only contains if it
     /// would be allowed theoretically, not checking if it would actually be possible.
-    en_passant_target: Option<Coordinate>,
+    en_passant: Option<EnPassant>,
 
     /// Specifies how many times each square is threatened by a team.
     threatened_state: Vec<Vec<ThreatenedState>>,
+}
+
+/// If an en_passant is possible gives the target square where the pawn can also be captured and the
+/// actual square the pawn is on.
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub struct EnPassant{
+    pub target_square: Coordinate,
+    pub actual_square: Coordinate,
+}
+
+impl EnPassant{
+    pub fn new_from_target_square(target_square: Coordinate) -> EnPassant{
+        EnPassant{
+            target_square,
+            actual_square: get_en_passant_actual(target_square),
+        }
+    }
+    pub fn from_option(square: Option<Coordinate>) -> Option<EnPassant>{
+        if let Some(target_square) = square{
+            return Some(EnPassant::new_from_target_square(target_square))
+        }
+        None
+    }
 }
 
 /// Consists of two u8s that tell how many times each team threatens a square. Useful for
@@ -85,7 +108,7 @@ impl Board {
             move_number: 1,
             half_move_amount: 0,
             castle_state: BoardCastleState::default(),
-            en_passant_target: None,
+            en_passant: None,
             threatened_state: vec![
                 vec![
                     ThreatenedState {
@@ -179,8 +202,15 @@ impl Board {
     }
 
     /// Returns the currently possible en passant target square.
-    pub fn get_en_passant_target(&self) -> Option<Coordinate> {
-        self.en_passant_target
+    pub fn get_en_passant_target(&self) -> Option<EnPassant> {
+        self.en_passant
+    }
+
+    pub fn get_en_passant_target_option(&self) -> Option<Coordinate>{
+        if let Some(en_passant) = self.get_en_passant_target() {
+            return Some(en_passant.target_square)
+        }
+        None
     }
 
     /// Returns all pieces that are on the [`Board`].
@@ -392,7 +422,7 @@ impl From<Fen> for Board {
         // Set the attributes of the board state
         board.move_number = f.move_number;
         board.half_move_amount = f.half_moves;
-        board.en_passant_target = f.en_passant;
+        board.en_passant = EnPassant::from_option(f.en_passant);
         board.castle_state = f.castles;
         match f.light_to_move {
             true => board.to_move = PieceColor::Light,
@@ -416,7 +446,7 @@ impl From<Board> for Fen {
             piece_placements: FenPiecePlacements { pieces: Vec::new() },
             light_to_move: board.get_light_to_move(),
             castles: *board.get_castle_state(), // Copy is implemented for BoardCastleState
-            en_passant: board.get_en_passant_target(),
+            en_passant: board.get_en_passant_target_option(),
             half_moves: board.get_half_move_amount(),
             move_number: board.get_move_number(),
         };
@@ -460,7 +490,7 @@ mod tests {
                 },
                 b.castle_state
             );
-            assert_eq!(None, b.en_passant_target);
+            assert_eq!(None, b.en_passant);
 
             assert_eq!(0, b.moves.len());
             assert_eq!(0, b.pieces.len());
@@ -596,10 +626,13 @@ mod tests {
         #[test]
         fn test_get_en_passant_target() {
             let mut b = Board::empty();
-            assert_eq!(None, b.en_passant_target);
+            assert_eq!(None, b.en_passant);
 
-            b.en_passant_target = Some((3, 4).into());
-            assert_eq!(Some((3, 4).into()), b.get_en_passant_target());
+            b.en_passant = Some(EnPassant::new_from_target_square((3, 4).into()));
+            assert_eq!(Some(EnPassant{
+                target_square: (3, 4).into(),
+                actual_square: (3,5).into()
+            }), b.get_en_passant_target());
         }
 
         #[test]
@@ -637,7 +670,7 @@ mod tests {
             );
 
             assert_eq!(PieceColor::Dark, board.to_move);
-            assert_eq!(None, board.en_passant_target);
+            assert_eq!(None, board.en_passant);
             assert_eq!(3, board.half_move_amount);
             assert_eq!(6, board.move_number);
             assert_eq!(
