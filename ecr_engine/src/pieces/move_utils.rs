@@ -35,7 +35,7 @@ macro_rules! check_square {
 /// be used outside of a loop.
 // TODO: Dumb macro name, change this
 #[macro_export]
-macro_rules! check_move {
+macro_rules! check_this_move {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
         let possible_square =  coordinate_check(&$x, &$y , $team_color, $board);
         // If the square is occupied by a piece

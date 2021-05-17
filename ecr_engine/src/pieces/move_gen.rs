@@ -10,7 +10,7 @@ use crate::board;
 use crate::board::{Board, BoardCastleState};
 use crate::pieces::move_utils::{coordinate_check, distance_to_border, next_row, piece_on_square};
 use crate::pieces::PieceColor;
-use crate::{check_move, check_square};
+use crate::{check_this_move, check_square};
 
 // TODO: Move to ecr_engine/src/move_gen package.
 
@@ -388,28 +388,28 @@ fn explore_knight_moves(
     let mut result: Vec<BasicMove> = vec![];
     match direction {
         KnightDirections::WN => {
-            check_move!(from_x - 2, from_y + 1, team_color, result, board);
+            check_this_move!(from_x - 2, from_y + 1, team_color, result, board);
         }
         KnightDirections::EN => {
-            check_move!(from_x + 2, from_y + 1, team_color, result, board);
+            check_this_move!(from_x + 2, from_y + 1, team_color, result, board);
         }
         KnightDirections::ES => {
-            check_move!(from_x + 2, from_y - 1, team_color, result, board);
+            check_this_move!(from_x + 2, from_y - 1, team_color, result, board);
         }
         KnightDirections::WS => {
-            check_move!(from_x - 2, from_y - 1, team_color, result, board);
+            check_this_move!(from_x - 2, from_y - 1, team_color, result, board);
         }
         KnightDirections::NW => {
-            check_move!(from_x - 1, from_y + 2, team_color, result, board);
+            check_this_move!(from_x - 1, from_y + 2, team_color, result, board);
         }
         KnightDirections::NE => {
-            check_move!(from_x + 1, from_y + 2, team_color, result, board);
+            check_this_move!(from_x + 1, from_y + 2, team_color, result, board);
         }
         KnightDirections::SE => {
-            check_move!(from_x + 1, from_y - 2, team_color, result, board);
+            check_this_move!(from_x + 1, from_y - 2, team_color, result, board);
         }
         KnightDirections::SW => {
-            check_move!(from_x - 1, from_y - 2, team_color, result, board);
+            check_this_move!(from_x - 1, from_y - 2, team_color, result, board);
         }
     }
     result
@@ -469,28 +469,28 @@ fn explore_king_moves(
     let from_y = start.get_y();
     match direction {
         Directions::N => {
-            check_move!((from_x), (from_y + 1), team_color, result, board);
+            check_this_move!((from_x), (from_y + 1), team_color, result, board);
         }
         Directions::E => {
-            check_move!((from_x + 1), (from_y), team_color, result, board);
+            check_this_move!((from_x + 1), (from_y), team_color, result, board);
         }
         Directions::S => {
-            check_move!((from_x), (from_y - 1), team_color, result, board);
+            check_this_move!((from_x), (from_y - 1), team_color, result, board);
         }
         Directions::W => {
-            check_move!((from_x - 1), (from_y), team_color, result, board);
+            check_this_move!((from_x - 1), (from_y), team_color, result, board);
         }
         Directions::NW => {
-            check_move!((from_x - 1), (from_y + 1), team_color, result, board);
+            check_this_move!((from_x - 1), (from_y + 1), team_color, result, board);
         }
         Directions::NE => {
-            check_move!((from_x + 1), (from_y + 1), team_color, result, board);
+            check_this_move!((from_x + 1), (from_y + 1), team_color, result, board);
         }
         Directions::SE => {
-            check_move!((from_x + 1), (from_y - 1), team_color, result, board);
+            check_this_move!((from_x + 1), (from_y - 1), team_color, result, board);
         }
         Directions::SW => {
-            check_move!((from_x - 1), (from_y - 1), team_color, result, board);
+            check_this_move!((from_x - 1), (from_y - 1), team_color, result, board);
         }
     }
     // The king cannot move into a threatened square
