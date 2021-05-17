@@ -26,7 +26,7 @@ fn get_moves_of_pieces(pieces: Vec<BoardPiece>, board: &board::Board) {
         piece.get_piece().get_pseudo_legal_moves(
             board,
             &piece.get_coordinate(),
-            &PieceColor::Light,
+            PieceColor::Light,
             false,
         );
     }
