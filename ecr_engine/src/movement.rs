@@ -241,7 +241,6 @@ impl board::Board {
 
     /// This function is called every move and is responsible for increasing/resetting the half move counter.
     fn count_half_moves(&mut self, piece_type: PieceType, capture: bool) {
-        // TODO: Testing
         match piece_type {
             PieceType::Pawn => self.half_move_amount = 0,
             _ => self.half_move_amount += 1,
@@ -473,6 +472,19 @@ mod tests {
             let mut default_board = Board::default();
             todo!()
         }*/
+
+        #[test]
+        fn test_count_half_moves(){
+            let mut board = Board::default();
+            board.count_half_moves(PieceType::Pawn, false);
+            assert_eq!(0, board.get_half_move_amount());
+            board.count_half_moves(PieceType::Bishop, false);
+            assert_eq!(1, board.get_half_move_amount());
+            board.count_half_moves(PieceType::Queen, false);
+            assert_eq!(2, board.get_half_move_amount());
+            board.count_half_moves(PieceType::Queen, true);
+            assert_eq!(0, board.get_half_move_amount());
+        }
 
         #[test]
         fn test_get_all_pseudo_legal_moves() {
