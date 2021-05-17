@@ -17,7 +17,7 @@ impl Piece for Queen {
         &self,
         board: &Board,
         piece_coordinate: &Coordinate,
-        piece_color: &PieceColor,
+        piece_color: PieceColor,
         #[allow(unused_variables)] has_moved: bool,
     ) -> Vec<BasicMove> {
         let mut result: Vec<BasicMove> = vec![];
@@ -57,7 +57,7 @@ mod tests {
         let default_board = board::Board::default();
         let piece = Queen {};
         let result =
-            piece.get_pseudo_legal_moves(&default_board, &(3, 4).into(), &PieceColor::Dark, true);
+            piece.get_pseudo_legal_moves(&default_board, &(3, 4).into(), PieceColor::Dark, true);
         let expected: Vec<BasicMove> = vec![
             // North
             BasicMove {

@@ -290,7 +290,7 @@ impl board::Board {
                     &self,
                     // These calls seem kinda dumb and i don't know why we need the first deref now but it works fine. If Anyone wants to improve them please do so.
                     &square_inner.deref().borrow().borrow().get_coordinate(),
-                    &square_inner.deref().borrow().borrow().get_color(),
+                    square_inner.deref().borrow().borrow().get_color(),
                     square_inner.deref().borrow().borrow().get_has_moved(),
                 );
             // We don't want to have Pieces which cannot move in the final array.

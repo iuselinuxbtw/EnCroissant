@@ -17,7 +17,7 @@ impl Piece for Pawn {
         &self,
         board: &Board,
         piece_coordinate: &Coordinate,
-        piece_color: &PieceColor,
+        piece_color: PieceColor,
         has_moved: bool,
     ) -> Vec<BasicMove> {
         pawn_moves(piece_coordinate, board, piece_color, has_moved)

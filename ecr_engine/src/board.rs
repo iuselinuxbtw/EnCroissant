@@ -293,7 +293,6 @@ impl Board {
     }
 }
 
-// TODO: Find a better solution for this, since this takes over 100 lines
 impl Default for Board {
     /// Returns the board with the default chess pieces placed on it.
     fn default() -> Self {

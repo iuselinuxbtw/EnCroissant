@@ -17,7 +17,7 @@ impl Piece for Rook {
         &self,
         board: &Board,
         piece_coordinate: &Coordinate,
-        piece_color: &PieceColor,
+        piece_color: PieceColor,
         #[allow(unused_variables)] has_moved: bool,
     ) -> Vec<BasicMove> {
         linear_moves(piece_coordinate, board, piece_color)

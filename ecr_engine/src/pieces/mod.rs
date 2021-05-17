@@ -38,7 +38,7 @@ pub trait Piece: Debug + Clone {
         &self,
         board: &Board,
         piece_coordinate: &Coordinate,
-        piece_color: &PieceColor,
+        piece_color: PieceColor,
         has_moved: bool,
     ) -> Vec<BasicMove>;
 
@@ -173,7 +173,7 @@ mod tests {
                 &self,
                 board: &Board,
                 piece_coordinate: &Coordinate,
-                piece_color: &PieceColor,
+                piece_color: PieceColor,
                 has_moved: bool,
                 ) -> Vec<BasicMove>;
             fn get_value(&self) -> u8;

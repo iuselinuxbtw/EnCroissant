@@ -85,10 +85,10 @@ pub fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
 /// This function returns the next row of the corresponding team. (If the team_color is white it's
 /// higher, otherwise it's lower). So far there is no check whether the returning row is valid but in
 /// most variants it is impossible since the pawn promotes when reaching the last row.
-pub fn next_row(y: u8, team_color: &PieceColor, step: u8) -> u8 {
+pub fn next_row(y: u8, team_color: PieceColor, step: u8) -> u8 {
     let mut result: u8 = y;
     // The next row for a pawn is higher if the piece is light and lower if the pawn is dark.
-    if team_color == &PieceColor::Light {
+    if team_color == PieceColor::Light {
         result += step;
     } else {
         result -= step;
@@ -100,7 +100,7 @@ pub fn next_row(y: u8, team_color: &PieceColor, step: u8) -> u8 {
 pub fn coordinate_check(
     x: &u8,
     y: &u8,
-    team_color: &PieceColor,
+    team_color: PieceColor,
     board: &board::Board,
 ) -> (Option<PieceType>, bool) {
     let square = (*x as u8, *y as u8).into();
@@ -111,8 +111,7 @@ pub fn coordinate_check(
 /// The second element returns true if it is an enemy piece, false otherwise.
 fn square_check(
     square: Coordinate,
-    // TODO: This should not be a reference(Probably optimized by the compiler, but isn't nice)
-    team_color: &PieceColor,
+    team_color: PieceColor,
     board: &board::Board,
 ) -> (Option<PieceType>, bool) {
     // We need to check if the square is occupied to avoid calculating non-reachable coordinates
@@ -121,7 +120,7 @@ fn square_check(
         // Check whether it is our own piece.
         Some(i) => {
             let piece_type = i.deref().borrow().get_piece().get_type();
-            if i.as_ref().borrow().deref().get_color() == *team_color {
+            if i.as_ref().borrow().deref().get_color() == team_color {
                 (Some(piece_type), false)
             } else {
                 (Some(piece_type), true)

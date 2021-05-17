@@ -17,7 +17,7 @@ impl Piece for Knight {
         &self,
         board: &Board,
         piece_coordinate: &Coordinate,
-        piece_color: &PieceColor,
+        piece_color: PieceColor,
         #[allow(unused_variables)] has_moved: bool,
     ) -> Vec<BasicMove> {
         knight_moves(piece_coordinate, board, piece_color)

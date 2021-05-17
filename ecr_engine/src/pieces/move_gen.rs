@@ -172,7 +172,7 @@ enum Directions {
 pub fn linear_moves(
     start: &Coordinate,
     board: &board::Board,
-    team_color: &PieceColor,
+    team_color: PieceColor,
 ) -> Vec<BasicMove> {
     // First we initialize a new vector, which we later return
     let mut result: Vec<BasicMove> = Vec::new();
@@ -220,7 +220,7 @@ fn explore_linear_direction(
     direction: LinearDirections,
     from_x: u8,
     from_y: u8,
-    team_color: &PieceColor,
+    team_color: PieceColor,
     board: &board::Board,
 ) -> Vec<BasicMove> {
     // Create a vector that will be returned at the end.
@@ -231,25 +231,25 @@ fn explore_linear_direction(
         LinearDirections::N => {
             while y < 7 {
                 y += 1;
-                check_square!(x, y, &team_color, result, board);
+                check_square!(x, y, team_color, result, board);
             }
         }
         LinearDirections::E => {
             while x < 7 {
                 x += 1;
-                check_square!(x, y, &team_color, result, board);
+                check_square!(x, y, team_color, result, board);
             }
         }
         LinearDirections::S => {
             while y > 0 {
                 y -= 1;
-                check_square!(x, y, &team_color, result, board);
+                check_square!(x, y, team_color, result, board);
             }
         }
         LinearDirections::W => {
             while x > 0 {
                 x -= 1;
-                check_square!(x, y, &team_color, result, board);
+                check_square!(x, y, team_color, result, board);
             }
         }
     };
@@ -260,7 +260,7 @@ fn explore_linear_direction(
 pub fn pawn_moves(
     start: &Coordinate,
     board: &board::Board,
-    team_color: &PieceColor,
+    team_color: PieceColor,
     has_moved: bool,
 ) -> Vec<BasicMove> {
     let mut result: Vec<BasicMove> = Vec::new();
@@ -299,7 +299,7 @@ pub fn pawn_moves(
         // If there is a piece on the square
         if let Some(e) = square_inner {
             // If it is the opponent's piece, we add the capture move.
-            if &e.as_ref().borrow().deref().get_color() != team_color {
+            if e.as_ref().borrow().deref().get_color() != team_color {
                 result.push(BasicMove {
                     to: possible_capture,
                     capture: Some(Capture {
@@ -316,7 +316,6 @@ pub fn pawn_moves(
                         to: possible_capture,
                         capture: Some(Capture {
                             piece_type: PieceType::Pawn,
-                            // TODO: We need the acutal coordinate of the pawn to capture
                             target: (6, 1).into(),
                         }),
                     });
@@ -330,7 +329,7 @@ pub fn pawn_moves(
 pub fn knight_moves(
     start: &Coordinate,
     board: &board::Board,
-    team_color: &PieceColor,
+    team_color: PieceColor,
 ) -> Vec<BasicMove> {
     // This queue is used to add the directions which can be scanned without resulting in invalid coordinates.
     let mut queue: Vec<KnightDirections> = vec![];
@@ -380,7 +379,7 @@ pub fn knight_moves(
 /// directions accordingly.
 fn explore_knight_moves(
     start: &Coordinate,
-    team_color: &PieceColor,
+    team_color: PieceColor,
     board: &board::Board,
     direction: KnightDirections,
 ) -> Vec<BasicMove> {
@@ -420,7 +419,7 @@ fn explore_knight_moves(
 pub fn king_moves(
     start: &Coordinate,
     board: &board::Board,
-    team_color: &PieceColor,
+    team_color: PieceColor,
 ) -> Vec<BasicMove> {
     let mut result: Vec<BasicMove> = vec![];
     let border_distances = distance_to_border(start);
@@ -461,7 +460,7 @@ pub fn king_moves(
 /// This function returns the king moves in a particular direction.
 fn explore_king_moves(
     start: &Coordinate,
-    team_color: &PieceColor,
+    team_color: PieceColor,
     board: &board::Board,
     direction: Directions,
 ) -> Vec<BasicMove> {
@@ -495,7 +494,7 @@ fn explore_king_moves(
         }
     }
     // The king cannot move into a threatened square
-    result.retain(|x| !x.get_is_threatened(board, *team_color));
+    result.retain(|x| !x.get_is_threatened(board, team_color));
     result
 }
 
@@ -609,7 +608,7 @@ fn no_piece_in_the_way(
 /// true if there is a piece in front. Steps determine how far it will go.
 fn piece_in_front(
     from: &Coordinate,
-    team_color: &PieceColor,
+    team_color: PieceColor,
     board: &board::Board,
     step: u8,
 ) -> bool {
@@ -626,7 +625,7 @@ fn piece_in_front(
 pub fn diagonal_moves(
     start: &Coordinate,
     board: &board::Board,
-    team_color: &PieceColor,
+    team_color: PieceColor,
 ) -> Vec<BasicMove> {
     // Create a vector that will be returned at the end.
     let mut result: Vec<BasicMove> = Vec::new();
@@ -672,7 +671,7 @@ fn explore_diagonal_direction(
     direction: DiagonalDirections,
     from_x: &u8,
     from_y: &u8,
-    team_color: &PieceColor,
+    team_color: PieceColor,
     board: &board::Board,
 ) -> Vec<BasicMove> {
     let mut x = *from_x as i32;
@@ -689,7 +688,7 @@ fn explore_diagonal_direction(
                 check_square!(
                     u8::try_from(x).unwrap(),
                     u8::try_from(y).unwrap(),
-                    &team_color,
+                    team_color,
                     result,
                     board
                 );
@@ -704,7 +703,7 @@ fn explore_diagonal_direction(
                 check_square!(
                     u8::try_from(x).unwrap(),
                     u8::try_from(y).unwrap(),
-                    &team_color,
+                    team_color,
                     result,
                     board
                 );
@@ -719,7 +718,7 @@ fn explore_diagonal_direction(
                 check_square!(
                     u8::try_from(x).unwrap(),
                     u8::try_from(y).unwrap(),
-                    &team_color,
+                    team_color,
                     result,
                     board
                 );
@@ -734,7 +733,7 @@ fn explore_diagonal_direction(
                 check_square!(
                     u8::try_from(x).unwrap(),
                     u8::try_from(y).unwrap(),
-                    &team_color,
+                    team_color,
                     result,
                     board
                 );
@@ -759,7 +758,7 @@ mod tests {
         #[test]
         fn test_linear_moves() {
             let board = board::Board::default();
-            let result = linear_moves(&(4, 3).into(), &board, &PieceColor::Light);
+            let result = linear_moves(&(4, 3).into(), &board, PieceColor::Light);
             // Make a new Vector and fill it with all possible Coordinates
             let expected: Vec<BasicMove> = vec![
                 // North
@@ -821,7 +820,7 @@ mod tests {
                 Fen::from_str("r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17")
                     .unwrap()
                     .into();
-            let moves_a1 = linear_moves(&(0, 7).into(), &gotc, &PieceColor::Dark);
+            let moves_a1 = linear_moves(&(0, 7).into(), &gotc, PieceColor::Dark);
             let expected_moves_a1: Vec<BasicMove> = vec![
                 BasicMove {
                     to: (1, 7).into(),
@@ -847,7 +846,7 @@ mod tests {
                 DiagonalDirections::NE,
                 &3,
                 &2,
-                &PieceColor::Light,
+                PieceColor::Light,
                 &empty_board,
             );
             let expected: Vec<BasicMove> = vec![
@@ -875,7 +874,7 @@ mod tests {
                 DiagonalDirections::NW,
                 &7,
                 &0,
-                &PieceColor::Dark,
+                PieceColor::Dark,
                 &empty_board,
             );
             let expected2: Vec<BasicMove> = vec![
@@ -917,7 +916,7 @@ mod tests {
                 DiagonalDirections::NW,
                 &4,
                 &2,
-                &PieceColor::Light,
+                PieceColor::Light,
                 &default_board,
             );
             let expected3: Vec<BasicMove> = vec![
@@ -948,7 +947,7 @@ mod tests {
                 DiagonalDirections::SE,
                 &3,
                 &2,
-                &PieceColor::Light,
+                PieceColor::Light,
                 &default_board,
             );
             let expected4: Vec<BasicMove> = vec![];
@@ -958,7 +957,7 @@ mod tests {
         #[test]
         fn test_diagonal_moves() {
             let board = Board::empty();
-            let result = diagonal_moves(&(4, 3).into(), &board, &PieceColor::Dark);
+            let result = diagonal_moves(&(4, 3).into(), &board, PieceColor::Dark);
             let expected: Vec<BasicMove> = vec![
                 // North-west (upper left)
                 BasicMove {
@@ -1018,7 +1017,7 @@ mod tests {
                 },
             ];
             assert_eq!(expected, result);
-            let result2 = diagonal_moves(&(3, 4).into(), &Default::default(), &PieceColor::Light);
+            let result2 = diagonal_moves(&(3, 4).into(), &Default::default(), PieceColor::Light);
             let expected2: Vec<BasicMove> = vec![
                 // upper-left
                 BasicMove {
@@ -1084,7 +1083,7 @@ mod tests {
         #[test]
         fn test_pawn_moves() {
             let default_board = board::Board::default();
-            let result = pawn_moves(&(0, 1).into(), &default_board, &PieceColor::Light, false);
+            let result = pawn_moves(&(0, 1).into(), &default_board, PieceColor::Light, false);
             let expected = vec![
                 BasicMove {
                     to: (0, 2).into(),
@@ -1097,7 +1096,7 @@ mod tests {
             ];
             assert_eq!(expected, result);
 
-            let result2 = pawn_moves(&(2, 5).into(), &default_board, &PieceColor::Light, false);
+            let result2 = pawn_moves(&(2, 5).into(), &default_board, PieceColor::Light, false);
             let expected2 = vec![
                 BasicMove {
                     to: (1, 6).into(),
@@ -1116,14 +1115,14 @@ mod tests {
             ];
             assert_eq!(expected2, result2);
 
-            let result3 = pawn_moves(&(7, 1).into(), &default_board, &PieceColor::Light, true);
+            let result3 = pawn_moves(&(7, 1).into(), &default_board, PieceColor::Light, true);
             let expected3 = vec![BasicMove {
                 to: (7, 2).into(),
                 capture: None,
             }];
             assert_eq!(expected3, result3);
 
-            let result4 = pawn_moves(&(0, 6).into(), &default_board, &PieceColor::Light, true);
+            let result4 = pawn_moves(&(0, 6).into(), &default_board, PieceColor::Light, true);
             let expected4 = vec![BasicMove {
                 to: (1, 7).into(),
                 capture: Some(Capture {
@@ -1137,7 +1136,7 @@ mod tests {
         #[test]
         fn test_knight_moves() {
             let default_board = board::Board::default();
-            let result = knight_moves(&(3, 3).into(), &default_board, &PieceColor::Light);
+            let result = knight_moves(&(3, 3).into(), &default_board, PieceColor::Light);
             let expected: Vec<BasicMove> = vec![
                 BasicMove {
                     to: (5, 2).into(),
@@ -1165,7 +1164,7 @@ mod tests {
                 },
             ];
             assert_eq!(expected, result);
-            let result2 = knight_moves(&(3, 2).into(), &default_board, &PieceColor::Dark);
+            let result2 = knight_moves(&(3, 2).into(), &default_board, PieceColor::Dark);
             let expected2: Vec<BasicMove> = vec![
                 BasicMove {
                     to: (5, 1).into(),
@@ -1217,10 +1216,10 @@ mod tests {
 
         #[test]
         fn test_king_moves() {
-            let result = king_moves(&(4, 0).into(), &Default::default(), &PieceColor::Light);
+            let result = king_moves(&(4, 0).into(), &Default::default(), PieceColor::Light);
             let expected: Vec<BasicMove> = vec![];
             assert_eq!(expected, result);
-            let result2 = king_moves(&(4, 2).into(), &Default::default(), &PieceColor::Light);
+            let result2 = king_moves(&(4, 2).into(), &Default::default(), PieceColor::Light);
             let expected2: Vec<BasicMove> = vec![
                 BasicMove {
                     to: (5, 2).into(),
@@ -1245,7 +1244,7 @@ mod tests {
             ];
             assert_eq!(expected2, result2);
 
-            let result3 = king_moves(&(4, 0).into(), &Default::default(), &PieceColor::Dark);
+            let result3 = king_moves(&(4, 0).into(), &Default::default(), PieceColor::Dark);
             let expected3: Vec<BasicMove> = vec![
                 BasicMove {
                     to: (5, 0).into(),
