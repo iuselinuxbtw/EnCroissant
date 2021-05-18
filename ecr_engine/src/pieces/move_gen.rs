@@ -345,10 +345,10 @@ pub fn knight_moves(
         }
     }
     if border_distances.up > 1 {
-        if border_distances.left > 0 {
+        if border_distances.right > 0 {
             queue.push(KnightDirections::NE);
         }
-        if border_distances.right > 0 {
+        if border_distances.left > 0 {
             queue.push(KnightDirections::NW);
         }
     }
