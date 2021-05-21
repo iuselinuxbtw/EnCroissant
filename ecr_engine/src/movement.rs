@@ -73,7 +73,6 @@ impl board::Board {
             .borrow_mut()
             .set_coordinate(move_properties.target_square);
 
-
         let mut piece_to_add: BoardPiece = move_properties
             .inner
             .deref()
@@ -93,15 +92,12 @@ impl board::Board {
         }
 
         if move_properties.capture.is_some() {
-            let mut target=move_properties.capture.unwrap().target;
+            let mut target = move_properties.capture.unwrap().target;
             if move_properties.en_passant {
                 // We can safely unwrap here since en_passant is only true if  en_passant is possible.
                 target = self.get_en_passant_target().unwrap().actual_square;
             }
-            self.capture_piece(
-                &move_properties.inner,
-                target,
-            );
+            self.capture_piece(&move_properties.inner, target);
         }
 
         // The piece has now moved
@@ -318,7 +314,7 @@ impl board::Board {
     fn check_checker(&self, team: PieceColor) -> bool {
         let all_moves: Vec<Moves> = self.get_pseudo_legal_moves(team);
         for moves in all_moves {
-            if moves.contains_check() {
+            if moves.contains_check(self) {
                 return true;
             }
         }
@@ -474,7 +470,7 @@ mod tests {
         }*/
 
         #[test]
-        fn test_count_half_moves(){
+        fn test_count_half_moves() {
             let mut board = Board::default();
             board.count_half_moves(PieceType::Pawn, false);
             assert_eq!(0, board.get_half_move_amount());

@@ -10,7 +10,7 @@ use crate::board;
 use crate::board::{Board, BoardCastleState};
 use crate::pieces::move_utils::{coordinate_check, distance_to_border, next_row, piece_on_square};
 use crate::pieces::PieceColor;
-use crate::{check_this_move, check_square};
+use crate::{check_square, check_this_move};
 
 // TODO: Move to ecr_engine/src/move_gen package.
 
@@ -311,14 +311,14 @@ pub fn pawn_moves(
         }
         // TODO: Test en_passant
         if let Some(t) = board.get_en_passant_target() {
-                if possible_capture == t.target_square {
-                    result.push(BasicMove {
-                        to: possible_capture,
-                        capture: Some(Capture {
-                            piece_type: PieceType::Pawn,
-                            target: (6, 1).into(),
-                        }),
-                    });
+            if possible_capture == t.target_square {
+                result.push(BasicMove {
+                    to: possible_capture,
+                    capture: Some(Capture {
+                        piece_type: PieceType::Pawn,
+                        target: (6, 1).into(),
+                    }),
+                });
             }
         }
     }

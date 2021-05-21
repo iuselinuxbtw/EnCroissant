@@ -13,7 +13,7 @@ impl board::Board {
         let piece_value = evaluate_pieces(self);
         let position_value = position_value(self);
 
-        (piece_value as u64+ position_value) as f32
+        (piece_value as u64 + position_value) as f32
     }
 }
 
@@ -33,7 +33,6 @@ fn evaluate_pieces(board: &Board) -> u8 {
     value_light - value_dark
 }
 
-
 ///
 fn position_value(board: &Board) -> u64 {
     let middle_squares = vec![
@@ -43,14 +42,14 @@ fn position_value(board: &Board) -> u64 {
         Coordinate { y: 4, x: 4 },
     ];
 
-    let mut other_squares:Vec<Coordinate> = vec![];
-    for x in 0..=7{
-        for y in 0..=7{
-            other_squares.push((x,y).into());
+    let mut other_squares: Vec<Coordinate> = vec![];
+    for x in 0..=7 {
+        for y in 0..=7 {
+            other_squares.push((x, y).into());
         }
     }
     for square in &middle_squares {
-        other_squares.retain(|s| s!=square);
+        other_squares.retain(|s| s != square);
     }
     // For now we calculate the ThreatenedStates
     get_threatened_score(
@@ -59,13 +58,12 @@ fn position_value(board: &Board) -> u64 {
     ) - get_threatened_score(
         get_threatened_states(board, middle_squares),
         PieceColor::Dark,
-    )
-    + get_threatened_score(
+    ) + get_threatened_score(
         get_threatened_states(board, other_squares.clone()),
-        PieceColor::Light
-    )
-    - get_threatened_score(get_threatened_states(board, other_squares),
-        PieceColor::Dark
+        PieceColor::Light,
+    ) - get_threatened_score(
+        get_threatened_states(board, other_squares),
+        PieceColor::Dark,
     )
 }
 
@@ -79,7 +77,7 @@ fn get_threatened_states(board: &Board, coords: Vec<Coordinate>) -> Vec<Threaten
 
 /// Gets the threats of a particular team on given squares
 fn get_threatened_score(states: Vec<ThreatenedState>, team: PieceColor) -> u64 {
-    let mut result:u64 = 0;
+    let mut result: u64 = 0;
     for state in states {
         result += state.get_by_team(team) as u64;
     }
