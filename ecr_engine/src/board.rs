@@ -8,7 +8,7 @@ use ecr_shared::coordinate::Coordinate;
 
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
-use crate::utils::{new_rc_refcell, get_en_passant_actual};
+use crate::utils::{get_en_passant_actual, new_rc_refcell};
 
 // Just exists so we can safely
 
@@ -56,21 +56,21 @@ pub struct Board {
 /// If an en_passant is possible gives the target square where the pawn can also be captured and the
 /// actual square the pawn is on.
 #[derive(Debug, Clone, PartialEq, Copy)]
-pub struct EnPassant{
+pub struct EnPassant {
     pub target_square: Coordinate,
     pub actual_square: Coordinate,
 }
 
-impl EnPassant{
-    pub fn new_from_target_square(target_square: Coordinate) -> EnPassant{
-        EnPassant{
+impl EnPassant {
+    pub fn new_from_target_square(target_square: Coordinate) -> EnPassant {
+        EnPassant {
             target_square,
             actual_square: get_en_passant_actual(target_square),
         }
     }
-    pub fn from_option(square: Option<Coordinate>) -> Option<EnPassant>{
-        if let Some(target_square) = square{
-            return Some(EnPassant::new_from_target_square(target_square))
+    pub fn from_option(square: Option<Coordinate>) -> Option<EnPassant> {
+        if let Some(target_square) = square {
+            return Some(EnPassant::new_from_target_square(target_square));
         }
         None
     }
@@ -206,9 +206,9 @@ impl Board {
         self.en_passant
     }
 
-    pub fn get_en_passant_target_option(&self) -> Option<Coordinate>{
+    pub fn get_en_passant_target_option(&self) -> Option<Coordinate> {
         if let Some(en_passant) = self.get_en_passant_target() {
-            return Some(en_passant.target_square)
+            return Some(en_passant.target_square);
         }
         None
     }
@@ -628,10 +628,13 @@ mod tests {
             assert_eq!(None, b.en_passant);
 
             b.en_passant = Some(EnPassant::new_from_target_square((3, 4).into()));
-            assert_eq!(Some(EnPassant{
-                target_square: (3, 4).into(),
-                actual_square: (3,5).into()
-            }), b.get_en_passant_target());
+            assert_eq!(
+                Some(EnPassant {
+                    target_square: (3, 4).into(),
+                    actual_square: (3, 5).into()
+                }),
+                b.get_en_passant_target()
+            );
         }
 
         #[test]
