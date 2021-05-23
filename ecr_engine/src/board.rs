@@ -24,9 +24,9 @@ pub struct Board {
     /// `0` to `7` is possible. Contains an [`Option<BoardPiece>`] since a square can be empty, which
     /// means that squares with [`None`] as value will be empty.
     board: Vec<Vec<Option<SquareInner>>>,
-   /// Since a hybrid solution for saving the pieces is used, we save all pieces as well as
-   pub(crate) pieces: Vec<SquareInner>,    
-   /// All moves that were played. Can be empty if the board gets created from e.g. the FEN
+    /// Since a hybrid solution for saving the pieces is used, we save all pieces as well as
+    pub(crate) pieces: Vec<SquareInner>,
+    /// All moves that were played. Can be empty if the board gets created from e.g. the FEN
     /// notation.
     moves: Vec<Move>,
 
@@ -105,10 +105,11 @@ impl Clone for Board {
         // We need to replace the pieces inside the array
         let mut cloned_pieces = vec![];
         for piece in &self.pieces {
-            cloned_pieces.push(Rc::clone(piece));
+            cloned_pieces.push(Rc::new(RefCell::new(piece.borrow().deref().clone())));
+            // TODO: This doesn't clone the Piece
         }
         board_clone.castle_state = *self.get_castle_state();
-        board_clone.pieces = cloned_pieces;
+        board_clone.pieces = cloned_pieces.clone();
         board_clone.fill_board_from_pieces();
         board_clone.en_passant = self.en_passant;
         board_clone.half_move_amount = self.get_half_move_amount();
@@ -534,6 +535,17 @@ mod tests {
                     assert_eq!(Some(&None), elements.get(j));
                 }
             }
+        }
+
+        #[test]
+        fn test_clone() {
+            let mut default_board = Board::default();
+            let mut cloned_board = default_board.clone();
+            // They should not be equal since the Refcells should be different
+            assert_ne!(default_board.pieces, cloned_board.pieces);
+            default_board.pieces[2].borrow().get_has_moved();
+            cloned_board.pieces[2].borrow().get_has_moved();
+            //assert_eq!(Fen::from(default_board), Fen::from(cloned_board));
         }
 
         #[test]
