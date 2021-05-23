@@ -17,16 +17,16 @@ use crate::utils::{get_en_passant_actual, new_rc_refcell};
 pub type SquareInner = Rc<RefCell<BoardPiece>>;
 
 /// A [`Board`] contains the current game of chess.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Board {
     /// The representation of the board. A board consists of 8x8 squares. The first array is for the
     /// x, the second for the y coordinate. Since the board has 8 squares on each axis, an index of
     /// `0` to `7` is possible. Contains an [`Option<BoardPiece>`] since a square can be empty, which
     /// means that squares with [`None`] as value will be empty.
     board: Vec<Vec<Option<SquareInner>>>,
-    /// Since a hybrid solution for saving the pieces is used, we save all pieces as well as
-    pub(crate) pieces: Vec<SquareInner>,
-    /// All moves that were played. Can be empty if the board gets created from e.g. the FEN
+   /// Since a hybrid solution for saving the pieces is used, we save all pieces as well as
+   pub(crate) pieces: Vec<SquareInner>,    
+   /// All moves that were played. Can be empty if the board gets created from e.g. the FEN
     /// notation.
     moves: Vec<Move>,
 
@@ -97,6 +97,29 @@ impl ThreatenedState {
     }
 }
 
+impl Clone for Board {
+    /// Since we use RefCells we can't just clone a board but have to replace the references inside.
+    fn clone(&self) -> Self {
+        // First we create an empty board to clone to.
+        let mut board_clone = Board::empty();
+        // We need to replace the pieces inside the array
+        let mut cloned_pieces = vec![];
+        for piece in &self.pieces {
+            cloned_pieces.push(Rc::clone(piece));
+        }
+        board_clone.castle_state = *self.get_castle_state();
+        board_clone.pieces = cloned_pieces;
+        board_clone.fill_board_from_pieces();
+        board_clone.en_passant = self.en_passant;
+        board_clone.half_move_amount = self.get_half_move_amount();
+        board_clone.move_number = self.get_move_number();
+        board_clone.moves = self.moves.clone();
+        board_clone.to_move = self.to_move;
+
+        board_clone
+    }
+}
+
 impl Board {
     /// Returns an empty board.
     pub fn empty() -> Board {
@@ -140,6 +163,17 @@ impl Board {
         }
     }
 
+    fn fill_board_from_pieces(&mut self) {
+        self.remove_all_board_pieces();
+        for piece in &self.pieces.clone() {
+            self.add_piece(piece.borrow().deref().clone());
+        }
+    }
+
+    fn remove_all_board_pieces(&mut self) {
+        self.board.clear();
+    }
+
     /// Returns the piece at the supplied coordinate on the board.
     pub fn get_at(&self, coordinate: Coordinate) -> Option<SquareInner> {
         // ? -> column not found
@@ -147,10 +181,7 @@ impl Board {
         // ? -> square not found
         let square = column.get(coordinate.get_y() as usize)?;
         // If it was found, clone the BoardPiece for future access
-        match square {
-            Some(v) => Some(Rc::clone(v)),
-            None => None,
-        }
+        square.as_ref().map(|v| Rc::clone(v))
     }
 
     /// Adds a piece to the board. Since a hybrid solution for saving the board is used, the piece
@@ -262,7 +293,7 @@ impl Board {
             threatened_light: 0,
             threatened_dark: 0,
         };
-        let range = 0 as usize..7;
+        let range = 0_usize..7;
         for i in 0..=7 {
             let column = self.threatened_state.get_mut(i).unwrap();
             column.splice(

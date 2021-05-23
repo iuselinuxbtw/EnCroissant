@@ -1,5 +1,4 @@
-use std::borrow::Borrow;
-
+use ecr_formats::fen::Fen;
 use ecr_shared::coordinate::Coordinate;
 
 use crate::pieces::PieceType;
@@ -36,20 +35,26 @@ impl Moves {
     /// Returns whether the moves of a piece contain a check(If the piece could capture the king if nothing is done)
     pub fn contains_check(&self, board: &Board) -> bool {
         // This could be a lot cleaner but it works
-        for mv in self.basic_move.clone(){
+        for mv in self.basic_move.clone() {
             let mut board_clone = board.clone();
+            println!("{}", Fen::from(board_clone.clone()));
+            // So apparently this crashes the function and i seriously don't know why
+            println!("{} to: {:?}", self.from, &mv);
             board_clone.r#move(self.from, &mv);
             let inner = board_clone.get_at(mv.to).unwrap();
             let color = inner.as_ref().borrow().get_color();
             // We need to get the moves in the future
-            let new_move = inner.as_ref().borrow().get_piece().get_pseudo_legal_moves(board, &mv.to, color, true);
+            let new_move = inner
+                .as_ref()
+                .borrow()
+                .get_piece()
+                .get_pseudo_legal_moves(board, &mv.to, color, true);
             // Turn it into a Moves
-            let new_moves = Moves{
+            let new_moves = Moves {
                 from: mv.to,
                 basic_move: new_move,
-
             };
-            if new_moves.contains_king(){
+            if new_moves.contains_king() {
                 return true;
             }
         }
@@ -100,11 +105,16 @@ mod tests {
     use super::*;
     #[test]
     fn test_contains_check() {
-        let board:Board = (Fen::from_str("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2")).unwrap().into();
+        let board: Board =
+            (Fen::from_str("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2"))
+                .unwrap()
+                .into();
         let multiple_moves = board.get_all_pseudo_legal_moves();
         let mut checks = 0;
-        for moves in multiple_moves{
-            if moves.contains_check(&board){checks+=1;};
+        for moves in multiple_moves {
+            if moves.contains_check(&board) {
+                checks += 1;
+            };
         }
         assert_eq!(1, checks);
     }
