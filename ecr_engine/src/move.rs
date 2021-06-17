@@ -37,9 +37,6 @@ impl Moves {
         // This could be a lot cleaner but it works
         for mv in self.basic_move.clone() {
             let mut board_clone = board.clone();
-            println!("{}", Fen::from(board_clone.clone()));
-            // So apparently this crashes the function and i seriously don't know why
-            println!("{} to: {:?}", self.from, &mv);
             board_clone.r#move(self.from, &mv);
             let inner = board_clone.get_at(mv.to).unwrap();
             let color = inner.as_ref().borrow().get_color();

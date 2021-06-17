@@ -104,12 +104,14 @@ impl Clone for Board {
         let mut board_clone = Board::empty();
         // We need to replace the pieces inside the array
         let mut cloned_pieces = vec![];
-        for piece in &self.pieces {
-            cloned_pieces.push(Rc::new(RefCell::new(piece.borrow().deref().clone())));
+        for inner in &self.pieces {
+            let board_piece_to_add:BoardPiece = inner.borrow().deref().clone();
+            let piece = Rc::new(RefCell::new(board_piece_to_add));
+            cloned_pieces.push(piece);
             // TODO: This doesn't clone the Piece
         }
         board_clone.castle_state = *self.get_castle_state();
-        board_clone.pieces = cloned_pieces.clone();
+        board_clone.pieces = cloned_pieces;
         board_clone.fill_board_from_pieces();
         board_clone.en_passant = self.en_passant;
         board_clone.half_move_amount = self.get_half_move_amount();
@@ -172,7 +174,8 @@ impl Board {
     }
 
     fn remove_all_board_pieces(&mut self) {
-        self.board.clear();
+        let none_vector: Vec<Option<SquareInner>> = vec![None, None, None, None, None, None, None, None];
+        self.board.fill(none_vector);
     }
 
     /// Returns the piece at the supplied coordinate on the board.

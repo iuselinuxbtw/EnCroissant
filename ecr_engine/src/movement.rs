@@ -315,7 +315,6 @@ impl board::Board {
     fn check_checker(&self, team: PieceColor) -> bool {
         let all_moves: Vec<Moves> = self.get_pseudo_legal_moves(team);
         for moves in all_moves {
-            println!("input_board: {}", Fen::from(self.clone()));
             if moves.contains_check(self) {
                 return true;
             }
