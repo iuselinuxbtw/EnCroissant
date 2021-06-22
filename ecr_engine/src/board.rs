@@ -9,6 +9,7 @@ use ecr_shared::coordinate::Coordinate;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::{get_en_passant_actual, new_rc_refcell};
+use std::fmt::Formatter;
 
 // Just exists so we can safely
 
@@ -105,7 +106,7 @@ impl Clone for Board {
         // We need to replace the pieces inside the array
         let mut cloned_pieces = vec![];
         for inner in &self.pieces {
-            let board_piece_to_add:BoardPiece = inner.borrow().deref().clone();
+            let board_piece_to_add: BoardPiece = inner.borrow().deref().clone();
             let piece = Rc::new(RefCell::new(board_piece_to_add));
             cloned_pieces.push(piece);
             // TODO: This doesn't clone the Piece
@@ -174,7 +175,8 @@ impl Board {
     }
 
     fn remove_all_board_pieces(&mut self) {
-        let none_vector: Vec<Option<SquareInner>> = vec![None, None, None, None, None, None, None, None];
+        let none_vector: Vec<Option<SquareInner>> =
+            vec![None, None, None, None, None, None, None, None];
         self.board.fill(none_vector);
     }
 
@@ -493,6 +495,12 @@ impl From<Board> for Fen {
         }
 
         fen
+    }
+}
+
+impl std::fmt::Display for Board {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", Fen::from(self.clone()).to_string())
     }
 }
 

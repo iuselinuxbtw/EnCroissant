@@ -155,10 +155,7 @@ impl board::Board {
         match castle_move.move_type {
             CastleMoveType::LightKingSide => {
                 // Move the king
-                self.r#move(
-                    (4, 0).into(),
-                    &BasicMove::new_move((6,0).into()),
-                );
+                self.r#move((4, 0).into(), &BasicMove::new_move((6, 0).into()));
                 // Move the rook
                 self.r#move(
                     (7, 0).into(),
@@ -169,10 +166,7 @@ impl board::Board {
                 );
             }
             CastleMoveType::LightQueenSide => {
-                self.r#move(
-                    (4, 0).into(),
-                    &BasicMove::new_move((2,0).into()),
-                );
+                self.r#move((4, 0).into(), &BasicMove::new_move((2, 0).into()));
                 self.r#move(
                     (0, 0).into(),
                     &BasicMove {
@@ -182,10 +176,7 @@ impl board::Board {
                 );
             }
             CastleMoveType::DarkKingSide => {
-                self.r#move(
-                    (4, 7).into(),
-                    &BasicMove::new_move((6,7).into()),
-                );
+                self.r#move((4, 7).into(), &BasicMove::new_move((6, 7).into()));
                 self.r#move(
                     (7, 7).into(),
                     &BasicMove {
@@ -195,10 +186,7 @@ impl board::Board {
                 );
             }
             CastleMoveType::DarkQueenSide => {
-                self.r#move(
-                    (4, 7).into(),
-                    &BasicMove::new_move((2,7).into()),
-                );
+                self.r#move((4, 7).into(), &BasicMove::new_move((2, 7).into()));
                 self.r#move(
                     (0, 7).into(),
                     &BasicMove {
@@ -414,15 +402,13 @@ mod tests {
                 Fen::from(default_board.clone()).to_string()
             );
 
-            // FIXME: This crashes for some reason but it is really annoying to have this in the tests right now.
             assert!(!default_board.clone().get_en_passant_target().is_some());
             assert_eq!(None, default_board.get_at((6, 4).into()));
             assert!(!default_board.check_checker(PieceColor::Light));
             assert!(!default_board.check_checker(PieceColor::Dark));
-            /*
             default_board = Board::default();
 
-            assert!(default_board.get_at((5,1).into()).is_some());
+            assert!(default_board.get_at((5, 1).into()).is_some());
             // The best opening move known to mankind
             default_board.r#move(
                 (5, 1).into(),
@@ -430,7 +416,7 @@ mod tests {
                     to: (5, 2).into(),
                     capture: None,
                 },
-            )*/
+            )
 
             // TODO: Test Promotion
         }
