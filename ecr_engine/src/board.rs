@@ -542,8 +542,8 @@ mod tests {
 
         #[test]
         fn test_clone() {
-            let mut default_board = Board::default();
-            let mut cloned_board = default_board.clone();
+            let default_board = Board::default();
+            let cloned_board = default_board.clone();
             // They should not be equal since the Refcells should be different
             assert_ne!(default_board.pieces, cloned_board.pieces);
             default_board.pieces[2].borrow().get_has_moved();

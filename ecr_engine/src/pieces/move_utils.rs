@@ -104,12 +104,12 @@ pub fn coordinate_check(
     board: &board::Board,
 ) -> (Option<PieceType>, bool) {
     let square = (*x as u8, *y as u8).into();
-    square_check(square, team_color, board)
+    check_square(square, team_color, board)
 }
 
 /// Checks if a square is occupied. If it is it returns Some(PieceType), if it is not, the first element of the tuple is none.
 /// The second element returns true if it is an enemy piece, false otherwise.
-fn square_check(
+fn check_square(
     square: Coordinate,
     team_color: PieceColor,
     board: &board::Board,

@@ -1,4 +1,3 @@
-use ecr_formats::fen::Fen;
 use ecr_shared::coordinate::Coordinate;
 
 use crate::pieces::PieceType;
@@ -34,8 +33,8 @@ pub struct Moves {
 impl Moves {
     /// Returns whether the moves of a piece contain a check(If the piece could capture the king if nothing is done)
     pub fn contains_check(&self, board: &Board) -> bool {
-        // This could be a lot cleaner but it works
-        for mv in self.basic_move.clone() {
+        // Do every possible move and test whether the board where the move is done has a move where the king could be captured
+        for mv in self.basic_move.clone(){
             let mut board_clone = board.clone();
             board_clone.r#move(self.from, &mv);
             let inner = board_clone.get_at(mv.to).unwrap();

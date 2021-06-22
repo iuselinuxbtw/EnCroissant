@@ -8,7 +8,6 @@ use crate::board::SquareInner;
 use crate::pieces::move_gen::{BasicMove, Capture, CastleMove, CastleMoveType};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Moves;
-use ecr_formats::fen::Fen;
 use ecr_shared::board::BoardCastleState;
 
 struct MoveProperties {
@@ -153,16 +152,12 @@ impl board::Board {
     /// Executes a given CastleMove by moving the king first and then the rook
     pub fn castle(&mut self, castle_move: CastleMove) {
         // First we move the king to the target square.
-        // TODO: We don't actually need the to: Coordinate in the CastleMove
         match castle_move.move_type {
             CastleMoveType::LightKingSide => {
                 // Move the king
                 self.r#move(
                     (4, 0).into(),
-                    &BasicMove {
-                        capture: None,
-                        to: castle_move.to,
-                    },
+                    &BasicMove::new_move((6,0).into()),
                 );
                 // Move the rook
                 self.r#move(
@@ -176,10 +171,7 @@ impl board::Board {
             CastleMoveType::LightQueenSide => {
                 self.r#move(
                     (4, 0).into(),
-                    &BasicMove {
-                        capture: None,
-                        to: castle_move.to,
-                    },
+                    &BasicMove::new_move((2,0).into()),
                 );
                 self.r#move(
                     (0, 0).into(),
@@ -192,10 +184,7 @@ impl board::Board {
             CastleMoveType::DarkKingSide => {
                 self.r#move(
                     (4, 7).into(),
-                    &BasicMove {
-                        capture: None,
-                        to: castle_move.to,
-                    },
+                    &BasicMove::new_move((6,7).into()),
                 );
                 self.r#move(
                     (7, 7).into(),
@@ -208,10 +197,7 @@ impl board::Board {
             CastleMoveType::DarkQueenSide => {
                 self.r#move(
                     (4, 7).into(),
-                    &BasicMove {
-                        capture: None,
-                        to: castle_move.to,
-                    },
+                    &BasicMove::new_move((2,7).into()),
                 );
                 self.r#move(
                     (0, 7).into(),

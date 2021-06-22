@@ -80,7 +80,6 @@ impl BasicMove {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct CastleMove {
-    pub to: Coordinate,
     pub move_type: CastleMoveType,
 }
 
@@ -512,6 +511,7 @@ pub fn get_castle_moves(
     // First we match the team so we can give back only the castle moves of a specific team.
     match team {
         PieceColor::Light => {
+            // TODO: Simplify this using lambdas or macros
             if castle_state.light_queen_side
                 //&& board.is_threatened((4, 0).into()) == 0 This check is redundant since the check_move_gen will never call this function.
                 // And if a piece is in the way
@@ -521,7 +521,6 @@ pub fn get_castle_moves(
                 && board.get_threatened_state((2, 0).into()).threatened_dark == 0
             {
                 result.push(CastleMove {
-                    to: (2, 0).into(),
                     move_type: CastleMoveType::LightQueenSide,
                 })
             }
@@ -531,7 +530,6 @@ pub fn get_castle_moves(
                 && board.get_threatened_state((6, 0).into()).threatened_dark == 0
             {
                 result.push(CastleMove {
-                    to: (6, 0).into(),
                     move_type: CastleMoveType::LightKingSide,
                 })
             }
@@ -543,7 +541,6 @@ pub fn get_castle_moves(
                 && board.get_threatened_state((4, 7).into()).threatened_light == 0
             {
                 result.push(CastleMove {
-                    to: (2, 7).into(),
                     move_type: CastleMoveType::DarkQueenSide,
                 })
             }
@@ -553,7 +550,6 @@ pub fn get_castle_moves(
                 && board.get_threatened_state((6, 7).into()).threatened_light == 0
             {
                 result.push(CastleMove {
-                    to: (6, 7).into(),
                     move_type: CastleMoveType::DarkKingSide,
                 })
             }

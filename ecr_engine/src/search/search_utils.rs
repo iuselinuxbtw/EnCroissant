@@ -7,8 +7,8 @@ pub fn search() {
 #[cfg(test)]
 mod tests {
     use crate::board::Board;
-
     use super::*;
+
     #[test]
     fn test_search() {
         let mut board = Board::default();
