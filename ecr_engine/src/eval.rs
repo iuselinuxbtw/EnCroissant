@@ -74,8 +74,7 @@ fn all_squares_score(board: &Board) -> i32 {
     );
     let dark_score =
         get_threatened_score(get_threatened_states(board, all_squares), PieceColor::Dark);
-
-    (light_score as i32 - dark_score as i32)
+    light_score as i32 - dark_score as i32
 }
 
 fn get_middle_squares() -> Vec<Coordinate> {
