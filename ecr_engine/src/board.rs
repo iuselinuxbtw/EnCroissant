@@ -170,7 +170,7 @@ impl Board {
     fn fill_board_from_pieces(&mut self) {
         self.remove_all_board_pieces();
         for piece in &self.pieces.clone() {
-            self.add_piece(piece.borrow().deref().clone());
+            self.add_piece_to_board(piece.borrow().deref().clone());
         }
     }
 
@@ -193,6 +193,16 @@ impl Board {
     /// Adds a piece to the board. Since a hybrid solution for saving the board is used, the piece
     /// gets added into the board array as well as the piece list.
     pub fn add_piece(&mut self, piece: BoardPiece) {
+        self.add_piece_to_board(piece.clone());
+
+        let square_inner = new_rc_refcell(piece);
+        // Since we are using a hybrid approach for saving the board and its pieces, we have to add
+        // the square to the list of all pieces, too
+        self.pieces.push(square_inner);
+    }
+
+    /// Adds a piece to the board.
+    pub fn add_piece_to_board(&mut self, piece: BoardPiece) {
         let x_coordinate = piece.get_coordinate().get_x();
         let y_coordinate = piece.get_coordinate().get_y();
 
@@ -207,10 +217,6 @@ impl Board {
 
         // Replaces the square with the supplied piece
         column.splice(column_index_range, vec![Some(Rc::clone(&square_inner))]);
-
-        // Since we are using a hybrid approach for saving the board and its pieces, we have to add
-        // the square to the list of all pieces, too
-        self.pieces.push(square_inner);
     }
 
     pub fn get_pieces_by_type(&self, piece_type: PieceType) -> Vec<SquareInner> {
@@ -500,7 +506,12 @@ impl From<Board> for Fen {
 
 impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", Fen::from(self.clone()).to_string())
+        write!(
+            f,
+            "Fen: {}, Eval: {}",
+            Fen::from(self.clone()).to_string(),
+            self.eval()
+        )
     }
 }
 
@@ -552,8 +563,7 @@ mod tests {
         fn test_clone() {
             let default_board = Board::default();
             let cloned_board = default_board.clone();
-            // They should not be equal since the Refcells should be different
-            assert_ne!(default_board.pieces, cloned_board.pieces);
+            assert_eq!(cloned_board.pieces.len(), default_board.pieces.len());
             default_board.pieces[2].borrow().get_has_moved();
             cloned_board.pieces[2].borrow().get_has_moved();
             //assert_eq!(Fen::from(default_board), Fen::from(cloned_board));
@@ -852,7 +862,15 @@ mod tests {
                 threatened_light: 0,
                 threatened_dark: 0,
             };
-            assert_eq!(state, expected2);
+            assert_eq!(expected2, state);
+        }
+        #[test]
+        fn test_get_team_pieces() {
+            let default_board = Board::default();
+            let light_pieces = default_board.get_team_pieces(PieceColor::Light);
+            let dark_pieces = default_board.get_team_pieces(PieceColor::Dark);
+            assert_eq!(16, light_pieces.len());
+            assert_eq!(16, dark_pieces.len());
         }
     }
 }

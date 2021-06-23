@@ -18,22 +18,25 @@ impl board::Board {
 }
 
 /// MiniMax Evaluation
-fn evaluate_pieces(board: &Board) -> u8 {
+fn evaluate_pieces(board: &Board) -> i32 {
+    // Get pieces of each team
     let light_pieces = board.get_team_pieces(PieceColor::Light);
     let dark_pieces = board.get_team_pieces(PieceColor::Dark);
-    let mut value_light = 0;
-    let mut value_dark = 0;
+
+    // Calculate the values of the pieces of each team
+    let mut value_light: i32 = 0;
+    let mut value_dark: i32 = 0;
     for piece in light_pieces {
-        value_light = piece.borrow().deref().get_piece().get_value();
+        value_light += piece.borrow().deref().get_piece().get_value() as i32;
     }
     for piece in dark_pieces {
-        value_dark = piece.borrow().deref().get_piece().get_value();
+        value_dark += piece.borrow().deref().get_piece().get_value() as i32;
     }
-
+    // FIXME: This crashes because of an "Attempt to subtract with Overflow"
     value_light - value_dark
 }
 
-///
+/// Used to evaluate a position. Right now this is only using the ThreatenedStates of the middle squares
 fn position_value(board: &Board) -> u64 {
     let middle_squares = vec![
         Coordinate { y: 3, x: 3 },

@@ -1,6 +1,6 @@
-use ecr_formats::fen::Fen;
+use crate::board::Board;
 use std::fmt::Display;
-use trees::{tr, Node};
+use trees::{tr, Node, Tree};
 
 pub fn search() {
     //TODO: Implement a Graph containing either the full board oor a minimal version of the board(or the move).
@@ -46,6 +46,8 @@ mod tests {
             root.push_back(tr(variation));
         }
         // Print the tree sorted by preorder
-        println!("{:#?}", tree_to_string(tree.root()));
+        assert_eq!(32, root.data().pieces.len());
+        println!("{}", tree_to_string(tree.root()));
+        println!("{}", tree);
     }
 }
