@@ -13,7 +13,7 @@ impl board::Board {
         let piece_value = evaluate_pieces(self);
         let position_value = position_value(self);
 
-        (piece_value as u64 + position_value) as f32
+        (piece_value + position_value) as f32
     }
 }
 
@@ -37,37 +37,54 @@ fn evaluate_pieces(board: &Board) -> i32 {
 }
 
 /// Used to evaluate a position. Right now this is only using the ThreatenedStates of the middle squares
-fn position_value(board: &Board) -> u64 {
-    let middle_squares = vec![
+fn position_value(board: &Board) -> i32 {
+    // For now we calculate the ThreatenedStates
+    let middle_squares_score = middle_squares_score(board);
+    let all_squares_score = all_squares_score(board);
+    middle_squares_score + all_squares_score
+}
+
+/// Returns the Score of who has more Threats in the four middle squares following the MiniMax
+/// Principle
+fn middle_squares_score(board: &Board) -> i32 {
+    let middle_squares = get_middle_squares();
+    let light_score = get_threatened_score(
+        get_threatened_states(board, middle_squares.clone()),
+        PieceColor::Light,
+    );
+    let dark_score = get_threatened_score(
+        get_threatened_states(board, middle_squares),
+        PieceColor::Dark,
+    );
+    light_score as i32 - dark_score as i32
+}
+
+/// Returns the Score of who has more Threats all squares following the MiniMax Principle
+fn all_squares_score(board: &Board) -> i32 {
+    // TODO: Put this into get_all_squares(). That function should also be used in the benchmark generate_pieces_of_type
+    let mut all_squares: Vec<Coordinate> = vec![];
+    for x in 0..=7 {
+        for y in 0..=7 {
+            all_squares.push((x, y).into());
+        }
+    }
+    let light_score = get_threatened_score(
+        get_threatened_states(board, all_squares.clone()),
+        PieceColor::Light,
+    );
+    let dark_score =
+        get_threatened_score(get_threatened_states(board, all_squares), PieceColor::Dark);
+
+    (light_score as i32 - dark_score as i32)
+}
+
+fn get_middle_squares() -> Vec<Coordinate> {
+    vec![
         Coordinate { y: 3, x: 3 },
         Coordinate { y: 4, x: 3 },
         Coordinate { y: 3, x: 4 },
         Coordinate { y: 4, x: 4 },
-    ];
-
-    let mut other_squares: Vec<Coordinate> = vec![];
-    for x in 0..=7 {
-        for y in 0..=7 {
-            other_squares.push((x, y).into());
-        }
-    }
-    for square in &middle_squares {
-        other_squares.retain(|s| s != square);
-    }
-    // For now we calculate the ThreatenedStates
-    get_threatened_score(
-        get_threatened_states(board, middle_squares.clone()),
-        PieceColor::Light,
-    ) - get_threatened_score(
-        get_threatened_states(board, middle_squares),
-        PieceColor::Dark,
-    ) + get_threatened_score(
-        get_threatened_states(board, other_squares.clone()),
-        PieceColor::Light,
-    ) - get_threatened_score(
-        get_threatened_states(board, other_squares),
-        PieceColor::Dark,
-    )
+    ]
 }
 
 fn get_threatened_states(board: &Board, coords: Vec<Coordinate>) -> Vec<ThreatenedState> {
