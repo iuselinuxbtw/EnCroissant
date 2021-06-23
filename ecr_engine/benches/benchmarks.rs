@@ -5,18 +5,18 @@ use ecr_engine::board::Board;
 use ecr_engine::pieces::move_gen::*;
 use ecr_engine::pieces::{BoardPiece, PieceColor};
 use ecr_shared::pieces::PieceType;
+use ecr_engine::utils::get_all_squares;
 
 /// Generates a light-colored piece of the given type for every square on the board.
 fn generate_pieces_of_type(piece_type: PieceType) -> Vec<BoardPiece> {
     let mut result: Vec<BoardPiece> = vec![];
-    for x in 0..7 {
-        for y in 0..=7 {
-            result.push(BoardPiece::new_from_type(
-                piece_type,
-                (x, y).into(),
-                PieceColor::Light,
-            ));
-        }
+    let all_squares = get_all_squares();
+    for square in all_squares{
+        result.push(BoardPiece::new_from_type(
+            piece_type,
+                square,
+            PieceColor::Light
+        ))
     }
     result
 }

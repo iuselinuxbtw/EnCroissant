@@ -56,10 +56,10 @@ impl Moves {
         }
         false
     }
+    /// Returns whether Moves contains a move that would capture the king
     fn contains_king(&self) -> bool {
         // This could be made with a iterator
         for basic_move in self.basic_move.clone() {
-            // This is bs. It has to look into the future instead of this
             if let Some(capture) = basic_move.capture {
                 if capture.piece_type == PieceType::King {
                     return true;

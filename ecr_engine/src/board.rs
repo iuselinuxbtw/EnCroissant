@@ -22,8 +22,8 @@ pub type SquareInner = Rc<RefCell<BoardPiece>>;
 pub struct Board {
     /// The representation of the board. A board consists of 8x8 squares. The first array is for the
     /// x, the second for the y coordinate. Since the board has 8 squares on each axis, an index of
-    /// `0` to `7` is possible. Contains an [`Option<BoardPiece>`] since a square can be empty, which
-    /// means that squares with [`None`] as value will be empty.
+    /// `0` to `7` is possible. Contains an [`Option<BoardPiece>`] since a square can be empty,
+    /// which means that squares with [`None`] as value will be empty.
     board: Vec<Vec<Option<SquareInner>>>,
     /// Since a hybrid solution for saving the pieces is used, we save all pieces as well as
     pub(crate) pieces: Vec<SquareInner>,
@@ -109,7 +109,7 @@ impl Clone for Board {
             let board_piece_to_add: BoardPiece = inner.borrow().deref().clone();
             let piece = Rc::new(RefCell::new(board_piece_to_add));
             cloned_pieces.push(piece);
-            // TODO: This doesn't clone the Piece
+
         }
         board_clone.castle_state = *self.get_castle_state();
         board_clone.pieces = cloned_pieces;

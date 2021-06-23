@@ -16,6 +16,17 @@ pub fn get_en_passant_actual(target_square: Coordinate) -> Coordinate {
     }
 }
 
+// Returns all Squares on a default board as Coordinates
+pub fn get_all_squares() -> Vec<Coordinate>{
+    let mut result = vec![];
+    for x in 0..=7 {
+        for y in 0..=7 {
+            result.push((x, y).into());
+        }
+    }
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use std::any;

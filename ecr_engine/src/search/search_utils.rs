@@ -2,7 +2,7 @@ use crate::board::Board;
 use std::fmt::Display;
 use trees::{tr, Node, Tree};
 
-pub fn search() {
+pub fn search(depth: u8) {
     //TODO: Implement a Graph containing either the full board oor a minimal version of the board(or the move).
 }
 
@@ -44,6 +44,7 @@ mod tests {
         for variation in variations {
             root.push_back(tr(variation));
         }
+
         // Print the tree sorted by preorder
         assert_eq!(32, root.data().pieces.len());
         println!("{}", tree_to_string(tree.root()));
