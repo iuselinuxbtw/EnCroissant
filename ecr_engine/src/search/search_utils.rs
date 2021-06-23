@@ -23,7 +23,6 @@ pub fn tree_to_string<T: Display>(node: &Node<T>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::board::Board;
 
     #[test]
     fn test_search() {

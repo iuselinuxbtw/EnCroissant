@@ -32,7 +32,6 @@ fn evaluate_pieces(board: &Board) -> i32 {
     for piece in dark_pieces {
         value_dark += piece.borrow().deref().get_piece().get_value() as i32;
     }
-    // FIXME: This crashes because of an "Attempt to subtract with Overflow"
     value_light - value_dark
 }
 
