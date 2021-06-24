@@ -1,7 +1,8 @@
 use ecr_shared::coordinate::Coordinate;
 
+use crate::{board::Board};
+use crate::move_gen::move_gen::BasicMove;
 use crate::pieces::PieceType;
-use crate::{board::Board, pieces::move_gen::BasicMove};
 
 /// The type of a move. Can contain various information about
 #[derive(Debug, PartialEq, Clone)]
@@ -93,12 +94,12 @@ pub struct Move {
 
 #[cfg(test)]
 mod tests {
-
     use std::str::FromStr;
 
     use ecr_formats::fen::Fen;
 
     use super::*;
+
     #[test]
     fn test_contains_check() {
         let board: Board =

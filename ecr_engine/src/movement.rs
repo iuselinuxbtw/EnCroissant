@@ -5,7 +5,7 @@ use ecr_shared::coordinate::Coordinate;
 
 use crate::board;
 use crate::board::SquareInner;
-use crate::pieces::move_gen::{BasicMove, Capture, CastleMove, CastleMoveType};
+use crate::move_gen::move_gen::{BasicMove, Capture, CastleMove, CastleMoveType};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Moves;
 use ecr_shared::board::BoardCastleState;
@@ -339,7 +339,7 @@ mod tests {
         use ecr_formats::fen::Fen;
 
         use crate::board::Board;
-        use crate::pieces::move_gen::BasicMove;
+        use crate::move_gen::move_gen::BasicMove;
         use crate::pieces::PieceColor;
 
         use super::*;

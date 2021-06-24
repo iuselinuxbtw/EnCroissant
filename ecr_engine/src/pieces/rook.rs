@@ -1,7 +1,7 @@
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board::Board;
-use crate::pieces::move_gen::{linear_moves, BasicMove};
+use crate::move_gen::move_gen::{linear_moves, BasicMove};
 use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;

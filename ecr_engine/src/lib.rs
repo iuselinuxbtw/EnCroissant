@@ -5,3 +5,4 @@ pub mod movement;
 pub mod pieces;
 pub mod search;
 pub mod utils;
+pub mod move_gen;

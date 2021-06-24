@@ -1,7 +1,7 @@
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board::Board;
-use crate::pieces::move_gen::{diagonal_moves, linear_moves, BasicMove};
+use crate::move_gen::move_gen::{diagonal_moves, linear_moves, BasicMove};
 use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;
@@ -34,7 +34,7 @@ impl Piece for Queen {
 #[cfg(test)]
 mod tests {
     use crate::board;
-    use crate::pieces::move_gen::Capture;
+    use crate::move_gen::move_gen::Capture;
 
     use super::*;
 

@@ -11,8 +11,7 @@ use crate::board::{Board, BoardCastleState};
 use crate::pieces::move_utils::{coordinate_check, distance_to_border, next_row, piece_on_square};
 use crate::pieces::PieceColor;
 use crate::{check_square, check_this_move};
-
-// TODO: Move to ecr_engine/src/move_gen package.
+use crate::move_gen::directions::*;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Capture {
@@ -91,103 +90,6 @@ pub enum CastleMoveType {
     DarkQueenSide,
 }
 
-/// Utility enum for the function explore_diagonal_moves. Assigns each diagonal direction a on the
-/// chess board a cardinal direction. You can look up the cardinal directions
-/// [here](https://en.wikipedia.org/wiki/Cardinal_direction).
-enum DiagonalDirections {
-    // upper-left
-    NW,
-    // upper-right
-    NE,
-    // down-right
-    SE,
-    // down-left
-    SW,
-}
-
-/// Utility enum for the function explore_linear_moves. Assigns each linear direction a on the chess
-/// board a cardinal direction. You can look up the cardinal directions
-/// [here](https://en.wikipedia.org/wiki/Cardinal_direction).
-enum LinearDirections {
-    // up
-    N,
-    // right
-    E,
-    // down
-    S,
-    // left
-    W,
-}
-
-/// This enum combines LinearDirections and DiagonalDirections. Useful for the explore_knight_moves.
-/// The first direction always refers to the direction where the knight jumps further. These are
-/// cardinal directions, which you can look up [here](https://en.wikipedia.org/wiki/Cardinal_direction).
-enum KnightDirections {
-    // First the linear directions.
-    // left-then-up
-    WN,
-    // right-then-up
-    EN,
-    // right-then-down
-    ES,
-    // left-then-down
-    WS,
-    // And the diagonal ones as well.
-    // up-then-left
-    NW,
-    // up-then-right
-    NE,
-    // down-then-right
-    SE,
-    // down-then-left
-    SW,
-}
-
-/// This enum holds the combined directions of LinearDirections and DiagonalDirections. Used for
-/// e.g. KingDirections
-#[derive(Debug, PartialEq, Copy, Clone)]
-enum Directions {
-    // Linear Directions
-    // up
-    N,
-    // right
-    E,
-    // down
-    S,
-    // left
-    W,
-    // Diagonal Directions
-    // upper-left
-    NW,
-    // upper-right
-    NE,
-    // down-right
-    SE,
-    // down-left
-    SW,
-}
-
-impl Directions{
-    pub fn get_direction(x: i16, y: i16) -> Option<Directions>{
-        match (x, y){
-            // West and East
-            (-8..=-1, 0) => Some(Directions::W),
-            (1..=8, 0) => Some(Directions::E),
-            // South and North
-            (0, 1..=8) => Some(Directions::S),
-            (0,-8..=-1) => Some(Directions::N),
-            // South-east
-            (1..=8, 1..=8) => Some(Directions::SE),
-            // South-west
-            (-8..=-1, 1..=8) => Some(Directions::SW),
-            // North-east
-            (1..=8, -8..=-1) => Some(Directions::NE),
-            // North-west
-            (-8..=-1, -8..=-1) => Some(Directions::NW),
-            (_, _) => None
-        }
-    }
-}
 
 /// Returns the possible linear moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
@@ -237,7 +139,7 @@ pub fn linear_moves(
     result
 }
 
-/// This function is useful for exploring the squares in a linear direction of a piece. Used for
+/// Useful for exploring the squares in a linear direction of a piece. Used for
 /// rook and Queen move generation.
 fn explore_linear_direction(
     direction: LinearDirections,
@@ -286,6 +188,7 @@ pub fn pawn_moves(
     team_color: PieceColor,
     has_moved: bool,
 ) -> Vec<BasicMove> {
+    // TODO: Cleanup
     let mut result: Vec<BasicMove> = Vec::new();
     let from_x = start.get_x() as u8;
     let from_y = start.get_y() as u8;
@@ -359,6 +262,7 @@ pub fn knight_moves(
     let mut result: Vec<BasicMove> = Vec::new();
     let border_distances = distance_to_border(start);
     // This covers the positions from the right against the clock to the left and then down
+    // TODO: Do this in a match statement, since that should make it easier to read
     if border_distances.right > 1 {
         if border_distances.down > 0 {
             queue.push(KnightDirections::ES);
