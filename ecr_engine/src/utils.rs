@@ -45,4 +45,12 @@ mod tests {
             get_type_name(&r)
         );
     }
+
+    #[test]
+    fn test_get_all_squares(){
+        let all_squares:Vec<Coordinate> = get_all_squares();
+        assert_eq!(64, all_squares.len());
+        assert_eq!(Coordinate{ y: 1, x: 0 }, all_squares[1]);
+        assert_eq!(Coordinate{ y: 7, x: 7}, all_squares[63]);
+    }
 }

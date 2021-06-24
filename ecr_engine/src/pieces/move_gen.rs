@@ -142,8 +142,10 @@ enum KnightDirections {
     // down-then-left
     SW,
 }
+
 /// This enum holds the combined directions of LinearDirections and DiagonalDirections. Used for
 /// e.g. KingDirections
+#[derive(Debug, PartialEq, Copy, Clone)]
 enum Directions {
     // Linear Directions
     // up
@@ -163,6 +165,28 @@ enum Directions {
     SE,
     // down-left
     SW,
+}
+
+impl Directions{
+    pub fn get_direction(x: i16, y: i16) -> Option<Directions>{
+        match (x, y){
+            // West and East
+            (-8..=-1, 0) => Some(Directions::W),
+            (1..=8, 0) => Some(Directions::E),
+            // South and North
+            (0, 1..=8) => Some(Directions::S),
+            (0,-8..=-1) => Some(Directions::N),
+            // South-east
+            (1..=8, 1..=8) => Some(Directions::SE),
+            // South-west
+            (-8..=-1, 1..=8) => Some(Directions::SW),
+            // North-east
+            (1..=8, -8..=-1) => Some(Directions::NE),
+            // North-west
+            (-8..=-1, -8..=-1) => Some(Directions::NW),
+            (_, _) => None
+        }
+    }
 }
 
 /// Returns the possible linear moves of a piece with the given coordinates as a vector of
@@ -511,7 +535,7 @@ pub fn get_castle_moves(
     // First we match the team so we can give back only the castle moves of a specific team.
     match team {
         PieceColor::Light => {
-            // TODO: Simplify this using lambdas or macros
+            // TODO: Simplify this using a function
             if castle_state.light_queen_side
                 //&& board.is_threatened((4, 0).into()) == 0 This check is redundant since the check_move_gen will never call this function.
                 // And if a piece is in the way
@@ -1291,6 +1315,18 @@ mod tests {
             );
             let expected: Vec<CastleMove> = vec![];
             assert_eq!(expected, result);
+        }
+        #[test]
+        fn test_get_direction(){
+            assert_eq!(None, Directions::get_direction(0, 0));
+            assert_eq!(Some(Directions::N), Directions::get_direction(0, -5));
+            assert_eq!(Some(Directions::S), Directions::get_direction(0, 3));
+            assert_eq!(Some(Directions::E), Directions::get_direction(7, 0));
+            assert_eq!(Some(Directions::W), Directions::get_direction(-2, 0));
+            assert_eq!(Some(Directions::SE), Directions::get_direction(6, 4));
+            assert_eq!(Some(Directions::SW), Directions::get_direction(-7, 5));
+            assert_eq!(Some(Directions::NE), Directions::get_direction(3, -8));
+            assert_eq!(Some(Directions::NW), Directions::get_direction(-4, -2));
         }
     }
     mod basic_move {
