@@ -45,7 +45,7 @@ impl Moves {
                 .as_ref()
                 .borrow()
                 .get_piece()
-                .get_pseudo_legal_moves(board, &mv.to, color, true);
+                .get_pseudo_legal_moves(board, mv.to, color, true);
             // Turn it into a Moves
             let new_moves = Moves {
                 from: mv.to,

@@ -13,14 +13,14 @@ use crate::move_gen::directions::LinearDirections;
 /// This functions is useful for finding out whether or not a pawn can move forwards by returning
 /// true if there is a piece in front. Steps determine how far it will go.
 pub(crate) fn piece_in_front(
-    from: &Coordinate,
+    from: Coordinate,
     team_color: PieceColor,
     board: &board::Board,
     step: u8,
 ) -> bool {
-    let mut next_coordinate: Coordinate = *from;
-
+    let mut next_coordinate: Coordinate = from;
     next_coordinate.y = next_row(from.get_y(), team_color, step);
+
     // Return false if there is not a piece in front of it.
     piece_on_square(next_coordinate, board).is_some()
 }
@@ -78,7 +78,7 @@ pub(crate) fn piece_on_square(square: Coordinate, board: &board::Board) -> Optio
 /// when the piece is the  opponents color in which case it adds the position and then breaks.
 /// If it is neither of those it just adds it to the result.
 #[macro_export]
-macro_rules! check_square {
+macro_rules! check_square_in_loop {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
         let possible_square =  coordinate_check(&$x, &$y, $team_color, $board);
         // If the square is occupied by a piece
@@ -99,7 +99,6 @@ macro_rules! check_square {
 
 /// This macro is essentially the same as check_square without the 'break' statements so that it can
 /// be used outside of a loop.
-// TODO: Dumb macro name, change this
 #[macro_export]
 macro_rules! check_this_move {
     ($x: expr, $y: expr, $team_color: expr, $result: expr, $board: expr) => {
@@ -121,6 +120,7 @@ macro_rules! check_this_move {
 
 /// This struct holds the distance to the different borders of a coordinate. Useful for calculating
 /// in which directions the knight can go.
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct DistanceToBorder {
     // Distance to the upper border
     pub(crate) up: u8,
@@ -133,7 +133,7 @@ pub struct DistanceToBorder {
 }
 
 /// Returns the distance of a coordinate to every border.
-pub fn distance_to_border(coords: &Coordinate) -> DistanceToBorder {
+pub fn distance_to_border(coords: Coordinate) -> DistanceToBorder {
     let x = coords.get_x();
     let y = coords.get_y();
     let up = 7 - y;
@@ -201,6 +201,7 @@ mod tests {
     mod macros {
         use super::*;
         use crate::pieces::BoardPiece;
+        use crate::board::Board;
 
         #[test]
         fn test_piece_is_on_square() {
@@ -215,6 +216,24 @@ mod tests {
             let king = BoardPiece::new_from_type(PieceType::King, king_coords, PieceColor::Dark);
             let piece2 = piece_on_square(king_coords, &default_board);
             assert_eq!(king, *piece2.unwrap().as_ref().borrow().deref());
+        }
+
+        #[test]
+        fn test_next_row(){
+            assert_eq!(5, next_row(4,PieceColor::Light, 1));
+            assert_eq!(3, next_row(4,PieceColor::Dark, 1));
+            assert_eq!(2, next_row(4,PieceColor::Dark, 2));
+            assert_eq!(1, next_row(0,PieceColor::Light, 1));
+        }
+
+        #[test]
+        fn test_distance_to_borders(){
+            assert_eq!(DistanceToBorder{
+                up: 7,
+                right: 7,
+                down: 0,
+                left: 0
+            }, distance_to_border((0,0).into()));
         }
     }
 }

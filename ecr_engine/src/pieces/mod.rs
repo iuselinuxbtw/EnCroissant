@@ -35,7 +35,7 @@ pub trait Piece: Debug + Clone {
     fn get_pseudo_legal_moves(
         &self,
         board: &Board,
-        piece_coordinate: &Coordinate,
+        piece_coordinate: Coordinate,
         piece_color: PieceColor,
         has_moved: bool,
     ) -> Vec<BasicMove>;
@@ -170,7 +170,7 @@ mod tests {
            fn get_pseudo_legal_moves(
                 &self,
                 board: &Board,
-                piece_coordinate: &Coordinate,
+                piece_coordinate: Coordinate,
                 piece_color: PieceColor,
                 has_moved: bool,
                 ) -> Vec<BasicMove>;

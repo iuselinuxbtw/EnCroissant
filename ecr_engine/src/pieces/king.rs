@@ -17,7 +17,7 @@ impl Piece for King {
     fn get_pseudo_legal_moves(
         &self,
         board: &Board,
-        piece_coordinate: &Coordinate,
+        piece_coordinate: Coordinate,
         piece_color: PieceColor,
         #[allow(unused_variables)] has_moved: bool,
     ) -> Vec<BasicMove> {
