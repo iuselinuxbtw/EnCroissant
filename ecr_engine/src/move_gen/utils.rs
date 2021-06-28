@@ -1,14 +1,14 @@
 //! This file holds all the utility functions for the move_gen module.
 
-use ecr_shared::coordinate::Coordinate;
 use crate::board;
-use std::rc::Rc;
 use crate::board::SquareInner;
+use ecr_shared::coordinate::Coordinate;
+use std::rc::Rc;
 
 use std::ops::Deref;
 
-use crate::pieces::{PieceColor, PieceType};
 use crate::move_gen::directions::LinearDirections;
+use crate::pieces::{PieceColor, PieceType};
 
 /// This functions is useful for finding out whether or not a pawn can move forwards by returning
 /// true if there is a piece in front. Steps determine how far it will go.
@@ -200,8 +200,8 @@ mod tests {
     use super::*;
     mod macros {
         use super::*;
-        use crate::pieces::BoardPiece;
         use crate::board::Board;
+        use crate::pieces::BoardPiece;
 
         #[test]
         fn test_piece_is_on_square() {
@@ -219,21 +219,24 @@ mod tests {
         }
 
         #[test]
-        fn test_next_row(){
-            assert_eq!(5, next_row(4,PieceColor::Light, 1));
-            assert_eq!(3, next_row(4,PieceColor::Dark, 1));
-            assert_eq!(2, next_row(4,PieceColor::Dark, 2));
-            assert_eq!(1, next_row(0,PieceColor::Light, 1));
+        fn test_next_row() {
+            assert_eq!(5, next_row(4, PieceColor::Light, 1));
+            assert_eq!(3, next_row(4, PieceColor::Dark, 1));
+            assert_eq!(2, next_row(4, PieceColor::Dark, 2));
+            assert_eq!(1, next_row(0, PieceColor::Light, 1));
         }
 
         #[test]
-        fn test_distance_to_borders(){
-            assert_eq!(DistanceToBorder{
-                up: 7,
-                right: 7,
-                down: 0,
-                left: 0
-            }, distance_to_border((0,0).into()));
+        fn test_distance_to_borders() {
+            assert_eq!(
+                DistanceToBorder {
+                    up: 7,
+                    right: 7,
+                    down: 0,
+                    left: 0
+                },
+                distance_to_border((0, 0).into())
+            );
         }
     }
 }

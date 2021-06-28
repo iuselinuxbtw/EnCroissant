@@ -1,12 +1,10 @@
-use ecr_shared::pieces::{PieceType, PieceColor};
-use ecr_shared::coordinate::Coordinate;
 use crate::board;
+use ecr_shared::coordinate::Coordinate;
+use ecr_shared::pieces::{PieceColor, PieceType};
 
 pub mod directions;
 pub mod move_gen;
 mod utils;
-
-
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Capture {

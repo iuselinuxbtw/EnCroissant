@@ -1,8 +1,8 @@
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board::Board;
-use crate::pieces::PieceType;
 use crate::move_gen::BasicMove;
+use crate::pieces::PieceType;
 
 /// The type of a move. Can contain various information about
 #[derive(Debug, PartialEq, Clone)]

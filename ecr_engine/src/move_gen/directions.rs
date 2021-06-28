@@ -97,7 +97,7 @@ impl Directions {
 }
 #[cfg(test)]
 mod tests {
-    mod directions{
+    mod directions {
         use super::super::*;
         #[test]
         fn test_get_direction() {

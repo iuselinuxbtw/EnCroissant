@@ -9,12 +9,14 @@ use ecr_shared::pieces::PieceType;
 use crate::board;
 use crate::board::{Board, BoardCastleState};
 use crate::move_gen::directions::*;
-use crate::move_gen::{CastleMoveType, CastleMove, BasicMove};
-use crate::move_gen::utils::{coordinate_check, next_row, piece_in_front, piece_on_square, no_piece_in_the_way};
-use crate::{check_this_move, check_square_in_loop};
-use crate::move_gen::Capture;
-use crate::pieces::PieceColor;
 use crate::move_gen::utils::distance_to_border;
+use crate::move_gen::utils::{
+    coordinate_check, next_row, no_piece_in_the_way, piece_in_front, piece_on_square,
+};
+use crate::move_gen::Capture;
+use crate::move_gen::{BasicMove, CastleMove, CastleMoveType};
+use crate::pieces::PieceColor;
+use crate::{check_square_in_loop, check_this_move};
 
 /// Returns the possible linear moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
@@ -410,7 +412,6 @@ pub fn get_castle_moves(
     }
     result
 }
-
 
 /// Returns the possible diagonal moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
