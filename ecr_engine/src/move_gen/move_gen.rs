@@ -9,86 +9,12 @@ use ecr_shared::pieces::PieceType;
 use crate::board;
 use crate::board::{Board, BoardCastleState};
 use crate::move_gen::directions::*;
-use crate::pieces::move_utils::{coordinate_check, distance_to_border, next_row, piece_on_square};
+use crate::move_gen::{CastleMoveType, CastleMove, BasicMove};
+use crate::move_gen::utils::{coordinate_check, next_row, piece_in_front, piece_on_square, no_piece_in_the_way};
+use crate::{check_this_move, check_square};
+use crate::move_gen::Capture;
 use crate::pieces::PieceColor;
-use crate::{check_square, check_this_move};
-
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub struct Capture {
-    pub piece_type: PieceType,
-    pub target: Coordinate,
-}
-
-/// Defines a move in the most basic form.
-///
-/// Only defines where the move goes and whether or not the move is a capture.
-// TODO: Implement pawn promotion as maybe an Option i guess. We would have to make a new type to not always have a None type in the move.
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub struct BasicMove {
-    pub to: Coordinate,
-    pub capture: Option<Capture>,
-}
-
-impl BasicMove {
-    pub fn get_target_square(&self) -> Coordinate {
-        self.to
-    }
-    pub fn get_capture(&self) -> Option<Capture> {
-        self.capture
-    }
-
-    /// Returns whether the target square is threatened. Useful for king movement.
-    pub fn get_is_threatened(&self, board: &board::Board, team: PieceColor) -> bool {
-        let state = board.get_threatened_state(self.get_target_square());
-        match team {
-            PieceColor::Light => state.threatened_dark > 0,
-            PieceColor::Dark => state.threatened_light > 0,
-        }
-    }
-    /// If the Capture is
-    pub fn get_is_en_passant(&self) -> bool {
-        // We can safely unwrap since we've checked that is is_some
-        self.capture.is_some() && self.to != self.capture.unwrap().target
-    }
-    /// Generates a new non-capture move
-    pub fn new_move(to: Coordinate) -> BasicMove {
-        BasicMove { to, capture: None }
-    }
-    /// Generates a new capture move
-    pub fn new_capture(to: Coordinate, piece_type: PieceType) -> BasicMove {
-        BasicMove {
-            to,
-            capture: Some(Capture {
-                piece_type,
-                target: to,
-            }),
-        }
-    }
-
-    /// Generates a new en_passant move
-    pub fn new_en_passant(to: Coordinate, to_capture: Coordinate) -> BasicMove {
-        BasicMove {
-            to,
-            capture: Some(Capture {
-                piece_type: PieceType::Pawn,
-                target: to_capture,
-            }),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub struct CastleMove {
-    pub move_type: CastleMoveType,
-}
-
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum CastleMoveType {
-    LightKingSide,
-    LightQueenSide,
-    DarkKingSide,
-    DarkQueenSide,
-}
+use crate::move_gen::utils::distance_to_border;
 
 /// Returns the possible linear moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
@@ -485,62 +411,6 @@ pub fn get_castle_moves(
     result
 }
 
-/// Returns true if there is no piece in the way. Useful for [`get_castle_moves`]
-fn no_piece_in_the_way(
-    board: &board::Board,
-    start: Coordinate,
-    direction: LinearDirections,
-    range: u8,
-) -> bool {
-    let x = start.get_x();
-    let y = start.get_y();
-    match direction {
-        LinearDirections::N => {
-            for increment in 0..range {
-                if piece_on_square((x, y + increment).into(), board).is_some() {
-                    return false;
-                }
-            }
-        }
-        LinearDirections::E => {
-            for increment in 0..range {
-                if piece_on_square((x + increment, y).into(), board).is_some() {
-                    return false;
-                }
-            }
-        }
-        LinearDirections::S => {
-            for decrement in 0..range {
-                if piece_on_square((x, y - decrement).into(), board).is_some() {
-                    return false;
-                }
-            }
-        }
-        LinearDirections::W => {
-            for decrement in 0..range {
-                if piece_on_square((x - decrement, y).into(), board).is_some() {
-                    return false;
-                }
-            }
-        }
-    }
-    true
-}
-
-/// This functions is useful for finding out whether or not a pawn can move forwards by returning
-/// true if there is a piece in front. Steps determine how far it will go.
-fn piece_in_front(
-    from: &Coordinate,
-    team_color: PieceColor,
-    board: &board::Board,
-    step: u8,
-) -> bool {
-    let mut next_coordinate: Coordinate = *from;
-
-    next_coordinate.y = next_row(from.get_y(), team_color, step);
-    // Return false if there is not a piece in front of it.
-    piece_on_square(next_coordinate, board).is_some()
-}
 
 /// Returns the possible diagonal moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
@@ -986,21 +856,6 @@ mod tests {
                 },
             ];
             assert_eq!(expected2, result2);
-        }
-
-        #[test]
-        fn test_piece_is_on_square() {
-            let default_board = board::Board::default();
-            // Check where the pawn is in the default position
-            let pawn_coords: Coordinate = (0, 1).into();
-            let pawn = BoardPiece::new_from_type(PieceType::Pawn, pawn_coords, PieceColor::Light);
-            let piece = piece_on_square(pawn_coords, &default_board);
-            assert_eq!(*piece.unwrap().as_ref().borrow().deref(), pawn);
-
-            let king_coords: Coordinate = (4, 7).into();
-            let king = BoardPiece::new_from_type(PieceType::King, king_coords, PieceColor::Dark);
-            let piece2 = piece_on_square(king_coords, &default_board);
-            assert_eq!(king, *piece2.unwrap().as_ref().borrow().deref());
         }
 
         #[test]

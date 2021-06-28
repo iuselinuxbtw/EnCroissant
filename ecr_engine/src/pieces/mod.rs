@@ -11,12 +11,11 @@ pub use ecr_shared::pieces::PieceColor;
 pub use ecr_shared::pieces::PieceType;
 
 use crate::board::Board;
-use crate::move_gen::move_gen::BasicMove;
+use crate::move_gen::BasicMove;
 
 pub mod bishop;
 pub mod king;
 pub mod knight;
-pub mod move_utils;
 pub mod pawn;
 pub mod queen;
 pub mod rook;

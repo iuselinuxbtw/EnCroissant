@@ -1,10 +1,11 @@
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board::Board;
-use crate::move_gen::move_gen::{diagonal_moves, BasicMove};
+use crate::move_gen::move_gen::diagonal_moves;
 use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;
+use crate::move_gen::BasicMove;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bishop {}

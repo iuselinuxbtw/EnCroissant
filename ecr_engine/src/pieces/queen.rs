@@ -1,10 +1,11 @@
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board::Board;
-use crate::move_gen::move_gen::{diagonal_moves, linear_moves, BasicMove};
+use crate::move_gen::move_gen::{diagonal_moves, linear_moves};
 use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;
+use crate::move_gen::BasicMove;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Queen {}
@@ -34,7 +35,7 @@ impl Piece for Queen {
 #[cfg(test)]
 mod tests {
     use crate::board;
-    use crate::move_gen::move_gen::Capture;
+    use crate::move_gen::Capture;
 
     use super::*;
 

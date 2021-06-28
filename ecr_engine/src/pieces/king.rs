@@ -1,10 +1,11 @@
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board::Board;
-use crate::move_gen::move_gen::{king_moves, BasicMove};
+use crate::move_gen::move_gen::king_moves;
 use crate::pieces::{PieceColor, PieceType};
 
 use super::Piece;
+use crate::move_gen::BasicMove;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct King {}

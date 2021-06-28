@@ -1,11 +1,77 @@
-use std::ops::Deref;
-use std::rc::Rc;
+//! This file holds all the utility functions for the move_gen module.
 
 use ecr_shared::coordinate::Coordinate;
-
 use crate::board;
+use std::rc::Rc;
 use crate::board::SquareInner;
+
+use std::ops::Deref;
+
 use crate::pieces::{PieceColor, PieceType};
+use crate::move_gen::directions::LinearDirections;
+
+/// This functions is useful for finding out whether or not a pawn can move forwards by returning
+/// true if there is a piece in front. Steps determine how far it will go.
+pub(crate) fn piece_in_front(
+    from: &Coordinate,
+    team_color: PieceColor,
+    board: &board::Board,
+    step: u8,
+) -> bool {
+    let mut next_coordinate: Coordinate = *from;
+
+    next_coordinate.y = next_row(from.get_y(), team_color, step);
+    // Return false if there is not a piece in front of it.
+    piece_on_square(next_coordinate, board).is_some()
+}
+
+/// Returns true if there is no piece in the way. Useful for [`get_castle_moves`]
+pub(crate) fn no_piece_in_the_way(
+    board: &board::Board,
+    start: Coordinate,
+    direction: LinearDirections,
+    range: u8,
+) -> bool {
+    let x = start.get_x();
+    let y = start.get_y();
+    match direction {
+        LinearDirections::N => {
+            for increment in 0..range {
+                if piece_on_square((x, y + increment).into(), board).is_some() {
+                    return false;
+                }
+            }
+        }
+        LinearDirections::E => {
+            for increment in 0..range {
+                if piece_on_square((x + increment, y).into(), board).is_some() {
+                    return false;
+                }
+            }
+        }
+        LinearDirections::S => {
+            for decrement in 0..range {
+                if piece_on_square((x, y - decrement).into(), board).is_some() {
+                    return false;
+                }
+            }
+        }
+        LinearDirections::W => {
+            for decrement in 0..range {
+                if piece_on_square((x - decrement, y).into(), board).is_some() {
+                    return false;
+                }
+            }
+        }
+    }
+    true
+}
+
+// Returns the Piece a square is occupied by. If the square is not occupied it returns None
+pub(crate) fn piece_on_square(square: Coordinate, board: &board::Board) -> Option<SquareInner> {
+    // Get the SquareInner
+    board.get_at(square).map(|i| Rc::clone(&i))
+}
 
 /// This macro is used to break the loop of calculating positions when the current square is
 /// occupied. Breaks instantly when the square is occupied by a piece of the own color, but not
@@ -130,8 +196,25 @@ fn check_square(
     }
 }
 
-// Returns the Piece a square is occupied by. If the square is not occupied it returns None
-pub(crate) fn piece_on_square(square: Coordinate, board: &board::Board) -> Option<SquareInner> {
-    // Get the SquareInner
-    board.get_at(square).map(|i| Rc::clone(&i))
+mod tests {
+    use super::*;
+    mod macros {
+        use super::*;
+        use crate::pieces::BoardPiece;
+
+        #[test]
+        fn test_piece_is_on_square() {
+            let default_board = board::Board::default();
+            // Check where the pawn is in the default position
+            let pawn_coords: Coordinate = (0, 1).into();
+            let pawn = BoardPiece::new_from_type(PieceType::Pawn, pawn_coords, PieceColor::Light);
+            let piece = piece_on_square(pawn_coords, &default_board);
+            assert_eq!(*piece.unwrap().as_ref().borrow().deref(), pawn);
+
+            let king_coords: Coordinate = (4, 7).into();
+            let king = BoardPiece::new_from_type(PieceType::King, king_coords, PieceColor::Dark);
+            let piece2 = piece_on_square(king_coords, &default_board);
+            assert_eq!(king, *piece2.unwrap().as_ref().borrow().deref());
+        }
+    }
 }
