@@ -286,7 +286,7 @@ impl Board {
 
     /// Adds a threat to the square by the given team.
     pub fn add_threat(&mut self, square: Coordinate, team: PieceColor) {
-        let mut current_state = self.get_threatened_state(square).clone();
+        let mut current_state = self.get_threatened_state(square);
         match team {
             PieceColor::Light => {
                 current_state.threatened_light += 1;

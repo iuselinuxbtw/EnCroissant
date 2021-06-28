@@ -206,7 +206,7 @@ mod tests {
 
         #[test]
         fn test_piece_is_on_square() {
-            let default_board = board::Board::default();
+            let default_board = Board::default();
             // Check where the pawn is in the default position
             let pawn_coords: Coordinate = (0, 1).into();
             let pawn = BoardPiece::new_from_type(PieceType::Pawn, pawn_coords, PieceColor::Light);

@@ -23,10 +23,11 @@ pub fn search(board: &Board, depth: u8) -> Tree<Board> {
     tree
 }
 
+/*
 /// Used for recursion necessary for depth-search in search.
 fn search_util(root: Tree<Board>, depth: u8) {
     //TODO
-}
+}*/
 
 /// Prints the tree fens from a given node o a string.
 pub fn tree_to_string<T: Display>(node: &Node<T>) -> String {

@@ -1,6 +1,5 @@
 //! Pseudo-legal moves are generated here. For moves during check we'll use another generator.
 
-use std::convert::TryFrom;
 use std::ops::Deref;
 
 use ecr_shared::coordinate::Coordinate;
@@ -112,8 +111,8 @@ fn explore_direction(
                 y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square_in_loop!(
-                    u8::try_from(x).unwrap(),
-                    u8::try_from(y).unwrap(),
+                    x,
+                    y,
                     team_color,
                     result,
                     board
@@ -127,8 +126,8 @@ fn explore_direction(
                 y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square_in_loop!(
-                    u8::try_from(x).unwrap(),
-                    u8::try_from(y).unwrap(),
+                    x,
+                    y,
                     team_color,
                     result,
                     board
@@ -142,8 +141,8 @@ fn explore_direction(
                 y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square_in_loop!(
-                    u8::try_from(x).unwrap(),
-                    u8::try_from(y).unwrap(),
+                    x,
+                    y,
                     team_color,
                     result,
                     board
@@ -157,8 +156,8 @@ fn explore_direction(
                 y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
                 check_square_in_loop!(
-                    u8::try_from(x).unwrap(),
-                    u8::try_from(y).unwrap(),
+                    x,
+                    y,
                     team_color,
                     result,
                     board
