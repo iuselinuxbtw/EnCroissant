@@ -7,8 +7,8 @@ use std::rc::Rc;
 
 use std::ops::Deref;
 
-use crate::move_gen::directions::LinearDirections;
 use crate::pieces::{PieceColor, PieceType};
+use crate::move_gen::directions::Directions;
 
 /// This functions is useful for finding out whether or not a pawn can move forwards by returning
 /// true if there is a piece in front. Steps determine how far it will go.
@@ -29,40 +29,41 @@ pub(crate) fn piece_in_front(
 pub(crate) fn no_piece_in_the_way(
     board: &board::Board,
     start: Coordinate,
-    direction: LinearDirections,
+    direction: Directions,
     range: u8,
 ) -> bool {
     let x = start.get_x();
     let y = start.get_y();
     match direction {
-        LinearDirections::N => {
+        Directions::N => {
             for increment in 0..range {
                 if piece_on_square((x, y + increment).into(), board).is_some() {
                     return false;
                 }
             }
         }
-        LinearDirections::E => {
+        Directions::E => {
             for increment in 0..range {
                 if piece_on_square((x + increment, y).into(), board).is_some() {
                     return false;
                 }
             }
         }
-        LinearDirections::S => {
+        Directions::S => {
             for decrement in 0..range {
                 if piece_on_square((x, y - decrement).into(), board).is_some() {
                     return false;
                 }
             }
         }
-        LinearDirections::W => {
+        Directions::W => {
             for decrement in 0..range {
                 if piece_on_square((x - decrement, y).into(), board).is_some() {
                     return false;
                 }
             }
         }
+        _ => {todo!()}
     }
     true
 }

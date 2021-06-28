@@ -11,7 +11,7 @@ pub fn search(board: &Board, depth: u8) -> Tree<Board> {
     for moves in root.data().get_pseudo_legal_moves(board.to_move) {
         for m in moves.basic_move {
             let mut cloned_board = board.clone();
-            cloned_board.r#move(moves.from, &m);
+            cloned_board.do_blunder(moves.from, &m);
             variations.push(cloned_board);
         }
     }

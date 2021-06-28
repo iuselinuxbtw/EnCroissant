@@ -37,7 +37,7 @@ impl Moves {
         // Do every possible move and test whether the board where the move is done has a move where the king could be captured
         for mv in self.basic_move.clone() {
             let mut board_clone = board.clone();
-            board_clone.r#move(self.from, &mv);
+            board_clone.do_blunder(self.from, &mv);
             let inner = board_clone.get_at(mv.to).unwrap();
             let color = inner.as_ref().borrow().get_color();
             // We need to get the moves in the future

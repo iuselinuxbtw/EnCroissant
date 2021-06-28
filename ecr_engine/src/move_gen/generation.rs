@@ -34,29 +34,29 @@ pub fn linear_moves(
     let from_y = start.get_y();
 
     // explore all directions
-    result.append(&mut explore_linear_direction(
-        LinearDirections::N,
+    result.append(&mut explore_direction(
+        Directions::N,
         from_x,
         from_y,
         team_color,
         board,
     ));
-    result.append(&mut explore_linear_direction(
-        LinearDirections::E,
+    result.append(&mut explore_direction(
+        Directions::E,
         from_x,
         from_y,
         team_color,
         board,
     ));
-    result.append(&mut explore_linear_direction(
-        LinearDirections::S,
+    result.append(&mut explore_direction(
+        Directions::S,
         from_x,
         from_y,
         team_color,
         board,
     ));
-    result.append(&mut explore_linear_direction(
-        LinearDirections::W,
+    result.append(&mut explore_direction(
+        Directions::W,
         from_x,
         from_y,
         team_color,
@@ -68,8 +68,8 @@ pub fn linear_moves(
 
 /// Useful for exploring the squares in a linear direction of a piece. Used for
 /// rook and Queen move generation.
-fn explore_linear_direction(
-    direction: LinearDirections,
+fn explore_direction(
+    direction: Directions,
     from_x: u8,
     from_y: u8,
     team_color: PieceColor,
@@ -80,28 +80,89 @@ fn explore_linear_direction(
     let mut x = from_x;
     let mut y = from_y;
     match direction {
-        LinearDirections::N => {
+        Directions::N => {
             while y < 7 {
                 y += 1;
                 check_square_in_loop!(x, y, team_color, result, board);
             }
         }
-        LinearDirections::E => {
+        Directions::E => {
             while x < 7 {
                 x += 1;
                 check_square_in_loop!(x, y, team_color, result, board);
             }
         }
-        LinearDirections::S => {
+        Directions::S => {
             while y > 0 {
                 y -= 1;
                 check_square_in_loop!(x, y, team_color, result, board);
             }
         }
-        LinearDirections::W => {
+        Directions::W => {
             while x > 0 {
                 x -= 1;
                 check_square_in_loop!(x, y, team_color, result, board);
+            }
+        }
+        // upper-left
+        Directions::NW => {
+            while x > 0 && y < 7 {
+                // First we modify the coordinates so we can calculate the new possible coordinates
+                x -= 1;
+                y += 1;
+                // We can safely unwrap here since the variables can't be less than 0
+                check_square_in_loop!(
+                    u8::try_from(x).unwrap(),
+                    u8::try_from(y).unwrap(),
+                    team_color,
+                    result,
+                    board
+                );
+            }
+        }
+        // upper-right
+        Directions::NE => {
+            while x < 7 && y < 7 {
+                x += 1;
+                y += 1;
+                // We can safely unwrap here since the variables can't be less than 0
+                check_square_in_loop!(
+                    u8::try_from(x).unwrap(),
+                    u8::try_from(y).unwrap(),
+                    team_color,
+                    result,
+                    board
+                );
+            }
+        }
+        // down-right
+        Directions::SE => {
+            while x < 7 && y > 0 {
+                x += 1;
+                y -= 1;
+                // We can safely unwrap here since the variables can't be less than 0
+                check_square_in_loop!(
+                    u8::try_from(x).unwrap(),
+                    u8::try_from(y).unwrap(),
+                    team_color,
+                    result,
+                    board
+                );
+            }
+        }
+        // down-left
+        Directions::SW => {
+            while x > 0 && y > 0 {
+                x -= 1;
+                y -= 1;
+                // We can safely unwrap here since the variables can't be less than 0
+                check_square_in_loop!(
+                    u8::try_from(x).unwrap(),
+                    u8::try_from(y).unwrap(),
+                    team_color,
+                    result,
+                    board
+                );
             }
         }
     };
@@ -370,7 +431,7 @@ pub fn get_castle_moves(
             if castle_state.light_queen_side
                 //&& board.is_threatened((4, 0).into()) == 0 This check is redundant since the check_move_gen will never call this function.
                 // And if a piece is in the way
-                && no_piece_in_the_way(board, (3, 0).into(), LinearDirections::W, 3)
+                && no_piece_in_the_way(board, (3, 0).into(), Directions::W, 3)
                 // We have to check if one of the squares is threatened
                 && board.get_threatened_state((3, 0).into()).threatened_dark == 0
                 && board.get_threatened_state((2, 0).into()).threatened_dark == 0
@@ -380,7 +441,7 @@ pub fn get_castle_moves(
                 })
             }
             if castle_state.light_king_side
-                && no_piece_in_the_way(board, (5, 0).into(), LinearDirections::E, 2)
+                && no_piece_in_the_way(board, (5, 0).into(), Directions::E, 2)
                 && board.get_threatened_state((5, 0).into()).threatened_dark == 0
                 && board.get_threatened_state((6, 0).into()).threatened_dark == 0
             {
@@ -391,7 +452,7 @@ pub fn get_castle_moves(
         }
         PieceColor::Dark => {
             if castle_state.dark_queen_side
-                && no_piece_in_the_way(board, (3, 7).into(), LinearDirections::W, 3)
+                && no_piece_in_the_way(board, (3, 7).into(), Directions::W, 3)
                 && board.get_threatened_state((3, 7).into()).threatened_light == 0
                 && board.get_threatened_state((4, 7).into()).threatened_light == 0
             {
@@ -400,7 +461,7 @@ pub fn get_castle_moves(
                 })
             }
             if castle_state.dark_king_side
-                && no_piece_in_the_way(board, (5, 7).into(), LinearDirections::E, 2)
+                && no_piece_in_the_way(board, (5, 7).into(), Directions::E, 2)
                 && board.get_threatened_state((5, 7).into()).threatened_light == 0
                 && board.get_threatened_state((6, 7).into()).threatened_light == 0
             {
@@ -429,111 +490,34 @@ pub fn diagonal_moves(
     let from_y = start.get_y();
 
     // Explore the moves in all directions.
-    result.append(&mut explore_diagonal_direction(
-        DiagonalDirections::NW,
-        &from_x,
-        &from_y,
+    result.append(&mut explore_direction(
+        Directions::NW,
+        from_x,
+        from_y,
         team_color,
         board,
     ));
-    result.append(&mut explore_diagonal_direction(
-        DiagonalDirections::NE,
-        &from_x,
-        &from_y,
+    result.append(&mut explore_direction(
+        Directions::NE,
+        from_x,
+        from_y,
         team_color,
         board,
     ));
-    result.append(&mut explore_diagonal_direction(
-        DiagonalDirections::SE,
-        &from_x,
-        &from_y,
+    result.append(&mut explore_direction(
+        Directions::SE,
+        from_x,
+        from_y,
         team_color,
         board,
     ));
-    result.append(&mut explore_diagonal_direction(
-        DiagonalDirections::SW,
-        &from_x,
-        &from_y,
+    result.append(&mut explore_direction(
+        Directions::SW,
+        from_x,
+        from_y,
         team_color,
         board,
     ));
-    result
-}
-
-/// This function returns all moves into a particular diagonal direction
-fn explore_diagonal_direction(
-    direction: DiagonalDirections,
-    from_x: &u8,
-    from_y: &u8,
-    team_color: PieceColor,
-    board: &board::Board,
-) -> Vec<BasicMove> {
-    let mut x = *from_x as i32;
-    let mut y = *from_y as i32;
-    let mut result: Vec<BasicMove> = Vec::new();
-    match direction {
-        // upper-left
-        DiagonalDirections::NW => {
-            while x > 0 && y < 7 {
-                // First we modify the coordinates so we can calculate the new possible coordinates
-                x -= 1;
-                y += 1;
-                // We can safely unwrap here since the variables can't be less than 0
-                check_square_in_loop!(
-                    u8::try_from(x).unwrap(),
-                    u8::try_from(y).unwrap(),
-                    team_color,
-                    result,
-                    board
-                );
-            }
-        }
-        // upper-right
-        DiagonalDirections::NE => {
-            while x < 7 && y < 7 {
-                x += 1;
-                y += 1;
-                // We can safely unwrap here since the variables can't be less than 0
-                check_square_in_loop!(
-                    u8::try_from(x).unwrap(),
-                    u8::try_from(y).unwrap(),
-                    team_color,
-                    result,
-                    board
-                );
-            }
-        }
-        // down-right
-        DiagonalDirections::SE => {
-            while x < 7 && y > 0 {
-                x += 1;
-                y -= 1;
-                // We can safely unwrap here since the variables can't be less than 0
-                check_square_in_loop!(
-                    u8::try_from(x).unwrap(),
-                    u8::try_from(y).unwrap(),
-                    team_color,
-                    result,
-                    board
-                );
-            }
-        }
-        // down-left
-        DiagonalDirections::SW => {
-            while x > 0 && y > 0 {
-                x -= 1;
-                y -= 1;
-                // We can safely unwrap here since the variables can't be less than 0
-                check_square_in_loop!(
-                    u8::try_from(x).unwrap(),
-                    u8::try_from(y).unwrap(),
-                    team_color,
-                    result,
-                    board
-                );
-            }
-        }
-    }
     result
 }
 
@@ -636,10 +620,10 @@ mod tests {
         fn test_explore_diagonal_moves() {
             let empty_board = board::Board::empty();
             // Calculate the moves in the North-east (upper-right) direction from 3,2(d3)
-            let result = explore_diagonal_direction(
-                DiagonalDirections::NE,
-                &3,
-                &2,
+            let result = explore_direction(
+                Directions::NE,
+                3,
+                2,
                 PieceColor::Light,
                 &empty_board,
             );
@@ -664,10 +648,10 @@ mod tests {
             assert_eq!(expected, result);
 
             // Do the same for the North-west (upper-left) direction from h1
-            let result2 = explore_diagonal_direction(
-                DiagonalDirections::NW,
-                &7,
-                &0,
+            let result2 = explore_direction(
+                Directions::NW,
+                7,
+                0,
                 PieceColor::Dark,
                 &empty_board,
             );
@@ -706,10 +690,10 @@ mod tests {
             // Now do the whole thing with a filled board in the direction of NW (upper left) from e3
             // The fen string for the bishop from this position would be: 'rnbqkbnr/pppppppp/8/8/8/4B3/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
             let default_board = Board::default();
-            let result3 = explore_diagonal_direction(
-                DiagonalDirections::NW,
-                &4,
-                &2,
+            let result3 = explore_direction(
+                Directions::NW,
+                4,
+                2,
                 PieceColor::Light,
                 &default_board,
             );
@@ -737,10 +721,10 @@ mod tests {
             assert_eq!(expected3, result3);
 
             // This should be empty as there are only two of our own pieces in that direction.
-            let result4 = explore_diagonal_direction(
-                DiagonalDirections::SE,
-                &3,
-                &2,
+            let result4 = explore_direction(
+                Directions::SE,
+                3,
+                2,
                 PieceColor::Light,
                 &default_board,
             );

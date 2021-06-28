@@ -62,7 +62,7 @@ impl MoveProperties {
 impl board::Board {
     /// This function moves a piece from a given start square to another square, contained in a
     /// BasicMove. Note: This function doesn't complain if a piece by the wrong team is moved.
-    pub fn r#move(&mut self, start: Coordinate, basic_move: &BasicMove) {
+    pub fn do_blunder(&mut self, start: Coordinate, basic_move: &BasicMove) {
         let move_properties = MoveProperties::get_properties(*basic_move, self.clone(), start);
 
         self.pre_move(start, &move_properties.inner);
@@ -155,9 +155,9 @@ impl board::Board {
         match castle_move.move_type {
             CastleMoveType::LightKingSide => {
                 // Move the king
-                self.r#move((4, 0).into(), &BasicMove::new_move((6, 0).into()));
+                self.do_blunder((4, 0).into(), &BasicMove::new_move((6, 0).into()));
                 // Move the rook
-                self.r#move(
+                self.do_blunder(
                     (7, 0).into(),
                     &BasicMove {
                         capture: None,
@@ -166,8 +166,8 @@ impl board::Board {
                 );
             }
             CastleMoveType::LightQueenSide => {
-                self.r#move((4, 0).into(), &BasicMove::new_move((2, 0).into()));
-                self.r#move(
+                self.do_blunder((4, 0).into(), &BasicMove::new_move((2, 0).into()));
+                self.do_blunder(
                     (0, 0).into(),
                     &BasicMove {
                         capture: None,
@@ -176,8 +176,8 @@ impl board::Board {
                 );
             }
             CastleMoveType::DarkKingSide => {
-                self.r#move((4, 7).into(), &BasicMove::new_move((6, 7).into()));
-                self.r#move(
+                self.do_blunder((4, 7).into(), &BasicMove::new_move((6, 7).into()));
+                self.do_blunder(
                     (7, 7).into(),
                     &BasicMove {
                         capture: None,
@@ -186,8 +186,8 @@ impl board::Board {
                 );
             }
             CastleMoveType::DarkQueenSide => {
-                self.r#move((4, 7).into(), &BasicMove::new_move((2, 7).into()));
-                self.r#move(
+                self.do_blunder((4, 7).into(), &BasicMove::new_move((2, 7).into()));
+                self.do_blunder(
                     (0, 7).into(),
                     &BasicMove {
                         capture: None,
@@ -303,8 +303,8 @@ impl board::Board {
 
     fn calculate_team_threatened_state(&mut self, team_color: PieceColor) {
         for moves in self.get_pseudo_legal_moves(team_color) {
-            for r#move in moves.basic_move {
-                self.add_threat(r#move.to, team_color);
+            for do_blunder in moves.basic_move {
+                self.add_threat(do_blunder.to, team_color);
             }
         }
     }
@@ -321,7 +321,7 @@ impl board::Board {
         // Clone the current board
         let mut future_board = self.clone();
         // Do the move in the cloned board
-        future_board.r#move(start, basic_move);
+        future_board.do_blunder(start, basic_move);
         // Check if the the king can be captured by the team that can currently move.
         // We need to invert the result since moves where the opponent does not have check after are legal.
         !future_board.check_checker(future_board.to_move)
@@ -347,7 +347,7 @@ mod tests {
         #[test]
         fn test_movement() {
             let mut default_board = Board::default();
-            default_board.r#move(
+            default_board.do_blunder(
                 (7, 1).into(),
                 &BasicMove {
                     to: (7, 3).into(),
@@ -363,7 +363,7 @@ mod tests {
                 Fen::from(default_board.clone()).to_string()
             );
             assert!(default_board.get_at((7, 3).into()).is_some());
-            default_board.r#move(
+            default_board.do_blunder(
                 (6, 6).into(),
                 &BasicMove {
                     to: (6, 4).into(),
@@ -374,7 +374,7 @@ mod tests {
                 "rnbqkbnr/pppppp1p/8/6p1/7P/8/PPPPPPP1/RNBQKBNR w KQkq - 0 2".to_string(),
                 Fen::from(default_board.clone()).to_string()
             );
-            default_board.r#move(
+            default_board.do_blunder(
                 (7, 0).into(),
                 &BasicMove {
                     to: (7, 2).into(),
@@ -386,7 +386,7 @@ mod tests {
                 "rnbqkbnr/pppppp1p/8/6p1/7P/7R/PPPPPPP1/RNBQKBN1 b KQkq - 1 2".to_string(),
                 Fen::from(default_board.clone()).to_string()
             );
-            default_board.r#move(
+            default_board.do_blunder(
                 (6, 4).into(),
                 &BasicMove {
                     to: (7, 3).into(),
@@ -410,7 +410,7 @@ mod tests {
 
             assert!(default_board.get_at((5, 1).into()).is_some());
             // The best opening move known to mankind
-            default_board.r#move(
+            default_board.do_blunder(
                 (5, 1).into(),
                 &BasicMove {
                     to: (5, 2).into(),

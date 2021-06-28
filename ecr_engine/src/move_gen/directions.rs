@@ -1,30 +1,4 @@
-/// Utility enum for the function explore_diagonal_moves. Assigns each diagonal direction a on the
-/// chess board a cardinal direction. You can look up the cardinal directions
-/// [here](https://en.wikipedia.org/wiki/Cardinal_direction).
-pub(crate) enum DiagonalDirections {
-    // upper-left
-    NW,
-    // upper-right
-    NE,
-    // down-right
-    SE,
-    // down-left
-    SW,
-}
-
-/// Utility enum for the function explore_linear_moves. Assigns each linear direction a on the chess
-/// board a cardinal direction. You can look up the cardinal directions
-/// [here](https://en.wikipedia.org/wiki/Cardinal_direction).
-pub(crate) enum LinearDirections {
-    // up
-    N,
-    // right
-    E,
-    // down
-    S,
-    // left
-    W,
-}
+//! Contains the Directions used for orientation on the board, which are mostly used in Move Generation
 
 /// This enum combines LinearDirections and DiagonalDirections. Useful for the explore_knight_moves.
 /// The first direction always refers to the direction where the knight jumps further. These are
