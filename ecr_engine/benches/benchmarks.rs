@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use ecr_engine::board;
 use ecr_engine::board::Board;
-use ecr_engine::move_gen::move_gen::*;
+use ecr_engine::move_gen::generation::*;
 use ecr_engine::move_gen::*;
 use ecr_engine::pieces::{BoardPiece, PieceColor};
 use ecr_engine::utils::get_all_squares;

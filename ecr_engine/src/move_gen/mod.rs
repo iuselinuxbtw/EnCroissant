@@ -3,7 +3,7 @@ use ecr_shared::coordinate::Coordinate;
 use ecr_shared::pieces::{PieceColor, PieceType};
 
 pub mod directions;
-pub mod move_gen;
+pub mod generation;
 mod utils;
 
 #[derive(Debug, PartialEq, Copy, Clone)]

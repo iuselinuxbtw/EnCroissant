@@ -257,7 +257,7 @@ impl board::Board {
                 .borrow()
                 .get_piece()
                 .get_pseudo_legal_moves(
-                    &self,
+                    self,
                     // These calls seem kinda dumb and i don't know why we need the first deref now but it works fine. If Anyone wants to improve them please do so.
                     square_inner.deref().borrow().borrow().get_coordinate(),
                     square_inner.deref().borrow().borrow().get_color(),
@@ -321,7 +321,7 @@ impl board::Board {
         // Clone the current board
         let mut future_board = self.clone();
         // Do the move in the cloned board
-        future_board.r#move(start, &basic_move);
+        future_board.r#move(start, basic_move);
         // Check if the the king can be captured by the team that can currently move.
         // We need to invert the result since moves where the opponent does not have check after are legal.
         !future_board.check_checker(future_board.to_move)
