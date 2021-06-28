@@ -26,7 +26,7 @@ fn get_moves_of_pieces(pieces: Vec<BoardPiece>, board: &board::Board) {
     for piece in &pieces {
         piece.get_piece().get_pseudo_legal_moves(
             board,
-            &piece.get_coordinate(),
+            piece.get_coordinate(),
             PieceColor::Light,
             false,
         );
@@ -108,7 +108,7 @@ fn bench_move(b: &mut Criterion) {
     b.bench_function("Move", |c| {
         c.iter(|| {
             // The best opening move known to mankind
-            default_board.clone().r#move(
+            default_board.clone().do_blunder(
                 black_box((5, 1).into()),
                 &BasicMove {
                     to: (5, 2).into(),
