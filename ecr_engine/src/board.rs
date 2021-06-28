@@ -109,7 +109,6 @@ impl Clone for Board {
             let board_piece_to_add: BoardPiece = inner.borrow().deref().clone();
             let piece = Rc::new(RefCell::new(board_piece_to_add));
             cloned_pieces.push(piece);
-
         }
         board_clone.castle_state = *self.get_castle_state();
         board_clone.pieces = cloned_pieces;

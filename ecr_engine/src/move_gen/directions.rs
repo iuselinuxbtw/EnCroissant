@@ -74,15 +74,15 @@ pub(crate) enum Directions {
     SW,
 }
 
-impl Directions{
-    pub fn get_direction(x: i16, y: i16) -> Option<Directions>{
-        match (x, y){
+impl Directions {
+    pub fn get_direction(x: i16, y: i16) -> Option<Directions> {
+        match (x, y) {
             // West and East
             (-8..=-1, 0) => Some(Directions::W),
             (1..=8, 0) => Some(Directions::E),
             // South and North
             (0, 1..=8) => Some(Directions::S),
-            (0,-8..=-1) => Some(Directions::N),
+            (0, -8..=-1) => Some(Directions::N),
             // South-east
             (1..=8, 1..=8) => Some(Directions::SE),
             // South-west
@@ -91,7 +91,26 @@ impl Directions{
             (1..=8, -8..=-1) => Some(Directions::NE),
             // North-west
             (-8..=-1, -8..=-1) => Some(Directions::NW),
-            (_, _) => None
+            (_, _) => None,
+        }
+    }
+}
+#[cfg(test)]
+mod tests {
+    mod Directions{
+        use super::super::*;
+        #[test]
+        fn test_get_direction() {
+            assert_eq!(None, Directions::get_direction(0, 0));
+            assert_eq!(None, Directions::get_direction(10, 2));
+            assert_eq!(Some(Directions::N), Directions::get_direction(0, -5));
+            assert_eq!(Some(Directions::S), Directions::get_direction(0, 3));
+            assert_eq!(Some(Directions::E), Directions::get_direction(7, 0));
+            assert_eq!(Some(Directions::W), Directions::get_direction(-2, 0));
+            assert_eq!(Some(Directions::SE), Directions::get_direction(6, 4));
+            assert_eq!(Some(Directions::SW), Directions::get_direction(-7, 5));
+            assert_eq!(Some(Directions::NE), Directions::get_direction(3, -8));
+            assert_eq!(Some(Directions::NW), Directions::get_direction(-4, -2));
         }
     }
 }

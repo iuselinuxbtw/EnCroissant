@@ -2,21 +2,21 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use ecr_engine::board;
 use ecr_engine::board::Board;
+use ecr_engine::move_gen::move_gen::*;
 use ecr_engine::move_gen::*;
 use ecr_engine::pieces::{BoardPiece, PieceColor};
-use ecr_shared::pieces::PieceType;
 use ecr_engine::utils::get_all_squares;
-use ecr_engine::move_gen::move_gen::*;
+use ecr_shared::pieces::PieceType;
 
 /// Generates a light-colored piece of the given type for every square on the board.
 fn generate_pieces_of_type(piece_type: PieceType) -> Vec<BoardPiece> {
     let mut result: Vec<BoardPiece> = vec![];
     let all_squares = get_all_squares();
-    for square in all_squares{
+    for square in all_squares {
         result.push(BoardPiece::new_from_type(
             piece_type,
-                square,
-            PieceColor::Light
+            square,
+            PieceColor::Light,
         ))
     }
     result

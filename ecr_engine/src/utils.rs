@@ -17,7 +17,7 @@ pub fn get_en_passant_actual(target_square: Coordinate) -> Coordinate {
 }
 
 // Returns all Squares on a default board as Coordinates
-pub fn get_all_squares() -> Vec<Coordinate>{
+pub fn get_all_squares() -> Vec<Coordinate> {
     let mut result = vec![];
     for x in 0..=7 {
         for y in 0..=7 {
@@ -47,10 +47,10 @@ mod tests {
     }
 
     #[test]
-    fn test_get_all_squares(){
-        let all_squares:Vec<Coordinate> = get_all_squares();
+    fn test_get_all_squares() {
+        let all_squares: Vec<Coordinate> = get_all_squares();
         assert_eq!(64, all_squares.len());
-        assert_eq!(Coordinate{ y: 1, x: 0 }, all_squares[1]);
-        assert_eq!(Coordinate{ y: 7, x: 7}, all_squares[63]);
+        assert_eq!(Coordinate { y: 1, x: 0 }, all_squares[1]);
+        assert_eq!(Coordinate { y: 7, x: 7 }, all_squares[63]);
     }
 }

@@ -6,8 +6,8 @@ use ecr_shared::pieces::PieceColor;
 
 use crate::board;
 use crate::board::{Board, ThreatenedState};
-use ecr_shared::coordinate::Coordinate;
 use crate::utils::get_all_squares;
+use ecr_shared::coordinate::Coordinate;
 
 impl board::Board {
     pub fn eval(&self) -> f32 {
@@ -61,7 +61,7 @@ fn middle_squares_score(board: &Board) -> i32 {
 
 /// Returns the Score of who has more Threats all squares following the MiniMax Principle
 fn all_squares_score(board: &Board) -> i32 {
-    let mut all_squares: Vec<Coordinate> = get_all_squares();
+    let all_squares: Vec<Coordinate> = get_all_squares();
     let light_score = get_threatened_score(
         get_threatened_states(board, all_squares.clone()),
         PieceColor::Light,

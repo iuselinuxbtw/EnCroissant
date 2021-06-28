@@ -1,6 +1,6 @@
 use ecr_shared::coordinate::Coordinate;
 
-use crate::{board::Board};
+use crate::board::Board;
 use crate::move_gen::move_gen::BasicMove;
 use crate::pieces::PieceType;
 

@@ -8,10 +8,10 @@ use ecr_shared::pieces::PieceType;
 
 use crate::board;
 use crate::board::{Board, BoardCastleState};
+use crate::move_gen::directions::*;
 use crate::pieces::move_utils::{coordinate_check, distance_to_border, next_row, piece_on_square};
 use crate::pieces::PieceColor;
 use crate::{check_square, check_this_move};
-use crate::move_gen::directions::*;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Capture {
@@ -89,7 +89,6 @@ pub enum CastleMoveType {
     DarkKingSide,
     DarkQueenSide,
 }
-
 
 /// Returns the possible linear moves of a piece with the given coordinates as a vector of
 /// coordinates, also checks whether there are pieces in the way. An example of a piece that moves
@@ -1219,18 +1218,6 @@ mod tests {
             );
             let expected: Vec<CastleMove> = vec![];
             assert_eq!(expected, result);
-        }
-        #[test]
-        fn test_get_direction(){
-            assert_eq!(None, Directions::get_direction(0, 0));
-            assert_eq!(Some(Directions::N), Directions::get_direction(0, -5));
-            assert_eq!(Some(Directions::S), Directions::get_direction(0, 3));
-            assert_eq!(Some(Directions::E), Directions::get_direction(7, 0));
-            assert_eq!(Some(Directions::W), Directions::get_direction(-2, 0));
-            assert_eq!(Some(Directions::SE), Directions::get_direction(6, 4));
-            assert_eq!(Some(Directions::SW), Directions::get_direction(-7, 5));
-            assert_eq!(Some(Directions::NE), Directions::get_direction(3, -8));
-            assert_eq!(Some(Directions::NW), Directions::get_direction(-4, -2));
         }
     }
     mod basic_move {
