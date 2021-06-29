@@ -7,8 +7,8 @@ use std::rc::Rc;
 
 use std::ops::Deref;
 
-use crate::pieces::{PieceColor, PieceType};
 use crate::move_gen::directions::Directions;
+use crate::pieces::{PieceColor, PieceType};
 
 /// This functions is useful for finding out whether or not a pawn can move forwards by returning
 /// true if there is a piece in front. Steps determine how far it will go.
@@ -63,7 +63,9 @@ pub(crate) fn no_piece_in_the_way(
                 }
             }
         }
-        _ => {todo!()}
+        _ => {
+            todo!()
+        }
     }
     true
 }

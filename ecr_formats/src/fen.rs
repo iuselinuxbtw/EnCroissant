@@ -47,7 +47,7 @@ pub enum FenError {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Fen {
     pub piece_placements: FenPiecePlacements,
-    pub light_to_move: bool,
+    pub to_move: PieceColor,
     pub castles: BoardCastleState,
     pub en_passant: Option<Coordinate>,
     pub half_moves: u8,
@@ -61,9 +61,9 @@ impl Display for Fen {
             f,
             "{} {} {} {} {} {}",
             self.piece_placements.to_string(),
-            match self.light_to_move {
-                true => "w",
-                false => "b",
+            match self.to_move {
+                PieceColor::Light => "w",
+                PieceColor::Dark => "b",
             },
             {
                 if self.castles.is_any_possible() {
@@ -108,7 +108,11 @@ impl FromStr for Fen {
             // Unwrapping is safe here since the FEN string got already validated so this does not
             // return an error
             piece_placements: (&caps["piece_placements"]).parse().unwrap(),
-            light_to_move: matches!(&caps["to_move"], "w"),
+            to_move: match &caps["to_move"] {
+                "b" => PieceColor::Dark,
+                "w" => PieceColor::Light,
+                &_ => return Err(FenError::InvalidFenString),
+            },
             castles: resolve_board_castle_state(String::from(&caps["castles"])),
             en_passant: match &caps["en_passant"] {
                 "-" => None,
@@ -402,7 +406,7 @@ mod tests {
                     piece_placements: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
                         .parse()
                         .unwrap(),
-                    light_to_move: true,
+                    to_move: PieceColor::Light,
                     castles: BoardCastleState {
                         light_king_side: true,
                         light_queen_side: true,
@@ -420,7 +424,7 @@ mod tests {
             assert_eq!(
                 Fen {
                     piece_placements: "8/8/8/8/8/8/8/8".parse().unwrap(),
-                    light_to_move: false,
+                    to_move: PieceColor::Dark,
                     castles: BoardCastleState {
                         light_king_side: true,
                         light_queen_side: false,
@@ -433,6 +437,18 @@ mod tests {
                 },
                 Fen::from_str("8/8/8/8/8/8/8/8 b Kq e6 10 37").unwrap()
             );
+
+            assert_eq!(
+                Fen {
+                    piece_placements: "1k6/8/8/8/2r5/8/8/3KR2r".parse().unwrap(),
+                    to_move: PieceColor::Dark,
+                    castles: BoardCastleState::empty(),
+                    en_passant: None,
+                    half_moves: 0,
+                    move_number: 1
+                },
+                Fen::from_str("1k6/8/8/8/2r5/8/8/3KR2r b - - 0 1").unwrap()
+            )
         }
 
         #[test]

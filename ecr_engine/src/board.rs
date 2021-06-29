@@ -465,10 +465,7 @@ impl From<Fen> for Board {
         board.half_move_amount = f.half_moves;
         board.en_passant = EnPassant::from_option(f.en_passant);
         board.castle_state = f.castles;
-        match f.light_to_move {
-            true => board.to_move = PieceColor::Light,
-            false => board.to_move = PieceColor::Dark,
-        }
+        board.to_move = f.to_move;
 
         // Add all pieces to the board
         for piece in f.piece_placements {
@@ -485,7 +482,7 @@ impl From<Board> for Fen {
     fn from(board: Board) -> Self {
         let mut fen = Fen {
             piece_placements: FenPiecePlacements { pieces: Vec::new() },
-            light_to_move: board.get_light_to_move(),
+            to_move: board.to_move,
             castles: *board.get_castle_state(), // Copy is implemented for BoardCastleState
             en_passant: board.get_en_passant_target_option(),
             half_moves: board.get_half_move_amount(),
@@ -682,7 +679,9 @@ mod tests {
         fn test_eval_board() {
             let default_board: Board = board::Board::default();
             let result = default_board.eval_board();
-            assert_eq!(0.0, result);
+            // See https://floating-point-gui.de/errors/comparison/
+            assert_eq!(0, result as i8);
+            // TODO: More Tests
         }
 
         #[test]
@@ -797,7 +796,7 @@ mod tests {
                             ((4, 7).into(), PieceColor::Dark, PieceType::King).into(),
                         ],
                     },
-                    light_to_move: true,
+                    to_move: PieceColor::Light,
                     castles: BoardCastleState {
                         light_king_side: true,
                         light_queen_side: true,

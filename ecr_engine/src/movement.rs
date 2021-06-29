@@ -4,7 +4,7 @@ use std::ops::Deref;
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board;
-use crate::board::SquareInner;
+use crate::board::{SquareInner, Board};
 use crate::move_gen::{BasicMove, Capture, CastleMove, CastleMoveType};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Moves;
@@ -124,6 +124,12 @@ impl board::Board {
         // Check if the move is legal
         // TODO: Add to move Vector
         // TODO: Update castle_state
+    }
+
+    pub(crate) fn move_on_cloned_board(&self, start: Coordinate, basic_move: &BasicMove) -> Board{
+        let mut cloned_board = self.clone();
+        cloned_board.do_blunder(start, basic_move);
+        return cloned_board
     }
 
     // This function contains stuff that has to be done before every move
@@ -285,9 +291,9 @@ impl board::Board {
         result
     }
 
-    /// Returns true if the given team has a check
+    /// Returns true if the given team is currently checking the other team
     fn check_checker(&self, team: PieceColor) -> bool {
-        let all_moves: Vec<Moves> = self.get_pseudo_legal_moves(team);
+        let mut all_moves: Vec<Moves> = self.get_pseudo_legal_moves(team);
         for moves in all_moves {
             if moves.contains_check(self) {
                 return true;
@@ -439,6 +445,20 @@ mod tests {
                 Board::from(Fen::from_str("2k5/8/8/8/8/2R5/8/2K5 b - - 3 6").unwrap());
             light_check = check_board.check_checker(PieceColor::Light);
             assert_eq!(true, light_check);
+        }
+
+        #[test]
+        fn test_get_pseudo_legal_moves() {
+            let board: Board = (Fen::from_str("1k6/8/8/8/2r5/8/8/3KR2r b - - 0 1"))
+                .unwrap()
+                .into();
+            let moves = board.get_pseudo_legal_moves(board.to_move);
+            let piece_positions = vec![(1, 7).into(), (2, 3).into(), (7, 0).into()];
+            for m in &moves {
+                assert!(piece_positions.contains(&m.from));
+                assert!(board.get_at(m.from).is_some());
+            }
+            assert_eq!(3, moves.len());
         }
 
         /*#[test]

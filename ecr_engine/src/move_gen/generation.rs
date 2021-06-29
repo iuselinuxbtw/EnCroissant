@@ -8,10 +8,10 @@ use ecr_shared::pieces::PieceType;
 use crate::board;
 use crate::board::{Board, BoardCastleState};
 use crate::move_gen::directions::*;
-use crate::move_gen::utils::distance_to_border;
 use crate::move_gen::utils::{
     coordinate_check, next_row, no_piece_in_the_way, piece_in_front, piece_on_square,
 };
+use crate::move_gen::utils::{distance_to_border, DistanceToBorder};
 use crate::move_gen::Capture;
 use crate::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::pieces::PieceColor;
@@ -110,13 +110,7 @@ fn explore_direction(
                 x -= 1;
                 y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
-                check_square_in_loop!(
-                    x,
-                    y,
-                    team_color,
-                    result,
-                    board
-                );
+                check_square_in_loop!(x, y, team_color, result, board);
             }
         }
         // upper-right
@@ -125,13 +119,7 @@ fn explore_direction(
                 x += 1;
                 y += 1;
                 // We can safely unwrap here since the variables can't be less than 0
-                check_square_in_loop!(
-                    x,
-                    y,
-                    team_color,
-                    result,
-                    board
-                );
+                check_square_in_loop!(x, y, team_color, result, board);
             }
         }
         // down-right
@@ -140,13 +128,7 @@ fn explore_direction(
                 x += 1;
                 y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
-                check_square_in_loop!(
-                    x,
-                    y,
-                    team_color,
-                    result,
-                    board
-                );
+                check_square_in_loop!(x, y, team_color, result, board);
             }
         }
         // down-left
@@ -155,13 +137,7 @@ fn explore_direction(
                 x -= 1;
                 y -= 1;
                 // We can safely unwrap here since the variables can't be less than 0
-                check_square_in_loop!(
-                    x,
-                    y,
-                    team_color,
-                    result,
-                    board
-                );
+                check_square_in_loop!(x, y, team_color, result, board);
             }
         }
     };
@@ -249,7 +225,7 @@ pub fn knight_moves(
     let mut result: Vec<BasicMove> = Vec::new();
     let border_distances = distance_to_border(start);
     // This covers the positions from the right against the clock to the left and then down
-    // TODO: Do this in a match statement, since that should make it easier to read
+    // TODO: Cleanup
     if border_distances.right > 1 {
         if border_distances.down > 0 {
             queue.push(KnightDirections::ES);
@@ -619,13 +595,7 @@ mod tests {
         fn test_explore_diagonal_moves() {
             let empty_board = board::Board::empty();
             // Calculate the moves in the North-east (upper-right) direction from 3,2(d3)
-            let result = explore_direction(
-                Directions::NE,
-                3,
-                2,
-                PieceColor::Light,
-                &empty_board,
-            );
+            let result = explore_direction(Directions::NE, 3, 2, PieceColor::Light, &empty_board);
             let expected: Vec<BasicMove> = vec![
                 BasicMove {
                     to: (4, 3).into(),
@@ -647,13 +617,7 @@ mod tests {
             assert_eq!(expected, result);
 
             // Do the same for the North-west (upper-left) direction from h1
-            let result2 = explore_direction(
-                Directions::NW,
-                7,
-                0,
-                PieceColor::Dark,
-                &empty_board,
-            );
+            let result2 = explore_direction(Directions::NW, 7, 0, PieceColor::Dark, &empty_board);
             let expected2: Vec<BasicMove> = vec![
                 BasicMove {
                     to: (6, 1).into(),
@@ -689,13 +653,8 @@ mod tests {
             // Now do the whole thing with a filled board in the direction of NW (upper left) from e3
             // The fen string for the bishop from this position would be: 'rnbqkbnr/pppppppp/8/8/8/4B3/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
             let default_board = Board::default();
-            let result3 = explore_direction(
-                Directions::NW,
-                4,
-                2,
-                PieceColor::Light,
-                &default_board,
-            );
+            let result3 =
+                explore_direction(Directions::NW, 4, 2, PieceColor::Light, &default_board);
             let expected3: Vec<BasicMove> = vec![
                 BasicMove {
                     to: (3, 3).into(),
@@ -720,13 +679,8 @@ mod tests {
             assert_eq!(expected3, result3);
 
             // This should be empty as there are only two of our own pieces in that direction.
-            let result4 = explore_direction(
-                Directions::SE,
-                3,
-                2,
-                PieceColor::Light,
-                &default_board,
-            );
+            let result4 =
+                explore_direction(Directions::SE, 3, 2, PieceColor::Light, &default_board);
             let expected4: Vec<BasicMove> = vec![];
             assert_eq!(expected4, result4);
         }
