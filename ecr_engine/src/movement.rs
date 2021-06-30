@@ -235,19 +235,24 @@ impl board::Board {
         self.remove_piece(target_square);
     }
 
+    /// Returns the pseudo legal moves of the current team
+    pub fn get_pseudo_legal_moves(&self) -> Vec<Moves>{
+        self.get_pseudo_legal_moves_util(self.to_move)
+    }
+
     /// This function returns all possible pseudo legal moves (OF BOTH TEAMS!).
     ///
     /// We could also only get one move and bet on it being the best one which would certainly be
     /// interesting...
-    pub fn get_all_pseudo_legal_moves(&self) -> Vec<Moves> {
+    pub(crate) fn get_all_pseudo_legal_moves(&self) -> Vec<Moves> {
         let mut result: Vec<Moves> = vec![];
-        result.append(&mut self.get_pseudo_legal_moves(PieceColor::Light));
-        result.append(&mut self.get_pseudo_legal_moves(PieceColor::Dark));
+        result.append(&mut self.get_pseudo_legal_moves_util(PieceColor::Light));
+        result.append(&mut self.get_pseudo_legal_moves_util(PieceColor::Dark));
         result
     }
 
     /// Returns the pseudo-legal moves of a specific team.
-    pub fn get_pseudo_legal_moves(&self, team_color: PieceColor) -> Vec<Moves> {
+    pub fn get_pseudo_legal_moves_util(&self, team_color: PieceColor) -> Vec<Moves> {
         let mut result: Vec<Moves> = vec![];
         let own_pieces = self.get_all_pieces(team_color);
         result.append(&mut self.get_moves(own_pieces));
@@ -293,7 +298,7 @@ impl board::Board {
 
     /// Returns true if the given team is currently checking the other team
     fn check_checker(&self, team: PieceColor) -> bool {
-        let mut all_moves: Vec<Moves> = self.get_pseudo_legal_moves(team);
+        let mut all_moves: Vec<Moves> = self.get_pseudo_legal_moves_util(team);
         for moves in all_moves {
             if moves.contains_check(self) {
                 return true;
@@ -308,7 +313,7 @@ impl board::Board {
     }
 
     fn calculate_team_threatened_state(&mut self, team_color: PieceColor) {
-        for moves in self.get_pseudo_legal_moves(team_color) {
+        for moves in self.get_pseudo_legal_moves_util(team_color) {
             for do_blunder in moves.basic_move {
                 self.add_threat(do_blunder.to, team_color);
             }
@@ -452,7 +457,7 @@ mod tests {
             let board: Board = (Fen::from_str("1k6/8/8/8/2r5/8/8/3KR2r b - - 0 1"))
                 .unwrap()
                 .into();
-            let moves = board.get_pseudo_legal_moves(board.to_move);
+            let moves = board.get_pseudo_legal_moves();
             let piece_positions = vec![(1, 7).into(), (2, 3).into(), (7, 0).into()];
             for m in &moves {
                 assert!(piece_positions.contains(&m.from));

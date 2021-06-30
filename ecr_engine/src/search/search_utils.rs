@@ -8,7 +8,7 @@ pub fn search(board: &Board, depth: u8) -> Tree<Board> {
 
     // Execute every possible move in the variation vector.
     let mut variations = vec![];
-    for moves in root.data().get_pseudo_legal_moves(board.to_move) {
+    for moves in root.data().get_pseudo_legal_moves_util(board.to_move) {
         for m in moves.basic_move {
             let mut cloned_board = board.clone();
             cloned_board.do_blunder(moves.from, &m);

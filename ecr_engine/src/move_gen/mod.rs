@@ -15,7 +15,7 @@ pub struct Capture {
 /// Defines a move in the most basic form.
 ///
 /// Only defines where the move goes and whether or not the move is a capture.
-// TODO: Implement pawn promotion as maybe an Option i guess. We would have to make a new type to not always have a None type in the move.
+// TODO: Implement pawn promotion as a boolean. The additional moves it creates should be added in moves.basic_move
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct BasicMove {
     pub to: Coordinate,

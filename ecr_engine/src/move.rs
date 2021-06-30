@@ -133,7 +133,7 @@ mod tests {
         let board_2: Board = (Fen::from_str("1k6/8/8/8/2r5/8/8/3KR2r b - - 0 1"))
             .unwrap()
             .into();
-        let multiple_moves_2 = board_2.get_pseudo_legal_moves(board_2.to_move);
+        let multiple_moves_2 = board_2.get_pseudo_legal_moves();
         assert_eq!(3, multiple_moves_2.len());
 
         //FIXME: This should not be None

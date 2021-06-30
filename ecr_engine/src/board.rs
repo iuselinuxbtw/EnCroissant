@@ -29,7 +29,7 @@ pub struct Board {
     pub(crate) pieces: Vec<SquareInner>,
     /// All moves that were played. Can be empty if the board gets created from e.g. the FEN
     /// notation.
-    moves: Vec<Move>,
+    pub(crate) moves: Vec<Move>,
 
     /// The color that does the next move.
     pub(crate) to_move: PieceColor,
@@ -451,6 +451,7 @@ impl Default for Board {
             (5, 7).into(),
             PieceColor::Dark,
         ));
+        board.calculate_threatened_states();
 
         board
     }
