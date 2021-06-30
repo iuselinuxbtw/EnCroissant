@@ -4,7 +4,7 @@ use std::ops::Deref;
 use ecr_shared::coordinate::Coordinate;
 
 use crate::board;
-use crate::board::{SquareInner, Board};
+use crate::board::{Board, SquareInner};
 use crate::move_gen::{BasicMove, Capture, CastleMove, CastleMoveType};
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Moves;
@@ -126,10 +126,10 @@ impl board::Board {
         // TODO: Update castle_state
     }
 
-    pub(crate) fn move_on_cloned_board(&self, start: Coordinate, basic_move: &BasicMove) -> Board{
+    pub(crate) fn move_on_cloned_board(&self, start: Coordinate, basic_move: &BasicMove) -> Board {
         let mut cloned_board = self.clone();
         cloned_board.do_blunder(start, basic_move);
-        return cloned_board
+        return cloned_board;
     }
 
     // This function contains stuff that has to be done before every move
@@ -236,7 +236,7 @@ impl board::Board {
     }
 
     /// Returns the pseudo legal moves of the current team
-    pub fn get_pseudo_legal_moves(&self) -> Vec<Moves>{
+    pub fn get_pseudo_legal_moves(&self) -> Vec<Moves> {
         self.get_pseudo_legal_moves_util(self.to_move)
     }
 
@@ -298,7 +298,7 @@ impl board::Board {
 
     /// Returns true if the given team is currently checking the other team
     fn check_checker(&self, team: PieceColor) -> bool {
-        let mut all_moves: Vec<Moves> = self.get_pseudo_legal_moves_util(team);
+        let all_moves: Vec<Moves> = self.get_pseudo_legal_moves_util(team);
         for moves in all_moves {
             if moves.contains_check(self) {
                 return true;

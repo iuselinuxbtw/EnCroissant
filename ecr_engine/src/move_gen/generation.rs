@@ -9,9 +9,9 @@ use crate::board;
 use crate::board::{Board, BoardCastleState};
 use crate::move_gen::directions::*;
 use crate::move_gen::utils::{
-    coordinate_check, next_row, no_piece_in_the_way, piece_in_front, piece_on_square,
+    coordinate_check, distance_to_border, next_row, no_piece_in_the_way, piece_in_front,
+    piece_on_square,
 };
-use crate::move_gen::utils::{distance_to_border, DistanceToBorder};
 use crate::move_gen::Capture;
 use crate::move_gen::{BasicMove, CastleMove, CastleMoveType};
 use crate::pieces::PieceColor;

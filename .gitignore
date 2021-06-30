@@ -12,3 +12,6 @@ Cargo.lock
 .idea/
 .vscode/
 .project
+ecr_engine/fuzz/.gitignore
+ecr_engine/fuzz/Cargo.toml
+ecr_engine/fuzz/fuzz_targets/fuzz_target_1.rs

@@ -70,7 +70,6 @@ impl Moves {
         false
     }
 
-
     /// Removes all illegal moves from the Basic_Moves
     pub fn remove_illegal_moves(&mut self, board: &Board) {
         // FIXME: This returns less moves than are possible
@@ -86,14 +85,13 @@ impl Moves {
 
     /// Removes all captures from Moves. Could be written in a more functional style
     /// just as well...
-    pub fn remove_captures(&mut self){
-        for i in (0..self.basic_move.len()).rev(){
-            if self.basic_move[i].capture.is_some(){
+    pub fn remove_captures(&mut self) {
+        for i in (0..self.basic_move.len()).rev() {
+            if self.basic_move[i].capture.is_some() {
                 self.basic_move.remove(i);
             }
         }
     }
-
 }
 
 /// Represents a move. Can be used to modify the positions of pieces on the board. Does not do any
@@ -197,7 +195,6 @@ mod tests {
         // The Rook has 10 pseudo-legal moves, 4 of which are legal
         assert_eq!(10, moves.basic_move.len());
         moves.remove_illegal_moves(&board);
-        // FIXME: No Moves are removed although most of them leave the king in check
         assert_eq!(3, moves.basic_move.len());
         assert!(!moves.contains_check(&board));
         let legal_moves = vec![
