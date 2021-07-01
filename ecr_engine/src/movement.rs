@@ -307,6 +307,19 @@ impl board::Board {
         false
     }
 
+    fn king_can_be_captured(&self, team: PieceColor) -> bool{
+        // TODO: Tests
+        let all_moves: Vec<Moves> = self.get_pseudo_legal_moves_util(team);
+        for moves in all_moves {
+            for m in moves.basic_move{
+                if m.contains_king()  {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     pub fn calculate_threatened_states(&mut self) {
         self.calculate_team_threatened_state(PieceColor::Light);
         self.calculate_team_threatened_state(PieceColor::Dark);
@@ -334,7 +347,8 @@ impl board::Board {
         future_board.do_blunder(start, basic_move);
         // Check if the the king can be captured by the team that can currently move.
         // We need to invert the result since moves where the opponent does not have check after are legal.
-        !future_board.check_checker(future_board.to_move)
+        //FIXME: This is the wrong function to use here since it checks whether the other team is currently checking us not checking whether the king can be captured afterward
+        !future_board.king_can_be_captured(future_board.to_move)
     }
 }
 
@@ -437,10 +451,19 @@ mod tests {
                 .unwrap()
                 .into();
             let start = (4, 0).into();
+
+            // Legal moves
             let basic_move = BasicMove::new_move((5, 0).into());
             let basic_move_2 = BasicMove::new_move((6, 0).into());
+            let basic_move_3 = BasicMove::new_capture((7,0).into(), PieceType::Rook);
             assert!(board.check_if_legal_move(start, &basic_move));
             assert!(board.check_if_legal_move(start, &basic_move_2));
+            assert!(board.check_if_legal_move(start, &basic_move_3));
+            // Illegal moves
+            let illegal_move = BasicMove::new_move((4, 1).into());
+            let illegal_move_2 = BasicMove::new_move((4, 1).into());
+            assert!(!board.check_if_legal_move(start, &illegal_move));
+            assert!(!board.check_if_legal_move(start, &illegal_move_2));
         }
 
         #[test]
@@ -461,6 +484,10 @@ mod tests {
                 Board::from(Fen::from_str("2k5/8/8/8/8/2R5/8/2K5 b - - 3 6").unwrap());
             light_check = check_board.check_checker(PieceColor::Light);
             assert_eq!(true, light_check);
+
+            let endgame_board: Board = Board::from(Fen::from_str("1k6/8/8/8/8/8/8/3K1r2 w - - 0 1").unwrap());
+
+            assert!(endgame_board.check_checker(PieceColor::Dark));
         }
 
         #[test]

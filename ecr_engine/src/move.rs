@@ -134,7 +134,6 @@ mod tests {
         let multiple_moves_2 = board_2.get_pseudo_legal_moves();
         assert_eq!(3, multiple_moves_2.len());
 
-        //FIXME: This should not be None
         assert!(board_2.get_at(multiple_moves_2[1].from).is_some());
 
         checks = 0;

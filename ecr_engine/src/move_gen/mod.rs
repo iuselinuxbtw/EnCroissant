@@ -68,6 +68,14 @@ impl BasicMove {
             }),
         }
     }
+
+    pub fn contains_king(&self) -> bool {
+        if self.capture.is_some() && self.capture.unwrap().piece_type == PieceType::King{
+            true
+        }else {
+            false
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
