@@ -307,12 +307,12 @@ impl board::Board {
         false
     }
 
-    fn king_can_be_captured(&self, team: PieceColor) -> bool{
-        // TODO: Tests
+    /// Returns whether the given team can capture the king of the opposing team.
+    fn king_can_be_captured(&self, team: PieceColor) -> bool {
         let all_moves: Vec<Moves> = self.get_pseudo_legal_moves_util(team);
         for moves in all_moves {
-            for m in moves.basic_move{
-                if m.contains_king()  {
+            for m in moves.basic_move {
+                if m.contains_king() {
                     return true;
                 }
             }
@@ -347,7 +347,6 @@ impl board::Board {
         future_board.do_blunder(start, basic_move);
         // Check if the the king can be captured by the team that can currently move.
         // We need to invert the result since moves where the opponent does not have check after are legal.
-        //FIXME: This is the wrong function to use here since it checks whether the other team is currently checking us not checking whether the king can be captured afterward
         !future_board.king_can_be_captured(future_board.to_move)
     }
 }
@@ -455,7 +454,7 @@ mod tests {
             // Legal moves
             let basic_move = BasicMove::new_move((5, 0).into());
             let basic_move_2 = BasicMove::new_move((6, 0).into());
-            let basic_move_3 = BasicMove::new_capture((7,0).into(), PieceType::Rook);
+            let basic_move_3 = BasicMove::new_capture((7, 0).into(), PieceType::Rook);
             assert!(board.check_if_legal_move(start, &basic_move));
             assert!(board.check_if_legal_move(start, &basic_move_2));
             assert!(board.check_if_legal_move(start, &basic_move_3));
@@ -485,7 +484,8 @@ mod tests {
             light_check = check_board.check_checker(PieceColor::Light);
             assert_eq!(true, light_check);
 
-            let endgame_board: Board = Board::from(Fen::from_str("1k6/8/8/8/8/8/8/3K1r2 w - - 0 1").unwrap());
+            let endgame_board: Board =
+                Board::from(Fen::from_str("1k6/8/8/8/8/8/8/3K1r2 w - - 0 1").unwrap());
 
             assert!(endgame_board.check_checker(PieceColor::Dark));
         }
@@ -540,6 +540,27 @@ mod tests {
 
             let result_len = result.len();
             assert_eq!(16, result_len);
+        }
+
+        #[test]
+        fn test_king_can_be_captured() {
+            let board: Board = Fen::from_str("1k6/8/8/8/8/8/8/3K3R b - - 0 1")
+                .unwrap()
+                .into();
+
+            assert!(!board.king_can_be_captured(PieceColor::Dark));
+
+            let board: Board = Fen::from_str("1k6/8/8/3r4/8/8/8/3KR3 b - - 0 1")
+                .unwrap()
+                .into();
+            assert!(board.king_can_be_captured(PieceColor::Dark));
+
+            let board: Board =
+                Fen::from_str("r1bqkbnr/pp1npppp/2p2N2/8/3P4/8/PPP2PPP/R1BQKBNR w KQkq - 1 5")
+                    .unwrap()
+                    .into();
+            assert!(board.king_can_be_captured(PieceColor::Light));
+            assert!(!board.king_can_be_captured(PieceColor::Dark));
         }
     }
 }
