@@ -1,5 +1,6 @@
 //! Pseudo-legal moves are generated here. For moves during check we'll use another generator.
 
+use std::collections::VecDeque;
 use std::ops::Deref;
 
 use ecr_shared::coordinate::Coordinate;
@@ -313,31 +314,31 @@ pub fn king_moves(
 ) -> Vec<BasicMove> {
     let mut result: Vec<BasicMove> = vec![];
     let border_distances = distance_to_border(start);
-    let mut queue: Vec<Directions> = vec![];
+    let mut queue: VecDeque<Directions> = VecDeque::new();
 
     // This can be made smarter by only adding the linear directions and filling the diagonals afterwards
     if border_distances.right > 0 {
-        queue.push(Directions::E);
+        queue.push_back(Directions::E);
         if border_distances.up > 0 {
-            queue.push(Directions::NE);
+            queue.push_back(Directions::NE);
         }
     }
     if border_distances.up > 0 {
-        queue.push(Directions::N);
+        queue.push_back(Directions::N);
         if border_distances.left > 0 {
-            queue.push(Directions::NW);
+            queue.push_back(Directions::NW);
         }
     }
     if border_distances.left > 0 {
-        queue.push(Directions::W);
+        queue.push_back(Directions::W);
         if border_distances.down > 0 {
-            queue.push(Directions::SW);
+            queue.push_back(Directions::SW);
         }
     }
     if border_distances.down > 0 {
-        queue.push(Directions::S);
+        queue.push_back(Directions::S);
         if border_distances.right > 0 {
-            queue.push(Directions::SE);
+            queue.push_back(Directions::SE);
         }
     }
     // Now we iterate through the possible directions and check if the positions are possible.

@@ -328,7 +328,6 @@ impl board::Board {
 
     /// Returns true if the move is legal, false if it is illegal.
     pub fn check_if_legal_move(&self, start: Coordinate, basic_move: &BasicMove) -> bool {
-        // TODO: Testing
         // Clone the current board
         let mut future_board = self.clone();
         // Do the move in the cloned board
@@ -433,6 +432,18 @@ mod tests {
         }
 
         #[test]
+        fn test_check_if_legal_move() {
+            let board: Board = Fen::from_str("1k6/8/8/8/8/8/8/3KR2r w - - 0 1")
+                .unwrap()
+                .into();
+            let start = (4, 0).into();
+            let basic_move = BasicMove::new_move((5, 0).into());
+            let basic_move_2 = BasicMove::new_move((6, 0).into());
+            assert!(board.check_if_legal_move(start, &basic_move));
+            assert!(board.check_if_legal_move(start, &basic_move_2));
+        }
+
+        #[test]
         fn test_capture() {
             let mut default_board = Board::default();
             let pawn = default_board.get_at((0, 1).into()).unwrap();
@@ -465,12 +476,6 @@ mod tests {
             }
             assert_eq!(3, moves.len());
         }
-
-        /*#[test]
-        fn test_check_if_legal_move() {
-            let mut default_board = Board::default();
-            todo!()
-        }*/
 
         #[test]
         fn test_count_half_moves() {
