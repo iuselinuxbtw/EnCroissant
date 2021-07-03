@@ -49,6 +49,7 @@ pub(crate) enum Directions {
 }
 
 impl Directions {
+    /// Returns the direction the x and y distance are pointing to.
     pub fn get_direction(x: i16, y: i16) -> Option<Directions> {
         match (x, y) {
             // West and East

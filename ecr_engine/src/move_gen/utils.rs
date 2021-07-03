@@ -70,7 +70,7 @@ pub(crate) fn no_piece_in_the_way(
     true
 }
 
-// Returns the Piece a square is occupied by. If the square is not occupied it returns None
+/// Returns the Piece a square is occupied by. If the square is not occupied it returns None
 pub(crate) fn piece_on_square(square: Coordinate, board: &board::Board) -> Option<SquareInner> {
     // Get the SquareInner
     board.get_at(square).map(|i| Rc::clone(&i))

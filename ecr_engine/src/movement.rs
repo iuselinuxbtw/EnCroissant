@@ -126,10 +126,12 @@ impl board::Board {
         // TODO: Update castle_state
     }
 
+    /// Returns a cloned board where the given move is done
     pub(crate) fn move_on_cloned_board(&self, start: Coordinate, basic_move: &BasicMove) -> Board {
+        // TODO: Testing
         let mut cloned_board = self.clone();
         cloned_board.do_blunder(start, basic_move);
-        return cloned_board;
+        cloned_board
     }
 
     // This function contains stuff that has to be done before every move
@@ -227,7 +229,7 @@ impl board::Board {
         }
     }
 
-    /// This function removes the piece on the given coordinate and sets it out of game.
+    /// This function removes the piece on the given [`Coordinate`] and sets it out of game.
     fn capture_piece(&mut self, target: &SquareInner, target_square: Coordinate) {
         // TODO: Testing
         target.borrow_mut().set_out_of_game();
@@ -235,12 +237,12 @@ impl board::Board {
         self.remove_piece(target_square);
     }
 
-    /// Returns the pseudo legal moves of the current team
+    /// Returns the pseudo legal [`Moves`] of the current team
     pub fn get_pseudo_legal_moves(&self) -> Vec<Moves> {
         self.get_pseudo_legal_moves_util(self.to_move)
     }
 
-    /// This function returns all possible pseudo legal moves (OF BOTH TEAMS!).
+    /// This function returns all possible pseudo legal [`Moves`] (OF BOTH TEAMS!).
     ///
     /// We could also only get one move and bet on it being the best one which would certainly be
     /// interesting...
@@ -251,7 +253,7 @@ impl board::Board {
         result
     }
 
-    /// Returns the pseudo-legal moves of a specific team.
+    /// Returns the pseudo-legal [`Moves] of a specific team.
     pub fn get_pseudo_legal_moves_util(&self, team_color: PieceColor) -> Vec<Moves> {
         let mut result: Vec<Moves> = vec![];
         let own_pieces = self.get_all_pieces(team_color);
@@ -259,7 +261,7 @@ impl board::Board {
         result
     }
 
-    /// Returns pseudo legal moves of Vector of Pieces.
+    /// Returns pseudo legal [`Moves`] of Vector of [`SquareInner`].
     pub fn get_moves(&self, pieces: Vec<SquareInner>) -> Vec<Moves> {
         let mut result: Vec<Moves> = vec![];
         for square_inner in pieces {
@@ -285,7 +287,7 @@ impl board::Board {
         result
     }
 
-    /// Gets all pieces of a given Team color
+    /// Gets all pieces as [`SquareInner`]s of a given Team color
     fn get_all_pieces(&self, target_color: PieceColor) -> Vec<SquareInner> {
         let mut result: Vec<SquareInner> = vec![];
         for e in self.pieces.clone() {
@@ -339,7 +341,7 @@ impl board::Board {
         todo!()
     }
 
-    /// Returns true if the move is legal, false if it is illegal.
+    /// Returns true if the [`BasicMove`] is legal, false if it is illegal.
     pub fn check_if_legal_move(&self, start: Coordinate, basic_move: &BasicMove) -> bool {
         // Clone the current board
         let mut future_board = self.clone();

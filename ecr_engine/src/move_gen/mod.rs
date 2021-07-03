@@ -38,15 +38,18 @@ impl BasicMove {
             PieceColor::Dark => state.threatened_light > 0,
         }
     }
+
     /// Returns whether the capture is en_passant.
     pub fn get_is_en_passant(&self) -> bool {
         // We can safely unwrap since we've checked that is is_some
         self.capture.is_some() && self.to != self.capture.unwrap().target
     }
+
     /// Generates a new non-capture move
     pub fn new_move(to: Coordinate) -> BasicMove {
         BasicMove { to, capture: None }
     }
+
     /// Generates a new capture move
     pub fn new_capture(to: Coordinate, piece_type: PieceType) -> BasicMove {
         BasicMove {
@@ -69,12 +72,10 @@ impl BasicMove {
         }
     }
 
+    /// Returns if the current move has the king as a target
     pub fn contains_king(&self) -> bool {
-        if self.capture.is_some() && self.capture.unwrap().piece_type == PieceType::King {
-            true
-        } else {
-            false
-        }
+        // We can safely unwrap since we checked that the capture is there
+        self.capture.is_some() && self.capture.unwrap().piece_type == PieceType::King
     }
 }
 

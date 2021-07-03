@@ -18,7 +18,7 @@ impl board::Board {
     }
 }
 
-/// MiniMax Evaluation
+/// MiniMax Evaluation of the pieces
 fn evaluate_pieces(board: &Board) -> i32 {
     // Get pieces of each team
     let light_pieces = board.get_team_pieces(PieceColor::Light);
@@ -71,6 +71,8 @@ fn all_squares_score(board: &Board) -> i32 {
     light_score as i32 - dark_score as i32
 }
 
+
+/// Returns the four middle squares
 fn get_middle_squares() -> Vec<Coordinate> {
     vec![
         Coordinate { y: 3, x: 3 },
@@ -80,6 +82,7 @@ fn get_middle_squares() -> Vec<Coordinate> {
     ]
 }
 
+/// Returns the Threatened_states of the given coordinates
 fn get_threatened_states(board: &Board, coords: Vec<Coordinate>) -> Vec<ThreatenedState> {
     let mut result = vec![];
     for coord in coords {
@@ -106,5 +109,6 @@ mod tests {
         assert_eq!(0, evaluate_pieces(&default_board));
         let empty_board = Board::empty();
         assert_eq!(0, evaluate_pieces(&empty_board));
+        // TODO: Test this with a mid-game board that is not equal
     }
 }
