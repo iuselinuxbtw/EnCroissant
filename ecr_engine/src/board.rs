@@ -9,7 +9,6 @@ use ecr_shared::coordinate::Coordinate;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::{get_en_passant_actual, new_rc_refcell};
-use crate::eval::eval;
 use std::fmt::Formatter;
 
 // Just exists so we can safely
@@ -593,8 +592,8 @@ mod tests {
             let column = b.board.get_mut(2).unwrap();
             column.insert(1, Some(Rc::new(RefCell::new(p.clone()))));
 
-            assert_eq!(None, b.get_at((0 as u8, 0 as u8).into()));
-            let square_from_board = b.get_at((2 as u8, 1 as u8).into()).unwrap();
+            assert_eq!(None, b.get_at((0, 0).into()));
+            let square_from_board = b.get_at((2, 1).into()).unwrap();
             let piece_from_board = square_from_board.borrow_mut();
             assert_eq!(p, *piece_from_board);
         }
@@ -701,7 +700,7 @@ mod tests {
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::King, (2, 0).into(), PieceColor::Light),
                 board
-                    .get_at((2 as u8, 0 as u8).into())
+                    .get_at((2, 0).into())
                     .unwrap()
                     .deref()
                     .borrow()
@@ -710,7 +709,7 @@ mod tests {
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::Rook, (4, 2).into(), PieceColor::Light),
                 board
-                    .get_at((4 as u8, 2 as u8).into())
+                    .get_at((4, 2).into())
                     .unwrap()
                     .deref()
                     .borrow()
@@ -719,7 +718,7 @@ mod tests {
             assert_eq!(
                 &BoardPiece::new_from_type(PieceType::King, (2, 7).into(), PieceColor::Dark),
                 board
-                    .get_at((2 as u8, 7 as u8).into())
+                    .get_at((2, 7).into())
                     .unwrap()
                     .deref()
                     .borrow()
@@ -784,9 +783,9 @@ mod tests {
                 Fen {
                     piece_placements: FenPiecePlacements {
                         pieces: vec![
-                            ((5, 3).into(), PieceColor::Light, PieceType::Pawn).into(),
-                            ((4, 0).into(), PieceColor::Light, PieceType::King).into(),
-                            ((4, 7).into(), PieceColor::Dark, PieceType::King).into(),
+                            ((5, 3).into(), PieceColor::Light, PieceType::Pawn),
+                            ((4, 0).into(), PieceColor::Light, PieceType::King),
+                            ((4, 7).into(), PieceColor::Dark, PieceType::King),
                         ],
                     },
                     to_move: PieceColor::Light,

@@ -50,7 +50,7 @@ pub(crate) enum Directions {
 
 impl Directions {
     /// Returns the direction the x and y distance are pointing to.
-    pub fn get_direction(x: i16, y: i16) -> Option<Directions> {
+    pub fn into_direction(x: i16, y: i16) -> Option<Directions> {
         match (x, y) {
             // West and East
             (-8..=-1, 0) => Some(Directions::W),
@@ -76,16 +76,16 @@ mod tests {
         use super::super::*;
         #[test]
         fn test_get_direction() {
-            assert_eq!(None, Directions::get_direction(0, 0));
-            assert_eq!(None, Directions::get_direction(10, 2));
-            assert_eq!(Some(Directions::N), Directions::get_direction(0, -5));
-            assert_eq!(Some(Directions::S), Directions::get_direction(0, 3));
-            assert_eq!(Some(Directions::E), Directions::get_direction(7, 0));
-            assert_eq!(Some(Directions::W), Directions::get_direction(-2, 0));
-            assert_eq!(Some(Directions::SE), Directions::get_direction(6, 4));
-            assert_eq!(Some(Directions::SW), Directions::get_direction(-7, 5));
-            assert_eq!(Some(Directions::NE), Directions::get_direction(3, -8));
-            assert_eq!(Some(Directions::NW), Directions::get_direction(-4, -2));
+            assert_eq!(None, Directions::into_direction(0, 0));
+            assert_eq!(None, Directions::into_direction(10, 2));
+            assert_eq!(Some(Directions::N), Directions::into_direction(0, -5));
+            assert_eq!(Some(Directions::S), Directions::into_direction(0, 3));
+            assert_eq!(Some(Directions::E), Directions::into_direction(7, 0));
+            assert_eq!(Some(Directions::W), Directions::into_direction(-2, 0));
+            assert_eq!(Some(Directions::SE), Directions::into_direction(6, 4));
+            assert_eq!(Some(Directions::SW), Directions::into_direction(-7, 5));
+            assert_eq!(Some(Directions::NE), Directions::into_direction(3, -8));
+            assert_eq!(Some(Directions::NW), Directions::into_direction(-4, -2));
         }
     }
 }

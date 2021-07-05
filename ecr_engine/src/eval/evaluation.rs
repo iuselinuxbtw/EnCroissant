@@ -5,11 +5,11 @@ use std::ops::Deref;
 use ecr_shared::pieces::PieceColor;
 
 use crate::board;
-use crate::board::{Board, ThreatenedState, SquareInner};
+use crate::board::{Board, ThreatenedState};
+use crate::pieces::BoardPiece;
 use crate::utils::get_all_squares;
 use ecr_shared::coordinate::Coordinate;
 use std::cell::RefCell;
-use crate::pieces::BoardPiece;
 
 impl board::Board {
     pub fn eval(&self) -> f32 {
@@ -27,14 +27,14 @@ fn evaluate_pieces(board: &Board) -> i32 {
     let dark_pieces = board.get_team_pieces(PieceColor::Dark);
 
     // Calculate the values of the pieces of each team
-    let mut value_light: i32 = eval_pieces(light_pieces);
-    let mut value_dark: i32 = eval_pieces(dark_pieces);
+    let value_light: i32 = eval_pieces(light_pieces);
+    let value_dark: i32 = eval_pieces(dark_pieces);
 
     value_light - value_dark
 }
 
 /// Returns the combined value of the given array of pieces
-fn eval_pieces(pieces: Vec<&RefCell<BoardPiece>>) -> i32{
+fn eval_pieces(pieces: Vec<&RefCell<BoardPiece>>) -> i32 {
     let mut result = 0;
     for piece in pieces {
         result += piece.borrow().deref().get_piece().get_value() as i32;
@@ -128,14 +128,20 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_pieces(){
-
-        let first_piece = RefCell::new(BoardPiece::new_from_type(PieceType::Pawn, (0,0).into(), PieceColor::Light));
-        let second_piece = RefCell::new(BoardPiece::new_from_type(PieceType::Queen, (1,0).into(), PieceColor::Light));
+    fn test_eval_pieces() {
+        let first_piece = RefCell::new(BoardPiece::new_from_type(
+            PieceType::Pawn,
+            (0, 0).into(),
+            PieceColor::Light,
+        ));
+        let second_piece = RefCell::new(BoardPiece::new_from_type(
+            PieceType::Queen,
+            (1, 0).into(),
+            PieceColor::Light,
+        ));
         let piece_vector = vec![&first_piece, &second_piece];
         assert_eq!(100, eval_pieces(piece_vector));
     }
-
 
     #[test]
     fn test_eval_board() {

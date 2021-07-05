@@ -21,7 +21,7 @@ struct MoveProperties {
 
 impl MoveProperties {
     /// Find out the properties of a move. Useful for movement.
-    fn get_properties(
+    fn into_properties(
         basic_move: BasicMove,
         board: board::Board,
         start: Coordinate,
@@ -63,7 +63,7 @@ impl board::Board {
     /// This function moves a piece from a given start square to another square, contained in a
     /// BasicMove. Note: This function doesn't complain if a piece by the wrong team is moved.
     pub fn do_blunder(&mut self, start: Coordinate, basic_move: &BasicMove) {
-        let move_properties = MoveProperties::get_properties(*basic_move, self.clone(), start);
+        let move_properties = MoveProperties::into_properties(*basic_move, self.clone(), start);
 
         self.pre_move(start, &move_properties.inner);
 
@@ -243,9 +243,8 @@ impl board::Board {
     }
 
     /// This function returns all possible pseudo legal [`Moves`] (OF BOTH TEAMS!).
-    ///
-    /// We could also only get one move and bet on it being the best one which would certainly be
-    /// interesting...
+    // We could also only get one move and bet on it being the best one which would certainly be
+    // interesting...
     pub(crate) fn get_all_pseudo_legal_moves(&self) -> Vec<Moves> {
         let mut result: Vec<Moves> = vec![];
         result.append(&mut self.get_pseudo_legal_moves_util(PieceColor::Light));
@@ -381,7 +380,7 @@ mod tests {
             );
             assert_eq!(1, default_board.get_move_number());
             assert_eq!(0, default_board.get_half_move_amount());
-            assert_eq!(false, default_board.get_light_to_move());
+            assert!(!default_board.get_light_to_move());
             assert_eq!(None, default_board.get_at((7, 1).into()));
             assert_eq!(
                 "rnbqkbnr/pppppppp/8/8/7P/8/PPPPPPP1/RNBQKBNR b KQkq - 0 1".to_string(),
@@ -427,7 +426,7 @@ mod tests {
                 Fen::from(default_board.clone()).to_string()
             );
 
-            assert!(!default_board.clone().get_en_passant_target().is_some());
+            assert!(!default_board.get_en_passant_target().is_some());
             assert_eq!(None, default_board.get_at((6, 4).into()));
             assert!(!default_board.check_checker(PieceColor::Light));
             assert!(!default_board.check_checker(PieceColor::Dark));
@@ -485,7 +484,7 @@ mod tests {
             let check_board: Board =
                 Board::from(Fen::from_str("2k5/8/8/8/8/2R5/8/2K5 b - - 3 6").unwrap());
             light_check = check_board.check_checker(PieceColor::Light);
-            assert_eq!(true, light_check);
+            assert!(light_check);
 
             let endgame_board: Board =
                 Board::from(Fen::from_str("1k6/8/8/8/8/8/8/3K1r2 w - - 0 1").unwrap());
