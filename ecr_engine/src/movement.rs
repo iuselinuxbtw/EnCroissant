@@ -459,6 +459,7 @@ mod tests {
             let basic_move_3 = BasicMove::new_capture((7, 0).into(), PieceType::Rook);
             assert!(board.check_if_legal_move(start, &basic_move));
             assert!(board.check_if_legal_move(start, &basic_move_2));
+            // FIXME: This should be a legal move
             assert!(board.check_if_legal_move(start, &basic_move_3));
             // Illegal moves
             let illegal_move = BasicMove::new_move((4, 1).into());
