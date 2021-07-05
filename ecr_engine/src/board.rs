@@ -9,6 +9,7 @@ use ecr_shared::coordinate::Coordinate;
 use crate::pieces::{BoardPiece, PieceColor, PieceType};
 use crate::r#move::Move;
 use crate::utils::{get_en_passant_actual, new_rc_refcell};
+use crate::eval::eval;
 use std::fmt::Formatter;
 
 // Just exists so we can safely
@@ -674,15 +675,6 @@ mod tests {
                 },
                 b.get_castle_state()
             );
-        }
-
-        #[test]
-        fn test_eval_board() {
-            let default_board: Board = board::Board::default();
-            let result = default_board.eval_board();
-            // See https://floating-point-gui.de/errors/comparison/
-            assert_eq!(0, result as i8);
-            // TODO: More Tests
         }
 
         #[test]

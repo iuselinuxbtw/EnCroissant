@@ -24,7 +24,6 @@ pub fn search(board: &Board, depth: u8) -> Tree<Board> {
     tree
 }
 
-
 /*
 /// Used for recursion necessary for depth-search in search.
 fn search_util(root: &Board, depth: u8) -> Tree<&Board> {

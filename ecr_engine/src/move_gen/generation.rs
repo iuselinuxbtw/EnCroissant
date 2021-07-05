@@ -145,7 +145,7 @@ fn explore_direction(
     result
 }
 
-/// Used for generating moves for pawns.
+/// Used for generating [`BasicMove`] for pawns.
 pub fn pawn_moves(
     start: Coordinate,
     board: &board::Board,

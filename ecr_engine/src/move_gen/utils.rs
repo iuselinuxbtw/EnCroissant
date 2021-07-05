@@ -115,7 +115,8 @@ macro_rules! check_this_move {
             }
             // It's safe to use unwrap here since we already know that it's not None.
             // If it is the enemies piece we can capture it.
-            $result.push(BasicMove{to: ($x, $y).into(), capture: Some(Capture{piece_type: possible_square.0.unwrap(), target: ($x,$y).into()})});            return $result
+            $result.push(BasicMove{to: ($x, $y).into(), capture: Some(Capture{piece_type: possible_square.0.unwrap(), target: ($x,$y).into()})});
+            return $result
         }
         $result.push(BasicMove{to: ($x, $y).into(), capture: None});
     }

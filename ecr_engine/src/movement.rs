@@ -563,6 +563,12 @@ mod tests {
                     .into();
             assert!(board.king_can_be_captured(PieceColor::Light));
             assert!(!board.king_can_be_captured(PieceColor::Dark));
+
+            let board: Board = Fen::from_str("1k6/8/8/8/8/8/8/3K3R w - - 0 1")
+                .unwrap()
+                .into();
+            assert!(!board.king_can_be_captured(PieceColor::Dark));
+            assert!(!board.king_can_be_captured(PieceColor::Light));
         }
     }
 }
