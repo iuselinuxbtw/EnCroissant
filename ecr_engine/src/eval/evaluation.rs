@@ -5,11 +5,12 @@ use std::ops::Deref;
 use ecr_shared::pieces::PieceColor;
 
 use crate::board;
-use crate::board::{Board, ThreatenedState};
+use crate::board::Board;
 use crate::pieces::BoardPiece;
 use crate::utils::get_all_squares;
 use ecr_shared::coordinate::Coordinate;
 use std::cell::RefCell;
+use crate::eval::utils::{get_middle_squares, get_threatened_score, get_threatened_states};
 
 impl board::Board {
     pub fn eval(&self) -> f32 {
@@ -77,33 +78,7 @@ fn all_squares_score(board: &Board) -> i32 {
     light_score as i32 - dark_score as i32
 }
 
-/// Returns the four middle squares
-fn get_middle_squares() -> Vec<Coordinate> {
-    vec![
-        Coordinate { y: 3, x: 3 },
-        Coordinate { y: 4, x: 3 },
-        Coordinate { y: 3, x: 4 },
-        Coordinate { y: 4, x: 4 },
-    ]
-}
 
-/// Returns the Threatened_states of the given coordinates
-fn get_threatened_states(board: &Board, coords: Vec<Coordinate>) -> Vec<ThreatenedState> {
-    let mut result = vec![];
-    for coord in coords {
-        result.push(board.get_threatened_state(coord));
-    }
-    result
-}
-
-/// Gets the threats of a particular team on given squares
-fn get_threatened_score(states: Vec<ThreatenedState>, team: PieceColor) -> u64 {
-    let mut result: u64 = 0;
-    for state in states {
-        result += state.get_by_team(team) as u64;
-    }
-    result
-}
 
 mod tests {
     use std::str::FromStr;
@@ -118,7 +93,6 @@ mod tests {
         assert_eq!(0, evaluate_pieces(&default_board));
         let empty_board = Board::empty();
         assert_eq!(0, evaluate_pieces(&empty_board));
-        // TODO: Test this with a mid-game board that is not equal
         let board: Board =
             Fen::from_str("r1b4r/ppp3pp/1bnk4/3Np3/4P3/3PBN2/PPP2PPP/2KR3R w - - 5 14")
                 .unwrap()
